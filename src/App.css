@@ -1,0 +1,215 @@
+#root, body, html {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  font-size: 14px;
+  height: 100%;
+  width: 100%;
+}
+
+button, input {
+  font-size: 25px;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.header {  
+  display:flex;
+  border: 1px solid black;
+}
+
+.body {
+  text-align: center;
+  display:flex;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.header__title {
+  flex: 1 1 auto;
+}
+
+.header__buttons {
+  align-items: center;
+  display: flex;
+}
+
+.node-picker__container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  flex: 1 1 auto;
+  background-color: gray;
+}
+
+.option__panel {
+  border: 1px solid black;
+  width: 300px;
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-option {
+  color: white;
+  background-color: lightblue;
+  width: 90%;
+  align-self: center;
+}
+
+.add-option:hover {
+  background-color: blue;
+}
+
+.add-option:disabled {
+  background-color: lightblue;
+}
+
+.header__button {
+  width: 160px;
+}
+
+#model-id-input {
+  width: 500px;
+}
+
+@keyframes App-logo-float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(10px)
+  }
+  100% {
+    transform: translateY(0px)
+  }
+}
+.modal__header {
+  border-bottom: 1px solid black;
+}
+.modal__content {  
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  height: 50%;
+}
+
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.control-choice:hover {
+  background-color: blue;
+  color: white;
+}
+
+.control-choice-content {
+  background-color: white;
+  font-weight: bold;
+}
+
+.single-option__panel {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+}
+
+.ColorPicker {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.ColorPicker h3 {
+  font-weight: normal;
+  font-size: 20px;
+}
+
+.single-option__header {
+  display: flex;
+}
+
+.nameFieldTitle {
+  text-align: left;
+}
+
+.single-option__title {
+  text-align: left;
+  flex: 1 1 auto;
+}
+
+.input__container {
+  display: flex;
+}
+
+input[type="text"] {
+  width: 150px;
+}
+
+.single-option__panels__container {
+  overflow: auto;
+}
+
+#api-frame {
+  width: 100%;
+  height: 100%;
+}
+
+#modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0); 
+  background-color: rgba(0,0,0,0.4); 
+}
+
+#control-choice-modal {
+  display: none; 
+  position: fixed;
+  z-index: 1;
+  right: 17px;
+  top: 166px;
+  width: 286px;
+  overflow: auto;
+  border: 1px solid black;
+}
+
+#js-output {
+  width: 80%;
+  height: 77%;
+}
+
+input#colorName {
+  width: 260px;
+}
