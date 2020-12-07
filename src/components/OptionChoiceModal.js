@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { createControl, toggleOptionChoiceModalDisplay } from './viewerSlice';
 
 export default () => {
@@ -17,6 +17,10 @@ export default () => {
                     dispatch(createControl("toggle"));
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Toggle</div>
+                <div className="control-choice" onClick={() => {
+                    dispatch(createControl("grouping"));
+                    dispatch(toggleOptionChoiceModalDisplay());
+                }}>Grouping</div>
                 <div className="control-choice" onClick={() => {
                     dispatch(createControl("animation"));
                     dispatch(toggleOptionChoiceModalDisplay());

@@ -8,7 +8,7 @@
 }
 
 button, input {
-  font-size: 25px;
+  font-size: 15px;
 }
 
 .App {
@@ -54,9 +54,8 @@ button, input {
   background-color: gray;
 }
 
-.option__panel {
+.control-menu {
   border: 1px solid black;
-  width: 300px;
   flex: 0 0 320px;
   display: flex;
   flex-direction: column;
@@ -65,7 +64,6 @@ button, input {
 .add-option {
   color: white;
   background-color: lightblue;
-  width: 90%;
   align-self: center;
 }
 
@@ -83,6 +81,10 @@ button, input {
 
 #model-id-input {
   width: 500px;
+}
+
+.add__button {
+  width: 100%;
 }
 
 @keyframes App-logo-float {
@@ -167,12 +169,33 @@ button, input {
   display: flex;
 }
 
+.material__select {
+  width: 100%;
+}
+
 input[type="text"] {
   width: 150px;
 }
 
 .single-option__panels__container {
   overflow: auto;
+}
+
+.grouping__container {
+  overflow: auto;
+}
+
+.collapse__button {
+  width: 115px;
+}
+
+.node-name {
+  font-size: 10px;
+}
+
+#nodeControls {
+  overflow: auto;
+  background-color: white;
 }
 
 #api-frame {
@@ -199,10 +222,14 @@ input[type="text"] {
   position: fixed;
   z-index: 1;
   right: 17px;
-  top: 166px;
+  top: 143px;
   width: 286px;
   overflow: auto;
   border: 1px solid black;
+}
+
+#viewerControls {
+  display: flex;
 }
 
 #js-output {

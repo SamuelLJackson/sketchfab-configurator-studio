@@ -9,7 +9,10 @@ const initialState = {
   controls: [],
   disableButtons: true,
   latestControlId: 0,
-  isPreviewMode: false,
+  sketchfabAPI: null,
+  sceneGraphIsVisible: {},
+  viewMode: "options",
+  groupingOptions: [],
 };
 
 export const viewerSlice = createSlice({
@@ -19,8 +22,8 @@ export const viewerSlice = createSlice({
     resetState: state => {
       state = initialState;
     },
-    setIsPreviewMode: (state, action) => {
-      state.isPreviewMode = action.payload;
+    setSketchfabAPI: (state, action) => {
+      state.sketchfabAPI = action.payload;
     },
     setModelId: (state, action) => {
       state.modelId = action.payload;
@@ -34,6 +37,10 @@ export const viewerSlice = createSlice({
     setSceneGraph: (state, action) => {
       buildSceneGraph(state, action.payload.children, 0);
     },
+    setSceneGraphIsVisible: (state, action) => {
+      const { id, value } = action.payload;
+      state.sceneGraphIsVisible[id] = value;
+    },
     createControl: (state, action) => {
       state.latestControlId = state.latestControlId += 1;
       let id = state.latestControlId;
@@ -41,9 +48,15 @@ export const viewerSlice = createSlice({
         type: action.payload,
         id: id,
         name: action.payload,
-        entityIndex: 0,
+        entityIndex: "none",
         entity: {instanceID: 0},
+        animationUID: "none",
+        groupMembers: [],
+        isExpanded: true,
       });
+    },
+    setViewMode: (state, action) => {
+      state.viewMode = action.payload
     },
     setControls: (state, action) => {
       state.controls = action.payload;
@@ -53,10 +66,24 @@ export const viewerSlice = createSlice({
     },
     updateControl: (state, action) => {
       const { id, key, value } = action.payload;
+      console.log(action.payload)
       for (let i=0; i<state.controls.length; ++i) {
         if (state.controls[i].id == id) {
           state.controls[i][key] = value;
         }
+      }
+    },
+    setGroupingOptions: (state, action) => {
+      state.groupingOptions = action.payload;
+    },
+    setAllNodesVisible: (state, action) => {
+      for(let i=0; i<Object.keys(state.sceneGraphIsVisible).length; ++i) {
+        if(action.payload) {
+          state.sketchfabAPI.show(Object.keys(state.sceneGraphIsVisible)[i])
+        } else {
+          state.sketchfabAPI.hide(Object.keys(state.sceneGraphIsVisible)[i])
+        }
+        state.sceneGraphIsVisible[Object.keys(state.sceneGraphIsVisible)[i]] = action.payload;
       }
     },
   },
@@ -69,10 +96,11 @@ export const {
   toggleDisableButtons,
   updateControl,
   setControls,
-  setIsPreviewMode,
+  setSceneGraphIsVisible,
+  setViewMode,
+  setGroupingOptions,
+  setAllNodesVisible,
 } = viewerSlice.actions;
-
-export const selectIsPreviewMode = state => state.viewer.isPreviewMode;
 
 export const selectModelId = state => state.viewer.modelId;
 
@@ -85,6 +113,14 @@ export const selectControls = state => state.viewer.controls;
 export const selectDisableButtons = state => state.viewer.disableButtons;
 
 export const selectSceneGraph = state => state.viewer.sceneGraph;
+
+export const selectSketchfabAPI = state => state.viewer.sketchfabAPI;
+
+export const selectSceneGraphIsVisible = state => state.viewer.sceneGraphIsVisible;
+
+export const selectViewMode = state => state.viewer.viewMode;
+
+export const selectGroupingOptions = state => state.viewer.groupingOptions;
 
 export const toggleModalDisplay = () => dispatch => {
   const modal = document.getElementById('modal');
@@ -114,7 +150,7 @@ export const initializeViewer = modelId => dispatch => {
 
   var iframe = document.getElementById('api-frame');
   var version = '1.8.2';
-  var DEFAULT_URLID = 'c632823b6c204797bd9b95dbd9f53a06';
+  var DEFAULT_URLID = 'f373c5bab8e7489fa12db2071471fe4e';
   var DEFAULT_PREFIX = 'seat ';		
   
   var CONFIG = {
@@ -182,9 +218,11 @@ export const initializeViewer = modelId => dispatch => {
                   controls.innerHTML = buttonsText;
 
                   apiSkfb = api;
+                  dispatch(viewerSlice.actions.setSketchfabAPI(api));//JSON.parse(JSON.stringify(new A()))
                   api.start();
                   api.addEventListener('viewerready', function () {
                       this.api = api;
+                      api.pause();
 
                       api.getAnimations(function(err, animations) {
                           console.log(animations);          
@@ -289,11 +327,22 @@ export const initializeViewer = modelId => dispatch => {
 
 var buildSceneGraph = function(state, children, depth) {
 	for (let i=0; i<children.length; ++i) {
-		if(children[i].name == undefined) {
-			state.sceneGraph.push({name: children[i].type, depth: depth, instanceID: children[i].instanceID});
-		} else {
-			state.sceneGraph.push({name: children[i].name, depth: depth, instanceID: children[i].instanceID});
-		}
+    if (children[i].type != "Group" && children[i].name != "RootNode") {
+      if(children[i].name == undefined) {
+        state.sceneGraph.push({
+          name: children[i].type, 
+          depth: depth, 
+          instanceID: children[i].instanceID
+        });
+      } else {
+        state.sceneGraph.push({
+          name: children[i].name, 
+          depth: depth, 
+          instanceID: children[i].instanceID
+        });
+      }
+    }
+    state.sceneGraphIsVisible[children[i].instanceID] = true
 		if (children[i].children != undefined || children[i].children != null) {			
 			buildSceneGraph(state, children[i].children, depth+1);
 		}

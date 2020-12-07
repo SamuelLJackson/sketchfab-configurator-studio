@@ -24,6 +24,7 @@ export default props => {
       <div className="input__container">
         <button 
           id="addColor"
+          className="add__button"
           onClick={() => {
             if(option.additionalColors == undefined || option.additionalColors == null) {
                 const transferObject = {
@@ -42,7 +43,7 @@ export default props => {
               dispatch(updateControl({id: option.id, key: "additionalColors", value: newColors}));
             }
           }}
-        >Add Color</button>
+        >+ Add Color</button>
       </div>
     </div>
   )
@@ -107,8 +108,7 @@ const renderAdditionalColors = (id, additionalColors, dispatch) => {
 const renderColorsOption = (option, materials, dispatch) => {
   
     const materialsHtml = materials.map((material, index) => <option value={index}>{material.name}</option>)
-    materialsHtml.unshift(<option value={0}>Select a Material</option>)
-
+    materialsHtml.unshift(<option value="none">Select a Material</option>)
 
     return (
       <select 

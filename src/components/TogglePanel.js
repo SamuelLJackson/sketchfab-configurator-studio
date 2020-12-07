@@ -18,6 +18,7 @@ export default props => {
       <select 
         name="nodes" 
         id="nodes"
+        className="material__select"
         value={option.entity.instanceID}
         onChange={e => dispatch(updateControl({id: option.id, key: "entity", value: {instanceID: e.target.value}}))}
       >

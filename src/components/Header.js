@@ -6,14 +6,11 @@ import {
   setModelId, 
   toggleModalDisplay,
   selectDisableButtons,
-  selectIsPreviewMode,
-  setIsPreviewMode,
 } from './viewerSlice';
 
 export default () => {
   const modelId = useSelector(selectModelId);
   const disableButtons = useSelector(selectDisableButtons);
-  const isPreviewMode = useSelector(selectIsPreviewMode);
   
   const dispatch = useDispatch();
   return (
@@ -29,14 +26,7 @@ export default () => {
           className="header__button"      
           onClick={() => dispatch(initializeViewer(modelId))}
         >Load Model
-        </button>
-        {/*
-        <button
-          className="header__button"
-          disabled={disableButtons}
-          onClick={() => dispatch(setIsPreviewMode(!isPreviewMode))}
-        >{isPreviewMode ? "Studio View" : "Preview"}</button>
-        */}
+        </button>        
         <button 
           id="export-javascript"
           className="header__button"

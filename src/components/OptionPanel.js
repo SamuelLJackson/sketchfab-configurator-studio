@@ -9,6 +9,7 @@ import {
 } from './viewerSlice';
 import ColorPanel from './ColorPanel';
 import TogglePanel from './TogglePanel';
+import Grouping from './GroupingPanel';
 import AnimationPanel from './AnimationPanel';
 
 export default () => {  
@@ -19,10 +20,9 @@ export default () => {
   const dispatch = useDispatch();
 
   return (
-    <div class="option__panel">
-      <h2>Options</h2>
+    <div style={{overflow: "auto"}}>
       <button 
-        className="add-option" 
+        className="add-option add__button" 
         disabled={disableButtons}
         onClick={() => dispatch(toggleOptionChoiceModalDisplay())}
       >+ Add Option</button>
@@ -39,6 +39,17 @@ const renderOptions = (options, dispatch) => {
     <div className="single-option__panel">
       <div className="single-option__header">
         <h3 className="single-option__title">{option.id}. {option.type}</h3>
+        <button 
+          id={`collapseButton${option.id}`}
+          className="collapse__button"
+          onClick={(e) => dispatch(updateControl({
+            id: option.id,
+            key: "isExpanded",
+            value: !option.isExpanded
+          }))}
+        >
+          {option.isExpanded ? "Collapse" : "Expand"}
+        </button>
         <button 
           title="Remove option"
           onClick={() => {
@@ -68,16 +79,19 @@ const renderOptions = (options, dispatch) => {
           </svg>
         </button>
       </div>
-      <p className="nameFieldTitle">Name:</p>
-      <input 
-        type="text" 
-        name="colorName" 
-        id="colorName" 
-        value={option.name} 
-        onChange={(e) => dispatch(updateControl({id: option.id, key: "name", value: e.target.value}))}
-      />
-      
-      {renderPanel(option)}
+      <div style={{display: option.isExpanded ? "block" : "none"}}>
+        <div style={{display:"flex"}}>
+          <p className="nameFieldTitle">Name:</p>
+          <input 
+            type="text" 
+            name="colorName" 
+            id="colorName" 
+            value={option.name} 
+            onChange={(e) => dispatch(updateControl({id: option.id, key: "name", value: e.target.value}))}
+          />
+        </div>
+        {renderPanel(option)}
+      </div>
     </div>
   ))
 
@@ -91,5 +105,7 @@ const renderPanel = (option) => {
     return <TogglePanel option={option} />;
   } else if (option.type == "animation") {
     return <AnimationPanel option={option} />;
+  } else if (option.type == "grouping") {
+    return <Grouping option={option} />;
   }
 }
