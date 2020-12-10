@@ -18,9 +18,13 @@ export default () => {
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Toggle</div>
                 <div className="control-choice" onClick={() => {
-                    dispatch(createControl("grouping"));
+                    dispatch(createControl("nodeGrouping"));
                     dispatch(toggleOptionChoiceModalDisplay());
-                }}>Grouping</div>
+                }}>Node Grouping</div>
+                <div className="control-choice" onClick={() => {
+                    dispatch(createControl("textureGrouping"));
+                    dispatch(toggleOptionChoiceModalDisplay());
+                }}>Texture Grouping</div>
                 <div className="control-choice" onClick={() => {
                     dispatch(createControl("animation"));
                     dispatch(toggleOptionChoiceModalDisplay());

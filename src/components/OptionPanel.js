@@ -9,7 +9,8 @@ import {
 } from './viewerSlice';
 import ColorPanel from './ColorPanel';
 import TogglePanel from './TogglePanel';
-import Grouping from './GroupingPanel';
+import NodeGrouping from './NodeGroupingPanel';
+import TextureGrouping from './TextureGroupingPanel';
 import AnimationPanel from './AnimationPanel';
 
 export default () => {  
@@ -99,13 +100,15 @@ const renderOptions = (options, dispatch) => {
 }
 
 const renderPanel = (option) => {
-  if (option.type == "color") {
+  if (option.type === "color") {
     return <ColorPanel option={option} />;
-  } else if (option.type == "toggle") {
+  } else if (option.type === "toggle") {
     return <TogglePanel option={option} />;
-  } else if (option.type == "animation") {
+  } else if (option.type === "animation") {
     return <AnimationPanel option={option} />;
-  } else if (option.type == "grouping") {
-    return <Grouping option={option} />;
+  } else if (option.type === "nodeGrouping") {
+    return <NodeGrouping option={option} />;
+  } else if (option.type === "textureGrouping") {
+    return <TextureGrouping option={option} />;
   }
 }

@@ -221,9 +221,9 @@ input[type="text"] {
   display: none; 
   position: fixed;
   z-index: 1;
-  right: 17px;
-  top: 143px;
-  width: 286px;
+  right: 0px;
+  top: 120px;
+  width: 320px;
   overflow: auto;
   border: 1px solid black;
 }
