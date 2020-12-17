@@ -193,6 +193,12 @@ input[type="text"] {
   font-size: 10px;
 }
 
+.surface_configation__container {
+  display: flex;
+  align-items: baseline;
+  flex-direction: column;
+}
+
 #nodeControls {
   overflow: auto;
   background-color: white;

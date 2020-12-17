@@ -12,6 +12,10 @@ const initialState = {
   sketchfabAPI: null,
   sceneGraphIsVisible: {},
   viewMode: "options",
+  surfaceOptionMap: {},
+  surfaceConfigurationMode: false,
+  materialNameSegmentMap: {},
+  surfaceAttributeNameMap: {},
   groupingOptions: [],
 };
 
@@ -73,6 +77,22 @@ export const viewerSlice = createSlice({
         }
       }
     },
+    setSurfaceOptionMap: (state, action) => {
+      console.log("setSurfaceOptionMap -> action.payload")
+      console.log(action.payload)
+      state.surfaceOptionMap = action.payload;
+    },
+    setSurfaceConfigurationMode: (state, action) => {
+      state.surfaceConfigurationMode = action.payload;
+    },
+    setMaterialNameSegmentMap: (state, action) => {
+      console.log("setMaterialNameSegmentMap -> action.payload:")
+      console.log(action.payload)
+      state.materialNameSegmentMap = action.payload;
+    },
+    setSurfaceAttributeNameMap: (state, action) => {
+      state.surfaceAttributeNameMap = action.payload;
+    },
     setGroupingOptions: (state, action) => {
       state.groupingOptions = action.payload;
     },
@@ -99,6 +119,10 @@ export const {
   setSceneGraphIsVisible,
   setViewMode,
   setGroupingOptions,
+  setSurfaceOptionMap,
+  setSurfaceConfigurationMode,
+  setMaterialNameSegmentMap,
+  setSurfaceAttributeNameMap,
   setAllNodesVisible,
 } = viewerSlice.actions;
 
@@ -119,6 +143,14 @@ export const selectSketchfabAPI = state => state.viewer.sketchfabAPI;
 export const selectSceneGraphIsVisible = state => state.viewer.sceneGraphIsVisible;
 
 export const selectViewMode = state => state.viewer.viewMode;
+
+export const selectSurfaceOptionMap = state => state.viewer.surfaceOptionMap;
+
+export const selectSurfaceConfigurationMode = state => state.viewer.surfaceConfigurationMode;
+
+export const selectMaterialNameSegmentMap = state => state.viewer.materialNameSegmentMap;
+
+export const selectSurfaceAttributeNameMap = state => state.viewer.surfaceAttributeNameMap;
 
 export const selectGroupingOptions = state => state.viewer.groupingOptions;
 
@@ -166,17 +198,17 @@ export const initializeViewer = modelId => dispatch => {
 
   pollTime = function() {
         apiSkfb.getCurrentTime(function(err, time) {
-            if (!isSeeking) {
-                var percentage = (100 * time) / duration;
-                timeSlider.value = percentage;
-                                    
-                var timeDisplay = document.getElementById('timeDisplay');
-                timeDisplay.innerHTML = time.toFixed(2);
-                if (time == 2) {
-                  apiSkfb.seekTo(1);
-                }
+              if (!isSeeking) {
+                  var percentage = (100 * time) / duration;
+                  timeSlider.value = percentage;
+                                      
+                  var timeDisplay = document.getElementById('timeDisplay');
+                  timeDisplay.innerHTML = time.toFixed(2);
+                  if (time == 2) {
+                    apiSkfb.seekTo(1);
+                  }
+              requestAnimationFrame(pollTime);
             }
-            requestAnimationFrame(pollTime);
         });
   };
 
@@ -189,9 +221,14 @@ export const initializeViewer = modelId => dispatch => {
           this.config = config;
           var client = new Sketchfab(version, iframe);
           client.init(config.urlid, {
-              ui_infos: 0,
               ui_controls: 0,
               graph_optimizer: 0,
+              ui_animations: 0,
+              ui_watermark: 0,
+              ui_inspector: 0,
+              ui_stop: 0,
+              ui_infos: 0,
+
               success: function onSuccess(api) {
                   var controls = document.getElementById('animationControls');
                   var buttonsText = `
@@ -218,14 +255,13 @@ export const initializeViewer = modelId => dispatch => {
                   controls.innerHTML = buttonsText;
 
                   apiSkfb = api;
-                  dispatch(viewerSlice.actions.setSketchfabAPI(api));//JSON.parse(JSON.stringify(new A()))
+                  dispatch(viewerSlice.actions.setSketchfabAPI(api));
                   api.start();
                   api.addEventListener('viewerready', function () {
                       this.api = api;
                       api.pause();
 
                       api.getAnimations(function(err, animations) {
-                          console.log(animations);          
                           animationsList = animations;
 
                           dispatch(viewerSlice.actions.setAnimations(animations));
@@ -251,8 +287,6 @@ export const initializeViewer = modelId => dispatch => {
                                   duration = animationsList[current_anim][2];
                                   var animationName = document.getElementById('animationName');
                                   animationName.innerHTML = animationsList[current_anim][1];
-                  
-                                  console.log(duration);
                               });
                   
                               document.getElementById('next').addEventListener('click', function() {
@@ -264,8 +298,6 @@ export const initializeViewer = modelId => dispatch => {
                                   duration = animationsList[current_anim][2];
                                   var animationName = document.getElementById('animationName');
                                   animationName.innerHTML = animationsList[current_anim][1];
-                  
-                                  console.log(duration);
                               });
 
                               var animationName = document.getElementById('animationName');
@@ -275,7 +307,6 @@ export const initializeViewer = modelId => dispatch => {
                               duration = animations[current_anim][2];
                               isSeeking = false;
                               timeSlider = document.getElementById('timeSlider');
-                              pollTime();
           
                               timeSlider.addEventListener('change', function() {
                                   isSeeking = false;
@@ -293,10 +324,14 @@ export const initializeViewer = modelId => dispatch => {
                                   api.pause();
                                   api.seekTo(time);
                               });
+                              
+                              pollTime();
                           }
                       });
 
+                      
                       dispatch(viewerSlice.actions.toggleDisableButtons());
+                      
                       api.getSceneGraph(function(err, result) {
                           if (err) {
                               console.log('Error getting nodes');
@@ -307,11 +342,61 @@ export const initializeViewer = modelId => dispatch => {
 
                       api.getMaterialList(function(err, materials) {
                           dispatch(viewerSlice.actions.setMaterials(materials));
-          
-                          for (var i = 0; i < materials.length; i++) {
-                              var m = materials[i];
-                              console.log(m.name, m);
+
+                          let surfaceOptionMap = {};
+                          let materialNameSegmentMap = {};
+                          let surfaceAttributeNameMap = {};
+                          
+                          for (let i=0; i<materials.length; ++i) {
+                            var matches = materials[i].name.match(/[a-zA-Z]*-[A-Z]+-[a-zA-Z]+/g);
+                          
+                            if (matches !== null) {
+                              let materialNameArray = materials[i].name.split("-").filter(string => string != "")
+                              let geometryName = materialNameArray[0];
+                              let materialOptions = materials[i].name.match(/[A-Z]+-/g).map(option => option.replace("-", ""));
+                              let primaryValue = materialOptions[0];
+                              
+                              // generate material name segment map
+                              for (let j=0; j<materialOptions.length; ++j) {
+                                materialNameSegmentMap[materialOptions[j]] = materialOptions[j];
+                              }
+                              console.log("\n\nmaterialNameSegmentMap")
+                              console.log(materialNameSegmentMap)
+
+                              // generate select display
+                              let isNewUniqueGeometry = surfaceOptionMap[geometryName] === undefined;
+                              if (isNewUniqueGeometry) {
+                                surfaceOptionMap[geometryName] = {}
+
+                                surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
+                                surfaceOptionMap[geometryName][materialOptions[0]] = [];
+                                for (let j=1; j<materialOptions.length; ++j) {
+                                  surfaceAttributeNameMap[geometryName].push("Attribute Name")
+                                  surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
+                                }
+                              } else {
+                                let isNewUniquePrimaryValue = surfaceOptionMap[geometryName][primaryValue] === undefined
+                                if (isNewUniquePrimaryValue) {
+                                  surfaceOptionMap[geometryName][primaryValue] = [];
+                                  for (let j=1; j<materialOptions.length; ++j) {
+                                    surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
+                                  }
+                                } else {
+                                  for (let j=1; j<materialOptions.length; ++j) {
+                                    let currentAttributeOptions = surfaceOptionMap[geometryName][primaryValue][j-1];
+                                    let isNewUniqueValue = currentAttributeOptions.indexOf(materialOptions[j]) === -1;
+                                    if (isNewUniqueValue) {
+                                      currentAttributeOptions.push(materialOptions[j])
+                                    }
+                                  }                                  
+                                }
+                              }
+                            }
                           }
+                          
+                          dispatch(viewerSlice.actions.setMaterialNameSegmentMap(materialNameSegmentMap))
+                          dispatch(viewerSlice.actions.setSurfaceOptionMap(surfaceOptionMap))
+                          dispatch(viewerSlice.actions.setSurfaceAttributeNameMap(surfaceAttributeNameMap))
                       });
                   }.bind(this));
               }.bind(this),
@@ -332,13 +417,15 @@ var buildSceneGraph = function(state, children, depth) {
         state.sceneGraph.push({
           name: children[i].type, 
           depth: depth, 
-          instanceID: children[i].instanceID
+          instanceID: children[i].instanceID,
+          materialID: children[i].materialID,
         });
       } else {
         state.sceneGraph.push({
           name: children[i].name, 
           depth: depth, 
-          instanceID: children[i].instanceID
+          instanceID: children[i].instanceID,
+          materialID: children[i].materialID,
         });
       }
     }

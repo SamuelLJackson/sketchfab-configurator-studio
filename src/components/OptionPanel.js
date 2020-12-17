@@ -9,8 +9,8 @@ import {
 } from './viewerSlice';
 import ColorPanel from './ColorPanel';
 import TogglePanel from './TogglePanel';
-import NodeGrouping from './NodeGroupingPanel';
-import TextureGrouping from './TextureGroupingPanel';
+import Grouping from './GroupingPanel';
+import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import AnimationPanel from './AnimationPanel';
 
 export default () => {  
@@ -106,9 +106,9 @@ const renderPanel = (option) => {
     return <TogglePanel option={option} />;
   } else if (option.type === "animation") {
     return <AnimationPanel option={option} />;
-  } else if (option.type === "nodeGrouping") {
-    return <NodeGrouping option={option} />;
-  } else if (option.type === "textureGrouping") {
-    return <TextureGrouping option={option} />;
+  } else if (option.type === "grouping") {
+    return <Grouping option={option} />;
+  } else if (option.type === "surfaceConfiguration") {
+    return <SurfaceConfiguration />;
   }
 }

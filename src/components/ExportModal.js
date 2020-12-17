@@ -5,6 +5,10 @@ import {
 	selectControls, 
 	selectSceneGraph, 
 	selectModelId,
+	selectSurfaceOptionMap,
+	selectSurfaceConfigurationMode,
+	selectMaterialNameSegmentMap,
+	selectSurfaceAttributeNameMap,
 	selectGroupingOptions,
 } from './viewerSlice';
 
@@ -14,7 +18,22 @@ export default () => {
 	const controls = useSelector(selectControls);
 	const modelId = useSelector(selectModelId);
 	const sceneGraph = useSelector(selectSceneGraph);
+	const surfaceOptionMap = useSelector(selectSurfaceOptionMap);
+	const surfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
+	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
+	const surfaceAttributeNameMap = useSelector(selectSurfaceAttributeNameMap)
 	const groupingOptions = useSelector(selectGroupingOptions);
+
+	const configurationMaps = {
+		controls, 
+		modelId, 
+		sceneGraph, 
+		surfaceOptionMap, 
+		surfaceConfigurationMode,
+		materialNameSegmentMap,
+		surfaceAttributeNameMap,
+		groupingOptions,		
+	}
 
     return (
         <div id="modal">
@@ -24,13 +43,25 @@ export default () => {
                 <div className="modal__header">
                     <h1>Add This To Your Page</h1>
                 </div>
-                <textarea id="js-output" value={createJSExport(controls, modelId, sceneGraph, groupingOptions)} />
+                <textarea id="js-output" value={createJSExport(configurationMaps)} />
             </div>
         </div>
     )
 }
 
-const createJSExport = (controls, modelId, sceneGraph, groupingOptions) => (
+const createJSExport = (configurationMaps) => {
+	const {
+		controls, 
+		modelId, 
+		sceneGraph, 
+		surfaceOptionMap, 
+		surfaceConfigurationMode,
+		materialNameSegmentMap,
+		surfaceAttributeNameMap,
+		groupingOptions,	
+	} = configurationMaps;
+
+	return (
 `
 // Sketchfab Viewer API: Change Texture/material
 var version = '1.8.2';
@@ -62,7 +93,14 @@ var currentAnimationEndTime = 0;
 var groupingMode = false;
 var firstGroupingControlIndex = -1;
 
-var getName = function(children, depth) {
+var surfaceConfigurationMode = ${surfaceConfigurationMode};
+var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
+var materialNameSegmentMap = ${JSON.stringify(materialNameSegmentMap)};
+var surfaceAttributeNameMap = ${JSON.stringify(surfaceAttributeNameMap)};
+
+var apiSkfb, pollTime;
+
+var buildNodeNameArray = function(children, depth) {
 	for (let i=0; i<children.length; ++i) {
 		if(children[i].name == undefined) {
 			nameArrays.push({name: children[i].type, depth: depth, instanceID: children[i].instanceID});
@@ -70,7 +108,7 @@ var getName = function(children, depth) {
 			nameArrays.push({name: children[i].name, depth: depth, instanceID: children[i].instanceID});
 		}
 		if (children[i].children != undefined || children[i].children != null) {			
-			getName(children[i].children, depth+1);
+			buildNodeNameArray(children[i].children, depth+1);
 		}
 	}
 }
@@ -79,32 +117,35 @@ var apiSkfb, pollTime;
 
 
 pollTime = function() {
-        apiSkfb.getCurrentTime(function(err, time) {
-			
-			if (currentAnimationEndTime > 0 && time >= currentAnimationEndTime) {
-				apiSkfb.pause();
-			}
-            requestAnimationFrame(pollTime);
-        });
-  };
+	apiSkfb.getCurrentTime(function(err, time) {
+		
+		if (currentAnimationEndTime > 0 && time >= currentAnimationEndTime) {
+			apiSkfb.pause();
+		}
+		requestAnimationFrame(pollTime);
+	});
+};
 
+var globalTestMaterialID = "";
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
 		api.addEventListener('viewerready', function() {
-			pollTime();
 			api.pause();
             api.getSceneGraph(function(err, result) {
                 if (err) {
                     console.log('Error getting nodes');
                     return;
                 }
-				var sceneElements = [];
-				getName(result.children, 0);
+				buildNodeNameArray(result.children, 0);
+				console.log("sceneGraph[0]:")
+				console.log(result);
             });
 			
 			api.getMaterialList(function(err, materials) {
 				myMaterials = materials;
+				
+				configureInitialSurfaces(api)
 			});
 			
 			var animations = [];
@@ -376,7 +417,87 @@ var success = function(api) {
 						api.show(sceneGraph[i].instanceID);											
 					}
 				}		
-			}			
+			}
+			
+			if (animations.length > 0) {
+				pollTime();			
+			}
+			
+			if (surfaceConfigurationMode) {
+				var singleControlContainer = document.createElement("div");
+				for (var i=0; i<Object.keys(surfaceOptionMap).length; ++i) {
+					var surfaceTitle = document.createElement("h4");
+					var surfaceName = Object.keys(surfaceOptionMap)[i]
+					surfaceTitle.innerHTML = surfaceName;
+					singleControlContainer.appendChild(surfaceTitle);
+				
+					// generate primary Select
+					var primarySelectTitle = document.createElement("h5");
+					primarySelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][0];
+					var primarySelect = document.createElement("select");
+					primarySelect.classList.add(surfaceName + "-select");
+					primarySelect.id = surfaceName + 0;
+					var primaryOptions = Object.keys(surfaceOptionMap[surfaceName])
+					var firstPrimaryOption = primaryOptions[0];
+					for (var k=0; k<primaryOptions.length; ++k) {
+						var optionName = materialNameSegmentMap[primaryOptions[k]]
+						var primaryOption = document.createElement("option");
+						primaryOption.value = primaryOptions[k];
+						primaryOption.innerHTML = optionName;
+						primarySelect.appendChild(primaryOption);
+					}							
+
+					primarySelect.addEventListener("change", function(e) {
+						console.log("changing")
+						var currentSurfaceName = e.target.id.match(/[a-zA-Z]+/g)[0];						
+						
+						var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-select")
+	
+						console.log("relevantSelects:")
+						console.log(relevantSelects)
+						for (var j=0; j<surfaceAttributeNameMap[currentSurfaceName].length-1; ++j) {
+							var attributeSelect = relevantSelects[j+1];
+							attributeSelect.innerHTML = "";
+							var attributeOptions = surfaceOptionMap[currentSurfaceName][e.target.value][j]
+							
+							for (var k=0; k<attributeOptions.length; ++k) {
+								var optionName = materialNameSegmentMap[attributeOptions[k]]
+								var attributeOption = document.createElement("option");
+								attributeOption.value = attributeOptions[k];
+								attributeOption.innerHTML = optionName;
+								attributeSelect.appendChild(attributeOption);
+							}							
+						}
+						configureMaterials(currentSurfaceName, api)
+					});
+					singleControlContainer.appendChild(primarySelectTitle);
+					singleControlContainer.appendChild(primarySelect);
+	
+					for (var j=0; j<surfaceAttributeNameMap[surfaceName].length-1; ++j) {
+						var attributeSelectTitle = document.createElement("h5");
+						attributeSelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][0];
+						var attributeSelect = document.createElement("select");
+						attributeSelect.classList.add(surfaceName + "-select");
+						attributeSelect.id = surfaceName + j;
+						var attributeOptions = surfaceOptionMap[surfaceName][firstPrimaryOption][j]
+						for (var k=0; k<attributeOptions.length; ++k) {
+							var optionName = materialNameSegmentMap[attributeOptions[k]]
+							var attributeOption = document.createElement("option");
+							attributeOption.value = attributeOptions[k];
+							attributeOption.innerHTML = optionName;
+							attributeSelect.appendChild(attributeOption);
+						}												
+
+						attributeSelect.addEventListener("change", function(e) {
+							var currentSurfaceName = e.target.id.match(/[a-zA-Z]+/g)[0];
+							configureMaterials(currentSurfaceName, api);
+						});
+						singleControlContainer.appendChild(attributeSelectTitle);
+						singleControlContainer.appendChild(attributeSelect);
+					}
+				}
+				controlsContainer.appendChild(singleControlContainer);
+			}
 		});
 	});
 };
@@ -385,9 +506,106 @@ client.init(uid, {
 	success: success,
 	error: error,
 	autostart: 1,
-	preload: 1
+	preload: 1,
+	ui_animations: 0,
+	ui_watermark: 0,
+	ui_inspector: 0,
+	ui_stop: 0,
+	ui_infos: 0,
 });
+
+var configureMaterials = function(currentSurfaceName, api) {
+							
+	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-select")
+
+	var materialNameString = currentSurfaceName;
+	for (var k=0; k<relevantSelects.length; ++k) {
+		materialNameString += "-" + relevantSelects[k].value;
+	}
+	
+	var newMaterial;
+	for (var k=0; k<myMaterials.length; ++k) {
+		if (myMaterials[k].name.startsWith(materialNameString)) {
+			console.log("found material:")
+			console.log(myMaterials[k]);
+			newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
+		}
+	}
+	
+	if (currentSurfaceName === "Housing") {
+		for (var k=0; k<myMaterials.length; ++k) {
+			if (myMaterials[k].name === "FixtureHousing") {
+				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+				myMaterials[k].reflection = newMaterial.reflection;
+				myMaterials[k].reflector = newMaterial.reflector;
+				myMaterials[k].shadeless = newMaterial.shadeless;
+				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
+			}
+		}								
+	} else {
+		for (var k=0; k<myMaterials.length; ++k) {
+			if (myMaterials[k].name === currentSurfaceName) {
+				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+				myMaterials[k].reflection = newMaterial.reflection;
+				myMaterials[k].reflector = newMaterial.reflector;
+				myMaterials[k].shadeless = newMaterial.shadeless;
+				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
+			}
+		}
+	}
+}
+
+var configureInitialSurfaces = function(api) {
+	
+	var surfaceNames = Object.keys(surfaceOptionMap)				
+	
+	for (var i=0; i<surfaceNames.length; ++i) {
+		var currentSurfaceName = surfaceNames[i];
+
+		var firstPrimaryOption = Object.keys(surfaceOptionMap[currentSurfaceName])[0]
+		var optionsArray = surfaceOptionMap[currentSurfaceName][firstPrimaryOption]
+		var materialNameString = currentSurfaceName + "-" + firstPrimaryOption;
+		
+		
+		for (var k=0; k<optionsArray.length; ++k) {
+			materialNameString += "-" + optionsArray[0];
+		}
+		
+		var newMaterial;
+		for (var k=0; k<myMaterials.length; ++k) {
+			if (myMaterials[k].name.startsWith(materialNameString)) {
+				console.log("found material:")
+				console.log(myMaterials[k]);
+				newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
+			}
+		}
+		
+		if (currentSurfaceName === "Housing") {
+			for (var k=0; k<myMaterials.length; ++k) {
+				if (myMaterials[k].name === "FixtureHousing") {
+					myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+					myMaterials[k].reflection = newMaterial.reflection;
+					myMaterials[k].reflector = newMaterial.reflector;
+					myMaterials[k].shadeless = newMaterial.shadeless;
+					api.setMaterial(myMaterials[k], function() {console.log("material updated")})
+				}
+			}								
+		} else {
+			for (var k=0; k<myMaterials.length; ++k) {
+				if (myMaterials[k].name === currentSurfaceName) {
+					myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+					myMaterials[k].reflection = newMaterial.reflection;
+					myMaterials[k].reflector = newMaterial.reflector;
+					myMaterials[k].shadeless = newMaterial.shadeless;
+					api.setMaterial(myMaterials[k], function() {console.log("material updated")})
+				}
+			}
+		}
+	}			
+}
   
+
 
 `
 )
+}
