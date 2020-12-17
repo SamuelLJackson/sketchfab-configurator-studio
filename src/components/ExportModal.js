@@ -81,6 +81,11 @@ var sceneGraph = ${JSON.stringify(sceneGraph)}
 
 var groupingOptions = ${JSON.stringify(groupingOptions)}
 
+var surfaceConfigurationMode = ${surfaceConfigurationMode};
+var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
+var materialNameSegmentMap = ${JSON.stringify(materialNameSegmentMap)};
+var surfaceAttributeNameMap = ${JSON.stringify(surfaceAttributeNameMap)};
+
 var animationObjects = {};
 
 var controlsContainer = document.getElementById('controls');
@@ -93,10 +98,8 @@ var currentAnimationEndTime = 0;
 var groupingMode = false;
 var firstGroupingControlIndex = -1;
 
-var surfaceConfigurationMode = ${surfaceConfigurationMode};
-var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
-var materialNameSegmentMap = ${JSON.stringify(materialNameSegmentMap)};
-var surfaceAttributeNameMap = ${JSON.stringify(surfaceAttributeNameMap)};
+var appContainer = document.querySelector("div.app")
+appContainer.style.display = "block"
 
 var apiSkfb, pollTime;
 
@@ -144,8 +147,9 @@ var success = function(api) {
 			
 			api.getMaterialList(function(err, materials) {
 				myMaterials = materials;
-				
-				configureInitialSurfaces(api)
+				if (surfaceConfigurationMode) {
+					configureInitialSurfaces(api)
+				}
 			});
 			
 			var animations = [];
@@ -153,6 +157,9 @@ var success = function(api) {
 				if (controls[i].type == "animation") {
 					animations.push(controls[i]);
 					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].startTime), endTime: Number(controls[i].endTime), uid: controls[i].animationUID}; 
+					continue;
+				}
+				if (controls[i].type == "surfaceConfiguration") {
 					continue;
 				}
 				var singleControlContainer = document.createElement("div");
