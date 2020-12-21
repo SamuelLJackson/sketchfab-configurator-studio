@@ -280,15 +280,21 @@ var success = function(api) {
 								}
 								
 								for (var k=0; k<sceneGraph.length; ++k) {
-									var nodeNameArray = sceneGraph[k].name.split("-")
+									var indexContainingCodes = k;
+									if (sceneGraph[k].name === "MatrixTransform") {
+										indexContainingCodes = k - 1;
+									}
+									
+									var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
 									var mainDesignation = nodeNameArray[0];
 									var letterCode = nodeNameArray[1];
 									
-									api.hide(sceneGraph[k].instanceID);
+									api.hide(sceneGraph[indexContainingCodes].instanceID);
 									
 									if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
 											letterCode.includes(primaryLetterCode)) {
-										api.show(sceneGraph[k].instanceID);											
+										
+										api.show(sceneGraph[indexContainingCodes].instanceID);											
 									}
 								}								
 							}
@@ -413,15 +419,21 @@ var success = function(api) {
 				animationSelect.disabled = disableAnimation;
 				
 				for (var i=0; i<sceneGraph.length; ++i) {
-					var nodeNameArray = sceneGraph[i].name.split("-")
+					var indexContainingCodes = i;
+					if (sceneGraph[i].name === "MatrixTransform") {
+						indexContainingCodes = i - 1;
+					}
+					
+					var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
 					var mainDesignation = nodeNameArray[0];
 					var letterCode = nodeNameArray[1];
 					
-					api.hide(sceneGraph[i].instanceID);
+					api.hide(sceneGraph[indexContainingCodes].instanceID);
 					
 					if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
 							letterCode.includes(primaryLetterCode)) {
-						api.show(sceneGraph[i].instanceID);											
+						
+						api.show(sceneGraph[indexContainingCodes].instanceID);											
 					}
 				}		
 			}
@@ -455,13 +467,10 @@ var success = function(api) {
 					}							
 
 					primarySelect.addEventListener("change", function(e) {
-						console.log("changing")
 						var currentSurfaceName = e.target.id.match(/[a-zA-Z]+/g)[0];						
 						
 						var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-select")
-	
-						console.log("relevantSelects:")
-						console.log(relevantSelects)
+
 						for (var j=0; j<surfaceAttributeNameMap[currentSurfaceName].length-1; ++j) {
 							var attributeSelect = relevantSelects[j+1];
 							attributeSelect.innerHTML = "";
@@ -482,7 +491,7 @@ var success = function(api) {
 	
 					for (var j=0; j<surfaceAttributeNameMap[surfaceName].length-1; ++j) {
 						var attributeSelectTitle = document.createElement("h5");
-						attributeSelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][0];
+						attributeSelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][j+1];
 						var attributeSelect = document.createElement("select");
 						attributeSelect.classList.add(surfaceName + "-select");
 						attributeSelect.id = surfaceName + j;
@@ -533,31 +542,17 @@ var configureMaterials = function(currentSurfaceName, api) {
 	var newMaterial;
 	for (var k=0; k<myMaterials.length; ++k) {
 		if (myMaterials[k].name.startsWith(materialNameString)) {
-			console.log("found material:")
-			console.log(myMaterials[k]);
 			newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
 		}
 	}
 	
-	if (currentSurfaceName === "Housing") {
-		for (var k=0; k<myMaterials.length; ++k) {
-			if (myMaterials[k].name === "FixtureHousing") {
-				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-				myMaterials[k].reflection = newMaterial.reflection;
-				myMaterials[k].reflector = newMaterial.reflector;
-				myMaterials[k].shadeless = newMaterial.shadeless;
-				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
-			}
-		}								
-	} else {
-		for (var k=0; k<myMaterials.length; ++k) {
-			if (myMaterials[k].name === currentSurfaceName) {
-				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-				myMaterials[k].reflection = newMaterial.reflection;
-				myMaterials[k].reflector = newMaterial.reflector;
-				myMaterials[k].shadeless = newMaterial.shadeless;
-				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
-			}
+	for (var k=0; k<myMaterials.length; ++k) {
+		if (myMaterials[k].name === currentSurfaceName) {
+			myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+			myMaterials[k].reflection = newMaterial.reflection;
+			myMaterials[k].reflector = newMaterial.reflector;
+			myMaterials[k].shadeless = newMaterial.shadeless;
+			api.setMaterial(myMaterials[k], function() {console.log("material updated")})
 		}
 	}
 }
@@ -581,37 +576,20 @@ var configureInitialSurfaces = function(api) {
 		var newMaterial;
 		for (var k=0; k<myMaterials.length; ++k) {
 			if (myMaterials[k].name.startsWith(materialNameString)) {
-				console.log("found material:")
-				console.log(myMaterials[k]);
 				newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
 			}
 		}
-		
-		if (currentSurfaceName === "Housing") {
-			for (var k=0; k<myMaterials.length; ++k) {
-				if (myMaterials[k].name === "FixtureHousing") {
-					myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-					myMaterials[k].reflection = newMaterial.reflection;
-					myMaterials[k].reflector = newMaterial.reflector;
-					myMaterials[k].shadeless = newMaterial.shadeless;
-					api.setMaterial(myMaterials[k], function() {console.log("material updated")})
-				}
-			}								
-		} else {
-			for (var k=0; k<myMaterials.length; ++k) {
-				if (myMaterials[k].name === currentSurfaceName) {
-					myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-					myMaterials[k].reflection = newMaterial.reflection;
-					myMaterials[k].reflector = newMaterial.reflector;
-					myMaterials[k].shadeless = newMaterial.shadeless;
-					api.setMaterial(myMaterials[k], function() {console.log("material updated")})
-				}
+		for (var k=0; k<myMaterials.length; ++k) {
+			if (myMaterials[k].name === currentSurfaceName) {
+				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+				myMaterials[k].reflection = newMaterial.reflection;
+				myMaterials[k].reflector = newMaterial.reflector;
+				myMaterials[k].shadeless = newMaterial.shadeless;
+				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
 			}
 		}
 	}			
 }
-  
-
 
 `
 )

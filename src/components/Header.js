@@ -1,12 +1,12 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  initializeViewer, 
   selectModelId, 
   setModelId, 
   toggleModalDisplay,
   selectDisableButtons,
 } from './viewerSlice';
+import initializeViewer from './initializeViewer';
 
 export default () => {
   const modelId = useSelector(selectModelId);
