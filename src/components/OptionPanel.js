@@ -12,6 +12,7 @@ import TogglePanel from './TogglePanel';
 import Grouping from './GroupingPanel';
 import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import AnimationPanel from './AnimationPanel';
+import { ReactSortable } from 'react-sortablejs';
 
 export default () => {  
   
@@ -20,18 +21,18 @@ export default () => {
 
   const dispatch = useDispatch();
 
-  return (
-    <div style={{overflow: "auto"}}>
-      <button 
-        className="add-option add__button" 
-        disabled={disableButtons}
-        onClick={() => dispatch(toggleOptionChoiceModalDisplay())}
-      >+ Add Option</button>
-      <div className="single-option__panels__container">
-        {renderOptions(options, dispatch)}
-      </div>
-    </div>
-  )
+const renderPanel = (option) => {
+  if (option.type === "color") {
+    return <ColorPanel option={option} />;
+  } else if (option.type === "toggle") {
+    return <TogglePanel option={option} />;
+  } else if (option.type === "animation") {
+    return <AnimationPanel option={option} />;
+  } else if (option.type === "grouping") {
+    return <Grouping option={option} />;
+  } else if (option.type === "surfaceConfiguration") {
+    return <SurfaceConfiguration />;
+  }
 }
 
 const renderOptions = (options, dispatch) => {
@@ -99,16 +100,18 @@ const renderOptions = (options, dispatch) => {
   return optionsHtml;
 }
 
-const renderPanel = (option) => {
-  if (option.type === "color") {
-    return <ColorPanel option={option} />;
-  } else if (option.type === "toggle") {
-    return <TogglePanel option={option} />;
-  } else if (option.type === "animation") {
-    return <AnimationPanel option={option} />;
-  } else if (option.type === "grouping") {
-    return <Grouping option={option} />;
-  } else if (option.type === "surfaceConfiguration") {
-    return <SurfaceConfiguration />;
-  }
+  return (
+    <div style={{overflow: "auto"}}>
+      <button 
+        className="add-option add__button" 
+        disabled={disableButtons}
+        onClick={() => dispatch(toggleOptionChoiceModalDisplay())}
+      >+ Add Option</button>
+      <div className="single-option__panels__container">
+        <ReactSortable list={options} setList={options => dispatch(setControls(options))}>
+          {renderOptions(options, dispatch)}
+        </ReactSortable>
+      </div>
+    </div>
+  )
 }

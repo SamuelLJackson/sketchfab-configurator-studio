@@ -12,8 +12,6 @@ import {
 } from './viewerSlice';
 
 export default modelId => dispatch => {
-    console.log("\n\ndispatch:")
-    console.log(dispatch)
 
     dispatch(setControls([]));
   
