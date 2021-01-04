@@ -65,7 +65,7 @@ const createJSExport = (configurationMaps) => {
 `
 // Sketchfab Viewer API: Change Texture/material
 var version = '1.8.2';
-var uid = '${modelId}';
+var uid = '${modelId === '' ? 'f373c5bab8e7489fa12db2071471fe4e' : modelId}';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
@@ -163,11 +163,7 @@ var success = function(api) {
 					continue;
 				}
 				var singleControlContainer = document.createElement("div");
-				var controlTitle = document.createElement("h3");
-				controlTitle.innerHTML = controls[i].name;  
-				singleControlContainer.classList.add("single-control-container");					
-				
-				singleControlContainer.appendChild(controlTitle);
+				singleControlContainer.classList.add("single-control-container");		
 											
 				if (controls[i].type == "color") {
 					var resetBut = document.createElement("button");
@@ -312,6 +308,61 @@ var success = function(api) {
 						groupingsContainer.appendChild(groupingDiv);
 					}
 					singleControlContainer.appendChild(groupingsContainer);
+				} else if (controls[i].type === "category") {	
+					var wrapper = document.createElement("div")
+					wrapper.classList.add("custom-select-wrapper")
+					var select = document.createElement("div")
+					select.classList.add("custom-select")
+					var selectTrigger = document.createElement("div")
+					selectTrigger.classList.add("custom-select__trigger")
+					var triggerSpan = document.createElement("span")
+					selectTrigger.appendChild(triggerSpan)
+					var arrow = document.createElement("div")
+					arrow.classList.add("arrow")
+					selectTrigger.appendChild(arrow)
+					
+					var customOptions = document.createElement("div")
+					customOptions.classList.add("custom-options")
+					var selectTitle = document.createElement("h3")
+					selectTitle.classList.add("select-title")
+					selectTitle.textContent = controls[i].name;
+					customOptions.appendChild(selectTitle)
+					
+					select.appendChild(selectTrigger)
+					select.appendChild(customOptions)
+					wrapper.appendChild(select)	
+					
+					for (var j=0; j<Object.keys(controls[i].configuration.designations).length; ++j) {
+						
+						let customOption = document.createElement("span")
+						customOption.classList.add("custom-option");
+						if (j===0) {
+							customOption.classList.add("selected");
+						}
+						var name = Object.keys(controls[i].configuration.designations)[j];
+						var humanReadable = Object.values(controls[i].configuration.designations)[j]
+						customOption.setAttribute("data-value", name)
+						customOption.id = name + "-" + j;
+						customOption.innerHTML = name + " - " + humanReadable;
+						customOption.addEventListener('click', function() {
+							if (!this.classList.contains('selected')) {
+								var nameCode = this.id.split("-")[0]
+								
+								this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+								this.classList.add('selected');
+								this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+							}
+						})
+						
+						customOptions.appendChild(customOption)
+					}
+					triggerSpan.textContent = name;
+
+					wrapper.addEventListener('click', function() {
+						this.querySelector('.custom-select').classList.toggle('open');
+					})
+					
+					singleControlContainer.appendChild(wrapper);		
 				}
 				controlsContainer.appendChild(singleControlContainer);
 			}

@@ -132,6 +132,7 @@ button, input {
 .control-choice-content {
   background-color: white;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .single-option__panel {

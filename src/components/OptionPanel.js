@@ -10,6 +10,7 @@ import {
 import ColorPanel from './ColorPanel';
 import TogglePanel from './TogglePanel';
 import Grouping from './GroupingPanel';
+import ElementCategoryPanel from './ElementCategoryPanel'
 import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import AnimationPanel from './AnimationPanel';
 import { ReactSortable } from 'react-sortablejs';
@@ -30,6 +31,8 @@ const renderPanel = (option) => {
     return <AnimationPanel option={option} />;
   } else if (option.type === "grouping") {
     return <Grouping option={option} />;
+  } else if (option.type === "category") {
+    return <ElementCategoryPanel option ={option} />;
   } else if (option.type === "surfaceConfiguration") {
     return <SurfaceConfiguration />;
   }
@@ -38,7 +41,7 @@ const renderPanel = (option) => {
 const renderOptions = (options, dispatch) => {
   
   let optionsHtml = options.map((option, index, array) => (
-    <div className="single-option__panel">
+    <div className="single-option__panel" key={`option-${index}`}>
       <div className="single-option__header">
         <h3 className="single-option__title">{option.id}. {option.type}</h3>
         <button 
@@ -101,7 +104,7 @@ const renderOptions = (options, dispatch) => {
 }
 
   return (
-    <div style={{overflow: "auto"}}>
+    <div style={{overflow: "auto", display: "flex", flexDirection: "column"}}>
       <button 
         className="add-option add__button" 
         disabled={disableButtons}

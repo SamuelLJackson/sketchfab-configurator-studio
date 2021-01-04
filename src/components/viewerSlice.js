@@ -1,5 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-//import Sketchfab from '@sketchfab/viewer-api';
 
 const initialState = {
   modelId: '',
@@ -56,6 +55,11 @@ export const viewerSlice = createSlice({
         entity: {instanceID: 0},
         animationUID: "none",
         groupMembers: [],
+        configuration: {
+          isPrimary: false,
+          designations: {},
+          allowsAnimation: [],          
+        },
         isExpanded: true,
       });
     },

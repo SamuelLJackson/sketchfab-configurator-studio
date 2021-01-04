@@ -22,6 +22,10 @@ export default () => {
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Node Grouping</div>
                 <div className="control-choice" onClick={() => {
+                    dispatch(createControl("category"));
+                    dispatch(toggleOptionChoiceModalDisplay());
+                }}>Element Category</div>
+                <div className="control-choice" onClick={() => {
                     dispatch(createControl("surfaceConfiguration"));
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Surface Configuration</div>
