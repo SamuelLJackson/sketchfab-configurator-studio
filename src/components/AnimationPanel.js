@@ -20,8 +20,14 @@ export default props => {
           <label>Animation:</label>
           <select 
             name="animationSelect"
-            value={option.animationUID}
-            onChange={(e) => dispatch(updateControl({id: option.id, key: "animationUID", value: e.target.value}))}
+            value={option.configuration.animationUID}
+            onChange={(e) => {
+              let newConfiguration = {
+                ...option.configuration,
+                animationUID: e.target.value,
+              }
+              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
+            }}
           >
             {animationOptions}
           </select>
@@ -31,8 +37,14 @@ export default props => {
           <input 
             type="number" 
             name="start"
-            value={option.startTime} 
-            onChange={(e) => dispatch(updateControl({id: option.id, key: "startTime", value: e.target.value}))}
+            value={option.configuration.startTime} 
+            onChange={(e) => {
+              let newConfiguration = {
+                ...option.configuration,
+                startTime: e.target.value,
+              }
+              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))}
+            }
           />
         </div>
         <div>
@@ -40,8 +52,14 @@ export default props => {
           <input 
             type="number" 
             name="end"
-            value={option.endTime} 
-            onChange={(e) => dispatch(updateControl({id: option.id, key: "endTime", value: e.target.value}))}
+            value={option.configuration.endTime} 
+            onChange={(e) => {
+              let newConfiguration = {
+                ...option.configuration,
+                endTime: e.target.value,
+              }
+              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))}
+            }
           />
         </div>
       </div>

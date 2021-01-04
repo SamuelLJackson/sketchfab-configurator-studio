@@ -47,19 +47,30 @@ export const viewerSlice = createSlice({
     createControl: (state, action) => {
       state.latestControlId = state.latestControlId += 1;
       let id = state.latestControlId;
+      let defaultConfiguration = {}
+      if(action.payload === "animation") {
+        defaultConfiguration = {
+          animationUID: "none",
+          startTime: "0",
+          endTime: "0",
+        }
+      }
+
+      if(action.payload === "category") {
+        defaultConfiguration = {
+          isPrimary: false,
+          designations: {},
+          allowsAnimation: [],  
+        }
+      }
       state.controls.unshift({
         type: action.payload,
         id: id,
         name: action.payload,
         entityIndex: "none",
         entity: {instanceID: 0},
-        animationUID: "none",
         groupMembers: [],
-        configuration: {
-          isPrimary: false,
-          designations: {},
-          allowsAnimation: [],          
-        },
+        configuration: defaultConfiguration,
         isExpanded: true,
       });
     },
