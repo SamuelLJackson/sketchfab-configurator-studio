@@ -155,8 +155,27 @@ var success = function(api) {
 			var animations = [];
 			for (let i = 0; i < controls.length; ++i) {	
 				if (controls[i].type == "animation") {
+					var animationControls = document.getElementById("animation-controls")
+					animationControls.style.display = "block";
+					
+					var animationButtonContainer = document.getElementById("animation-buttons")
+					var animationButton = document.createElement("button")
+					animationButton.id = "animation-" + controls[i].id
+					animationButton.textContent = controls[i].name;
+					animationButton.addEventListener('click', function(e) {
+						var animationId = e.target.id.split("-")[1]
+						var startTime = animationObjects[animationId].startTime;
+						var endTime = animationObjects[animationId].endTime;
+						var animationUID = animationObjects[animationId].uid;
+						currentAnimationEndTime = endTime;
+						api.setCurrentAnimationByUID(animationUID);
+						api.seekTo(startTime);
+						api.play();
+					})
+					animationButtonContainer.appendChild(animationButton)
+					
 					animations.push(controls[i]);
-					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].startTime), endTime: Number(controls[i].endTime), uid: controls[i].animationUID}; 
+					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].configuration.startTime), endTime: Number(controls[i].configuration.endTime), uid: controls[i].configuration.animationUID}; 
 					continue;
 				}
 				if (controls[i].type == "surfaceConfiguration") {
@@ -321,6 +340,8 @@ var success = function(api) {
 					if (controls[i].configuration.isPrimary == true) {
 						triggerSpan.id = "primaryCategory";
 					}
+					triggerSpan.textContent = Object.keys(controls[i].configuration.designations)[0]
+					triggerSpan.id = "triggerSpan-" + i;
 					selectTrigger.appendChild(triggerSpan)
 					var arrow = document.createElement("div")
 					arrow.classList.add("arrow")
@@ -347,58 +368,37 @@ var success = function(api) {
 						var name = Object.keys(controls[i].configuration.designations)[j];
 						var humanReadable = Object.values(controls[i].configuration.designations)[j]
 						customOption.setAttribute("data-value", name)
-						customOption.id = name + "-" + j;
+						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function() {
+							var nameCode = this.id.split("-")[0]
 							if (!this.classList.contains('selected')) {
-								var nameCode = this.id.split("-")[0]
 								
 								this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
 								this.classList.add('selected');
 								this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
 							}
+							
+							var indexI = this.id.split("-")[2]
+							var animationButtons = document.querySelectorAll("#animation-buttons button")
+							for (var k=0; k<animationButtons.length; ++k) {
+								animationButtons[k].disabled = true;
+							}
+							if(controls[indexI].configuration.allowsAnimation.indexOf(nameCode) != -1) {
+								for (var k=0; k<animationButtons.length; ++k) {
+									animationButtons[k].disabled = false;
+								}
+							}	
 						})
 						
 						customOptions.appendChild(customOption)
 					}
-					triggerSpan.textContent = name;
 
 					wrapper.addEventListener('click', function() {
-						this.querySelector('.custom-select').classList.toggle('open');		
-						/* animation disabling control
-						var startButton = document.getElementById("startButton");
-						var pauseButton = document.getElementById("pauseButton");
-						var animationSelect = document.getElementById("animationSelect");
-						*/
+						this.querySelector('.custom-select').classList.toggle('open');	
 						
 						var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
 						var selectedPrefixes = [];
-						
-						/* animation disabling control
-						var allGroupingSelects = document.getElementsByClassName("grouping__select");
-						var selectedPrefixes = [];
-						var disableAnimation = false;
-						*/
-						/*
-						for (var j=0; j<allCategorySelects.length; ++j) {
-							selectedPrefixes.push(allCategorySelects[j].textContent);
-
-							var indexes = allGroupingSelects[k].id.split("select")
-							var indexI = indexes[0];
-							var indexJ = indexes[1];
-							
-							
-							if(controls[indexI].groupings[indexJ].allowsAnimation.indexOf(allGroupingSelects[k].value) == -1) {
-								disableAnimation = true;
-							}
-													
-						}
-						*/
-						/*
-						startButton.disabled = disableAnimation || animationSelect.value == "none";
-						pauseButton.disabled = disableAnimation || animationSelect.value == "none";
-						animationSelect.disabled = disableAnimation;
-						*/					
 						var primaryLetterCode = "";
 						
 						for (var j=0; j<allCategorySelects.length; ++j) {
@@ -433,75 +433,6 @@ var success = function(api) {
 				controlsContainer.appendChild(singleControlContainer);
 			}
 			
-			if (animations.length > 0) {
-				var singleControlContainer = document.createElement("div");
-				var controlTitle = document.createElement("h3");
-				controlTitle.innerHTML = "Animations";  
-				singleControlContainer.classList.add("single-control-container");					
-				
-				singleControlContainer.appendChild(controlTitle);
-				
-				var startBut = document.createElement("button");
-				startBut.id = "startButton";
-				startBut.innerHTML = "Start";
-				startBut.disabled = true;
-				startBut.onclick = function() {
-				    var startTime = animationObjects[currentAnimation].startTime;
-					api.seekTo(startTime);
-					api.play();
-				}
-				var pauseBut = document.createElement("button");
-				pauseBut.id = "pauseButton";
-				pauseBut.innerHTML = "Pause";
-				pauseBut.disabled = true;
-				pauseBut.onclick = function() {    
-					api.pause();
-				}
-				
-				singleControlContainer.appendChild(startBut);
-				singleControlContainer.appendChild(pauseBut);
-				
-				var animationSelect = document.createElement("select");
-				animationSelect.id = "animationSelect";
-				
-				var tempOption = document.createElement("option");
-				tempOption.value = "none";
-				tempOption.innerHTML = "Select An Animation";
-				
-				animationSelect.appendChild(tempOption);
-				for (let i=0; i<animations.length; ++i) {
-					if (i==0) {
-						currentAnimation = animations[i].id;
-					}
-					var tempOption = document.createElement("option");
-					tempOption.value = animations[i].id;
-					tempOption.innerHTML = animations[i].name;
-					
-					animationSelect.appendChild(tempOption);
-				}				
-				
-				animationSelect.addEventListener("change", function(e) {    
-					if (e.target.value != "none") {
-						startBut.disabled = false;
-						pauseBut.disabled = false;     
-						var animationUID = animationObjects[e.target.value].uid;
-						api.setCurrentAnimationByUID(animationUID);
-						var startTime = animationObjects[e.target.value].startTime;
-						currentAnimation = e.target.value;
-						api.seekTo(startTime);
-						var endTime = animationObjects[currentAnimation].endTime;
-						currentAnimationEndTime = endTime;
-						
-					} else {						
-						startBut.disabled = true;
-						pauseBut.disabled = true;
-					}
-				});
-				
-				singleControlContainer.appendChild(animationSelect);
-				controlsContainer.appendChild(singleControlContainer);
-			}
-			
 			//show/hide to OG specification
 			if (isElementCategoryControlled) {
 				window.addEventListener('click', function(e) {
@@ -511,31 +442,12 @@ var success = function(api) {
 						}
 					}
 				});
-				/* animation controls
-				var startButton = document.getElementById("startButton");
-				var pauseButton = document.getElementById("pauseButton");
-				var animationSelect = document.getElementById("animationSelect");
-				*/
+				
 				var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
 				var selectedPrefixes = [];
 				
-				/* animation disabling control
-				var allGroupingSelects = document.getElementsByClassName("grouping__select");
-				var selectedPrefixes = [];
-				var disableAnimation = false;
-				*/
 				for (var i=0; i<allCategorySelects.length; ++i) {
 					selectedPrefixes.push(allCategorySelects[i].textContent);
-					/* animation disabling control
-					var indexes = allGroupingSelects[k].id.split("select")
-					var indexI = indexes[0];
-					var indexJ = indexes[1];
-					
-					
-					if(controls[indexI].groupings[indexJ].allowsAnimation.indexOf(allGroupingSelects[k].value) == -1) {
-						disableAnimation = true;
-					}
-					*/							
 				}
 									
 				var primaryLetterCode = "";
@@ -544,6 +456,18 @@ var success = function(api) {
 					selectedPrefixes.push(allCategorySelects[i].value);
 					if(allCategorySelects[i].id === "primaryCategory") {
 						primaryLetterCode = groupingOptions[i].capitalLetter;
+					}
+					var controlIndex = allCategorySelects[i].id.split("-")[1]
+					var nameCode = allCategorySelects.textContent;
+					var animationButtons = document.querySelectorAll("#animation-buttons button")
+					for (var k=0; k<animationButtons.length; ++k) {
+						animationButtons[k].disabled = true;
+					}
+					if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) != -1) {
+						for (var k=0; k<animationButtons.length; ++k) {
+							animationButtons[k].disabled = false;
+						}
+						
 					}
 				}
 				
@@ -719,6 +643,9 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
+
+
+
 
 
 
