@@ -97,6 +97,9 @@ var currentAnimation = "";
 var currentAnimationEndTime = 0;
 var isElementCategoryControlled = false;
 var firstGroupingControlIndex = -1;
+var appContainer = document.querySelector(".app")
+
+var appWidth = Number(appContainer.style.width.replace("px",""))
 
 var appContainer = document.querySelector("div.app")
 appContainer.style.display = "block"
@@ -332,6 +335,7 @@ var success = function(api) {
 					
 					var wrapper = document.createElement("div")
 					wrapper.classList.add("custom-select-wrapper")
+					wrapper.style.width = (appWidth/4) + "px";
 					var select = document.createElement("div")
 					select.classList.add("custom-select")
 					var selectTrigger = document.createElement("div")
@@ -403,8 +407,12 @@ var success = function(api) {
 						
 						for (var j=0; j<allCategorySelects.length; ++j) {
 							selectedPrefixes.push(allCategorySelects[j].textContent);
-							if(allCategorySelects[j].id === "primaryCategory") {
-								primaryLetterCode = groupingOptions[j].capitalLetter;
+							if(allCategorySelects[j].className.includes("primary")) {
+								for (var k=0; k<groupingOptions.length; ++k) {
+									if (groupingOptions[k].designation === allCategorySelects[j].textContent) {
+										primaryLetterCode = groupingOptions[k].capitalLetter;
+									}
+								}
 							}
 						}
 						
@@ -417,7 +425,6 @@ var success = function(api) {
 							var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
 							var mainDesignation = nodeNameArray[0];
 							var letterCode = nodeNameArray[1];
-							
 							api.hide(sceneGraph[indexContainingCodes].instanceID);
 							
 							if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
@@ -466,8 +473,7 @@ var success = function(api) {
 					if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) != -1) {
 						for (var k=0; k<animationButtons.length; ++k) {
 							animationButtons[k].disabled = false;
-						}
-						
+						}						
 					}
 				}
 				
@@ -496,76 +502,197 @@ var success = function(api) {
 			}
 			
 			if (surfaceConfigurationMode) {
-				var singleControlContainer = document.createElement("div");
-				for (var i=0; i<Object.keys(surfaceOptionMap).length; ++i) {
-					var surfaceTitle = document.createElement("h4");
-					var surfaceName = Object.keys(surfaceOptionMap)[i]
-					surfaceTitle.innerHTML = surfaceName;
-					singleControlContainer.appendChild(surfaceTitle);
 				
-					// generate primary Select
-					var primarySelectTitle = document.createElement("h5");
-					primarySelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][0];
-					var primarySelect = document.createElement("select");
-					primarySelect.classList.add(surfaceName + "-select");
-					primarySelect.id = surfaceName + 0;
-					var primaryOptions = Object.keys(surfaceOptionMap[surfaceName])
-					var firstPrimaryOption = primaryOptions[0];
-					for (var j=0; j<primaryOptions.length; ++j) {
-						var optionName = materialNameSegmentMap[primaryOptions[j]]
-						var primaryOption = document.createElement("option");
-						primaryOption.value = primaryOptions[j];
-						primaryOption.innerHTML = optionName;
-						primarySelect.appendChild(primaryOption);
-					}							
-
-					primarySelect.addEventListener("change", function(e) {
-						var currentSurfaceName = e.target.id.match(/[a-zA-Z]+/g)[0];						
-						
-						var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-select")
-
-						for (var j=0; j<surfaceAttributeNameMap[currentSurfaceName].length-1; ++j) {
-							var attributeSelect = relevantSelects[j+1];
-							attributeSelect.innerHTML = "";
-							var attributeOptions = surfaceOptionMap[currentSurfaceName][e.target.value][j]
+				for (var i=0; i<Object.keys(surfaceOptionMap).length; ++i) {
+					var surfaceName = Object.keys(surfaceOptionMap)[i]
+					console.log(surfaceName)
+					var primaryInitialValue = Object.keys(surfaceOptionMap[surfaceName])[0]
+					console.log(primaryInitialValue)
+					
+					for (j=0; j<surfaceAttributeNameMap[surfaceName].length; ++j) {
+						if(j === 0) {
+							var singleControlContainer = document.createElement("div");
+							singleControlContainer.classList.add("single-control-container")
 							
-							for (var k=0; k<attributeOptions.length; ++k) {
-								var optionName = materialNameSegmentMap[attributeOptions[k]]
-								var attributeOption = document.createElement("option");
-								attributeOption.value = attributeOptions[k];
-								attributeOption.innerHTML = optionName;
-								attributeSelect.appendChild(attributeOption);
-							}							
-						}
-						configureMaterials(currentSurfaceName, api)
-					});
-					singleControlContainer.appendChild(primarySelectTitle);
-					singleControlContainer.appendChild(primarySelect);
-	
-					for (var j=0; j<surfaceAttributeNameMap[surfaceName].length-1; ++j) {
-						var attributeSelectTitle = document.createElement("h5");
-						attributeSelectTitle.innerHTML = surfaceAttributeNameMap[surfaceName][j+1];
-						var attributeSelect = document.createElement("select");
-						attributeSelect.classList.add(surfaceName + "-select");
-						attributeSelect.id = surfaceName + j;
-						var attributeOptions = surfaceOptionMap[surfaceName][firstPrimaryOption][j]
-						for (var k=0; k<attributeOptions.length; ++k) {
-							var optionName = materialNameSegmentMap[attributeOptions[k]]
-							var attributeOption = document.createElement("option");
-							attributeOption.value = attributeOptions[k];
-							attributeOption.innerHTML = optionName;
-							attributeSelect.appendChild(attributeOption);
-						}												
+							console.log(surfaceAttributeNameMap[surfaceName][j])
+							var wrapper = document.createElement("div")
+							wrapper.classList.add("custom-select-wrapper")
+							/* set wrapper width */
+							wrapper.style.width = (appWidth/4) + "px";
+							
+							var select = document.createElement("div")
+							select.classList.add("custom-select")
+							var selectTrigger = document.createElement("div")
+							selectTrigger.classList.add("custom-select__trigger")
+							var triggerSpan = document.createElement("span")
+							triggerSpan.id = "primarySurfaceElement-" + surfaceName;
+							triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
+							triggerSpan.id = "triggerSpan-" + i;
+							triggerSpan.classList.add(surfaceName + "-triggerSpan")
+							selectTrigger.appendChild(triggerSpan)
+							var arrow = document.createElement("div")
+							arrow.classList.add("arrow")
+							selectTrigger.appendChild(arrow)
+							
+							var customOptions = document.createElement("div")
+							customOptions.classList.add("custom-options")
+							var selectTitle = document.createElement("h3")
+							selectTitle.classList.add("select-title")
+							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
+							customOptions.appendChild(selectTitle)
+							
+							select.appendChild(selectTrigger)
+							select.appendChild(customOptions)
+							wrapper.appendChild(select)	
+							for (var k=0; k<Object.keys(surfaceOptionMap[surfaceName]).length; ++k) {
+								
+								let customOption = document.createElement("span")
+								customOption.classList.add("custom-option");
+								if (k===0) {
+									customOption.classList.add("selected");
+								}
+								var name = Object.keys(surfaceOptionMap[surfaceName])[k]
+								var humanReadable = materialNameSegmentMap[name];
+								customOption.setAttribute("data-value", name)
+								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
+								customOption.innerHTML = name + " - " + humanReadable;
+								customOption.addEventListener('click', function() {
+									var nameCode = this.id.split("-")[0]
+									var currentSurfaceName = this.id.split("-")[1]
+									var surfaceElementIndex = this.id.split("-")[2]
+									if (!this.classList.contains('selected')) {										
+										this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+										this.classList.add('selected');
+										this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+									}
+									var subPrimaryOptionArrays = document.getElementsByClassName(currentSurfaceName + "-options")
+									var primaryAttributeName = surfaceAttributeNameMap[currentSurfaceName][0]
+									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
+										var subPrimaryOptionElementName = subPrimaryOptionArrays[l].id.split("-")[1]
+										subPrimaryOptionArrays[l].innerHTML = "";
+										console.log("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
+										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
+										triggerSpan.textContent = surfaceOptionMap[currentSurfaceName][nameCode][l][0]
+										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
+											
+											let customOption = document.createElement("span")
+											customOption.classList.add("custom-option");
+											if (m===0) {
+												customOption.classList.add("selected");
+											}
+											var name = surfaceOptionMap[currentSurfaceName][nameCode][l][m]
+											var humanReadable = materialNameSegmentMap[name];
+											customOption.setAttribute("data-value", name)
+											customOption.id = name + "-" + m + "-" + l;
+											customOption.innerHTML = name + " - " + humanReadable;
+											customOption.addEventListener('click', function() {
+												var nameCode = this.id.split("-")[0]
+												
+												if (!this.classList.contains('selected')) {
+													
+													this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+													this.classList.add('selected');
+													this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+												}
+											})
+											
+											subPrimaryOptionArrays[l].appendChild(customOption)
+										}
+										
+									}
+									
+									configureMaterials(currentSurfaceName, primaryAttributeName, api)
+								})
+								
+								
+								customOptions.appendChild(customOption)
+							}
 
-						attributeSelect.addEventListener("change", function(e) {
-							var currentSurfaceName = e.target.id.match(/[a-zA-Z]+/g)[0];
-							configureMaterials(currentSurfaceName, api);
-						});
-						singleControlContainer.appendChild(attributeSelectTitle);
-						singleControlContainer.appendChild(attributeSelect);
+							wrapper.addEventListener('click', function() {
+								this.querySelector('.custom-select').classList.toggle('open');	
+								
+								var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+								var selectedPrefixes = [];
+								var primaryLetterCode = "";
+							})
+							singleControlContainer.appendChild(wrapper);		
+							controlsContainer.appendChild(singleControlContainer);
+						} else {
+							var singleControlContainer = document.createElement("div");
+							singleControlContainer.classList.add("single-control-container")
+							
+							console.log(surfaceAttributeNameMap[surfaceName][j])
+							var wrapper = document.createElement("div")
+							wrapper.classList.add("custom-select-wrapper")
+							wrapper.style.width = (appWidth/4) + "px";
+							var select = document.createElement("div")
+							select.classList.add("custom-select")
+							var selectTrigger = document.createElement("div")
+							selectTrigger.classList.add("custom-select__trigger")
+							var triggerSpan = document.createElement("span")
+							triggerSpan.textContent = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][0]
+							triggerSpan.id = "triggerSpan-" + surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-" + j;
+							triggerSpan.classList.add(surfaceName + "-triggerSpan")
+							selectTrigger.appendChild(triggerSpan)
+							var arrow = document.createElement("div")
+							arrow.classList.add("arrow")
+							selectTrigger.appendChild(arrow)
+							
+							var customOptions = document.createElement("div")
+							customOptions.id = surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-options";
+							customOptions.classList.add("custom-options")
+							customOptions.classList.add(surfaceName + "-options")
+							var selectTitle = document.createElement("h3")
+							selectTitle.classList.add("select-title")
+							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
+							customOptions.appendChild(selectTitle)
+							
+							select.appendChild(selectTrigger)
+							select.appendChild(customOptions)
+							wrapper.appendChild(select)	
+								
+							for (var k=0; k<surfaceOptionMap[surfaceName][primaryInitialValue][j-1].length; ++k) {
+								
+								let customOption = document.createElement("span")
+								customOption.classList.add("custom-option");
+								if (k===0) {
+									customOption.classList.add("selected");
+								}
+								var name = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][k]
+								var humanReadable = materialNameSegmentMap[name];
+								customOption.setAttribute("data-value", name)
+								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
+								customOption.innerHTML = name + " - " + humanReadable;
+								customOption.addEventListener('click', function() {
+									var nameCode = this.id.split("-")[0]
+									
+									if (!this.classList.contains('selected')) {
+										
+										this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+										this.classList.add('selected');
+										this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+									}
+									var currentSurfaceName = this.id.split("-")[1]
+									var attributeIndex = this.id.split("-")[2]
+									var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
+									configureMaterials(currentSurfaceName, attributeName, api)
+								})
+								
+								customOptions.appendChild(customOption)
+							}
+							
+							wrapper.addEventListener('click', function() {
+								this.querySelector('.custom-select').classList.toggle('open');	
+								
+								var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+								var selectedPrefixes = [];
+								var primaryLetterCode = "";		
+							})
+							singleControlContainer.appendChild(wrapper);		
+							controlsContainer.appendChild(singleControlContainer);
+						}
 					}
 				}
-				controlsContainer.appendChild(singleControlContainer);
 			}
 		});
 	});
@@ -583,13 +710,15 @@ client.init(uid, {
 	ui_infos: 0,
 });
 
-var configureMaterials = function(currentSurfaceName, api) {
+var configureMaterials = function(currentSurfaceName, currentElementName, api) {
 							
-	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-select")
-
+	//get array of selected values
+	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-triggerSpan")
+	console.log(relevantSelects)
+	//build name string via accessing selected values
 	var materialNameString = currentSurfaceName;
 	for (var k=0; k<relevantSelects.length; ++k) {
-		materialNameString += "-" + relevantSelects[k].value;
+		materialNameString += "-" + relevantSelects[k].textContent;
 	}
 	
 	var newMaterial;

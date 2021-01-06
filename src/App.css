@@ -235,6 +235,10 @@ input[type="text"] {
   border: 1px solid black;
 }
 
+#controls {
+  flex-wrap: wrap;
+}
+
 #viewerControls {
   display: flex;
 }

@@ -50,12 +50,11 @@ export default props => {
                   onChange={() => {                 
                     let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
                     let newConfiguration = {};
-                    console.log("\n\n\nnewDesignations:")
-                    console.log(newDesignations)
-                    console.log("\n\n\n")
+                    
                     if (newDesignations[groupingOption.designation] != undefined) {
                       delete newDesignations[groupingOption.designation];
                       newConfiguration = {
+                        isPrimary: option.configuration.isPrimary,
                         designations: newDesignations,
                         allowsAnimation: option.configuration.allowsAnimation.filter(a => a != groupingOption.designation)
                       }
@@ -64,6 +63,7 @@ export default props => {
                       let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
                       newDisablesAnimation.push(groupingOption.designation)
                       newConfiguration = {
+                        isPrimary: option.configuration.isPrimary,
                         designations: newDesignations,
                         allowsAnimation: newDisablesAnimation,
                       }
