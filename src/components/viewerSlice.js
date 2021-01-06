@@ -69,7 +69,6 @@ export const viewerSlice = createSlice({
         name: action.payload,
         entityIndex: "none",
         entity: {instanceID: 0},
-        groupMembers: [],
         configuration: defaultConfiguration,
         isExpanded: true,
       });

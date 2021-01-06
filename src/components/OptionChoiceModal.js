@@ -18,10 +18,6 @@ export default () => {
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Toggle</div>
                 <div className="control-choice" onClick={() => {
-                    dispatch(createControl("grouping"));
-                    dispatch(toggleOptionChoiceModalDisplay());
-                }}>Node Grouping</div>
-                <div className="control-choice" onClick={() => {
                     dispatch(createControl("category"));
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Element Category</div>

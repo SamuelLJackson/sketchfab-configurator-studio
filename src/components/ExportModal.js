@@ -240,97 +240,7 @@ var success = function(api) {
 						}
 					}
 					singleControlContainer.appendChild(toggleBut);
-				} else if (controls[i].type == "grouping") {			
-					isElementCategoryControlled = true;
-					if (firstGroupingControlIndex == -1) {
-						firstGroupingControlIndex = i;
-					}
-					var groupingsContainer = document.createElement("div");
-					groupingsContainer.style.display = "flex";
-					
-					for (var j=0; j<controls[i].groupings.length; ++j) {
-						var groupingDiv = document.createElement("div");
-						var groupingTitle = document.createElement("label");
-						groupingTitle.style.marginRight = "10px";
-						groupingTitle.style.marginLeft = "10px";
-						
-						groupingTitle.innerHTML = controls[i].groupings[j].name + ":";
-						var groupingSelect = document.createElement("select");
-						groupingSelect.classList.add("grouping__select");
-						groupingSelect.id = i + "select" + j;
-						
-						groupingSelect.addEventListener("change", function(e) {
-							var startButton = document.getElementById("startButton");
-							var pauseButton = document.getElementById("pauseButton");
-							var animationSelect = document.getElementById("animationSelect");
-							
-							var allGroupingSelects = document.getElementsByClassName("grouping__select");
-							var allDesignationsSet = true;
-							var selectedPrefixes = [];
-							var disableAnimation = false;
-							for (var k=0; k<allGroupingSelects.length; ++k) {
-								if (allGroupingSelects[k].value == "none") {
-									allDesignationsSet = false;
-								}
-								selectedPrefixes.push(allGroupingSelects[k].value);
-								var indexes = allGroupingSelects[k].id.split("select")
-								var indexI = indexes[0];
-								var indexJ = indexes[1];
-								
-								if(controls[indexI].groupings[indexJ].allowsAnimation.indexOf(allGroupingSelects[k].value) == -1) {
-									disableAnimation = true;
-								}								
-							}
-							startButton.disabled = disableAnimation || animationSelect.value == "none";
-							pauseButton.disabled = disableAnimation || animationSelect.value == "none";
-							animationSelect.disabled = disableAnimation;
-							
-							if (allDesignationsSet) {								
-								var primaryLetterCode = "";
-								for (var k=0; k<groupingOptions.length; ++k) {
-									if (groupingOptions[k].designation == allGroupingSelects[0].value) {
-										primaryLetterCode = groupingOptions[k].capitalLetter;
-									}
-								}
-								
-								for (var k=0; k<allGroupingSelects.length; ++k) {
-									selectedPrefixes.push(allGroupingSelects[k].value);
-								}
-								
-								for (var k=0; k<sceneGraph.length; ++k) {
-									var indexContainingCodes = k;
-									if (sceneGraph[k].name === "MatrixTransform") {
-										indexContainingCodes = k - 1;
-									}
-									
-									var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
-									var mainDesignation = nodeNameArray[0];
-									var letterCode = nodeNameArray[1];
-									
-									api.hide(sceneGraph[indexContainingCodes].instanceID);
-									
-									if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
-											letterCode.includes(primaryLetterCode)) {
-										
-										api.show(sceneGraph[indexContainingCodes].instanceID);											
-									}
-								}								
-							}
-						});
-						
-						for (var k=0; k<controls[i].groupings[j].designations.length; ++k) {
-							var designationOption = document.createElement("option");
-							designationOption.value = controls[i].groupings[j].designations[k];
-							designationOption.innerHTML = controls[i].groupings[j].designations[k];
-							groupingSelect.appendChild(designationOption);
-						}						
-						
-						groupingDiv.appendChild(groupingTitle);
-						groupingDiv.appendChild(groupingSelect);
-						groupingsContainer.appendChild(groupingDiv);
-					}
-					singleControlContainer.appendChild(groupingsContainer);
-				} else if (controls[i].type === "category") {	
+				} else if (controls[i].type === "category") {		
 					isElementCategoryControlled = true;
 					
 					var wrapper = document.createElement("div")
@@ -349,6 +259,7 @@ var success = function(api) {
 					if(controls[i].configuration.isPrimary) {
 						triggerSpan.classList.add("primary")
 					}
+					triggerSpan.classList.add("category")
 					selectTrigger.appendChild(triggerSpan)
 					var arrow = document.createElement("div")
 					arrow.classList.add("arrow")
@@ -384,18 +295,27 @@ var success = function(api) {
 								this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
 								this.classList.add('selected');
 								this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+							}							
+				
+							var allCategorySelects = document.querySelectorAll(".custom-select__trigger span.category")
+							var allowAnimations = true;
+							for (var k=0; k<allCategorySelects.length; ++k) {
+								var controlIndex = allCategorySelects[k].id.split("-")[1]
+								var nameCode = allCategorySelects[k].textContent;
+								
+								if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
+									allowAnimations = false;
+								}
 							}
-							
-							var indexI = this.id.split("-")[2]
 							var animationButtons = document.querySelectorAll("#animation-buttons button")
 							for (var k=0; k<animationButtons.length; ++k) {
 								animationButtons[k].disabled = true;
 							}
-							if(controls[indexI].configuration.allowsAnimation.indexOf(nameCode) != -1) {
+							if (allowAnimations) {
 								for (var k=0; k<animationButtons.length; ++k) {
 									animationButtons[k].disabled = false;
-								}
-							}	
+								}						
+							}
 						})
 						
 						customOptions.appendChild(customOption)
@@ -461,23 +381,26 @@ var success = function(api) {
 				}
 									
 				var primaryLetterCode = "";
-				
+				var allowAnimations = true;
 				for (var i=0; i<allCategorySelects.length; ++i) {
 					selectedPrefixes.push(allCategorySelects[i].value);
 					if(allCategorySelects[i].id === "primaryCategory") {
 						primaryLetterCode = groupingOptions[i].capitalLetter;
 					}
 					var controlIndex = allCategorySelects[i].id.split("-")[1]
-					var nameCode = allCategorySelects.textContent;
-					var animationButtons = document.querySelectorAll("#animation-buttons button")
+					var nameCode = allCategorySelects[i].textContent;
+					if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
+						allowAnimations = false;
+					}
+				}
+				var animationButtons = document.querySelectorAll("#animation-buttons button")
+				for (var k=0; k<animationButtons.length; ++k) {
+					animationButtons[k].disabled = true;
+				}
+				if (allowAnimations) {
 					for (var k=0; k<animationButtons.length; ++k) {
-						animationButtons[k].disabled = true;
-					}
-					if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) != -1) {
-						for (var k=0; k<animationButtons.length; ++k) {
-							animationButtons[k].disabled = false;
-						}						
-					}
+						animationButtons[k].disabled = false;
+					}						
 				}
 				
 				for (var i=0; i<sceneGraph.length; ++i) {

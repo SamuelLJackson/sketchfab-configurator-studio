@@ -9,7 +9,6 @@ import {
 } from './viewerSlice';
 import ColorPanel from './ColorPanel';
 import TogglePanel from './TogglePanel';
-import Grouping from './GroupingPanel';
 import ElementCategoryPanel from './ElementCategoryPanel'
 import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import AnimationPanel from './AnimationPanel';
@@ -29,8 +28,6 @@ const renderPanel = (option) => {
     return <TogglePanel option={option} />;
   } else if (option.type === "animation") {
     return <AnimationPanel option={option} />;
-  } else if (option.type === "grouping") {
-    return <Grouping option={option} />;
   } else if (option.type === "category") {
     return <ElementCategoryPanel option ={option} />;
   } else if (option.type === "surfaceConfiguration") {
