@@ -505,16 +505,13 @@ var success = function(api) {
 				
 				for (var i=0; i<Object.keys(surfaceOptionMap).length; ++i) {
 					var surfaceName = Object.keys(surfaceOptionMap)[i]
-					console.log(surfaceName)
 					var primaryInitialValue = Object.keys(surfaceOptionMap[surfaceName])[0]
-					console.log(primaryInitialValue)
 					
 					for (j=0; j<surfaceAttributeNameMap[surfaceName].length; ++j) {
-						if(j === 0) {
+						if(j === 0) { //primary attributes
 							var singleControlContainer = document.createElement("div");
 							singleControlContainer.classList.add("single-control-container")
 							
-							console.log(surfaceAttributeNameMap[surfaceName][j])
 							var wrapper = document.createElement("div")
 							wrapper.classList.add("custom-select-wrapper")
 							/* set wrapper width */
@@ -529,6 +526,8 @@ var success = function(api) {
 							triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
 							triggerSpan.id = "triggerSpan-" + i;
 							triggerSpan.classList.add(surfaceName + "-triggerSpan")
+							triggerSpan.classList.add("primary")
+							
 							selectTrigger.appendChild(triggerSpan)
 							var arrow = document.createElement("div")
 							arrow.classList.add("arrow")
@@ -570,7 +569,7 @@ var success = function(api) {
 									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
 										var subPrimaryOptionElementName = subPrimaryOptionArrays[l].id.split("-")[1]
 										subPrimaryOptionArrays[l].innerHTML = "";
-										console.log("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
+										
 										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
 										triggerSpan.textContent = surfaceOptionMap[currentSurfaceName][nameCode][l][0]
 										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
@@ -583,7 +582,7 @@ var success = function(api) {
 											var name = surfaceOptionMap[currentSurfaceName][nameCode][l][m]
 											var humanReadable = materialNameSegmentMap[name];
 											customOption.setAttribute("data-value", name)
-											customOption.id = name + "-" + m + "-" + l;
+											customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
 											customOption.innerHTML = name + " - " + humanReadable;
 											customOption.addEventListener('click', function() {
 												var nameCode = this.id.split("-")[0]
@@ -594,6 +593,10 @@ var success = function(api) {
 													this.classList.add('selected');
 													this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
 												}
+												var currentSurfaceName = this.id.split("-")[1]
+												var attributeIndex = this.id.split("-")[2]
+												var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
+												configureMaterials(currentSurfaceName, attributeName, api)
 											})
 											
 											subPrimaryOptionArrays[l].appendChild(customOption)
@@ -621,7 +624,6 @@ var success = function(api) {
 							var singleControlContainer = document.createElement("div");
 							singleControlContainer.classList.add("single-control-container")
 							
-							console.log(surfaceAttributeNameMap[surfaceName][j])
 							var wrapper = document.createElement("div")
 							wrapper.classList.add("custom-select-wrapper")
 							wrapper.style.width = (appWidth/4) + "px";
@@ -711,10 +713,9 @@ client.init(uid, {
 });
 
 var configureMaterials = function(currentSurfaceName, currentElementName, api) {
-							
 	//get array of selected values
 	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-triggerSpan")
-	console.log(relevantSelects)
+	
 	//build name string via accessing selected values
 	var materialNameString = currentSurfaceName;
 	for (var k=0; k<relevantSelects.length; ++k) {
@@ -752,7 +753,7 @@ var configureInitialSurfaces = function(api) {
 		
 		
 		for (var k=0; k<optionsArray.length; ++k) {
-			materialNameString += "-" + optionsArray[0];
+			materialNameString += "-" + optionsArray[k][0];
 		}
 		
 		var newMaterial;
@@ -772,9 +773,6 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
-
-
-
 
 
 
