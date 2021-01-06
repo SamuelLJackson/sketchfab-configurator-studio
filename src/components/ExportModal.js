@@ -88,7 +88,7 @@ var surfaceAttributeNameMap = ${JSON.stringify(surfaceAttributeNameMap)};
 
 var animationObjects = {};
 
-var controlsContainer = document.getElementById('controls');
+var controlsContainer = document.getElementById('sketchfab-lower-controls');
 var toggleableItems = {};
 var toggleableGroups = {};
 
@@ -97,11 +97,9 @@ var currentAnimation = "";
 var currentAnimationEndTime = 0;
 var isElementCategoryControlled = false;
 var firstGroupingControlIndex = -1;
-var appContainer = document.querySelector(".app")
+var appContainer = document.querySelector("div.sketchfab__container")
 
 var appWidth = Number(appContainer.style.width.replace("px",""))
-
-var appContainer = document.querySelector("div.app")
 appContainer.style.display = "block"
 
 var apiSkfb, pollTime;
@@ -158,10 +156,10 @@ var success = function(api) {
 			var animations = [];
 			for (let i = 0; i < controls.length; ++i) {	
 				if (controls[i].type == "animation") {
-					var animationControls = document.getElementById("animation-controls")
+					var animationControls = document.getElementById("sketchfab-animation-controls")
 					animationControls.style.display = "block";
 					
-					var animationButtonContainer = document.getElementById("animation-buttons")
+					var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
 					var animationButton = document.createElement("button")
 					animationButton.id = "animation-" + controls[i].id
 					animationButton.textContent = controls[i].name;
@@ -185,7 +183,7 @@ var success = function(api) {
 					continue;
 				}
 				var singleControlContainer = document.createElement("div");
-				singleControlContainer.classList.add("single-control-container");		
+				singleControlContainer.classList.add("sketchfab-single-control-container");		
 											
 				if (controls[i].type == "color") {
 					var resetBut = document.createElement("button");
@@ -240,16 +238,16 @@ var success = function(api) {
 						}
 					}
 					singleControlContainer.appendChild(toggleBut);
-				} else if (controls[i].type === "category") {		
+				} else if (controls[i].type === "category") {	
 					isElementCategoryControlled = true;
 					
 					var wrapper = document.createElement("div")
-					wrapper.classList.add("custom-select-wrapper")
+					wrapper.classList.add("sketchfab-select-wrapper")
 					wrapper.style.width = (appWidth/4) + "px";
 					var select = document.createElement("div")
-					select.classList.add("custom-select")
+					select.classList.add("sketchfab-select")
 					var selectTrigger = document.createElement("div")
-					selectTrigger.classList.add("custom-select__trigger")
+					selectTrigger.classList.add("sketchfab-select__trigger")
 					var triggerSpan = document.createElement("span")
 					if (controls[i].configuration.isPrimary == true) {
 						triggerSpan.id = "primaryCategory";
@@ -257,18 +255,18 @@ var success = function(api) {
 					triggerSpan.textContent = Object.keys(controls[i].configuration.designations)[0]
 					triggerSpan.id = "triggerSpan-" + i;
 					if(controls[i].configuration.isPrimary) {
-						triggerSpan.classList.add("primary")
+						triggerSpan.classList.add("sketchfab-category")
 					}
-					triggerSpan.classList.add("category")
+					triggerSpan.classList.add("sketchfab-category")
 					selectTrigger.appendChild(triggerSpan)
 					var arrow = document.createElement("div")
-					arrow.classList.add("arrow")
+					arrow.classList.add("sketchfab-select-arrow")
 					selectTrigger.appendChild(arrow)
 					
 					var customOptions = document.createElement("div")
-					customOptions.classList.add("custom-options")
+					customOptions.classList.add("sketchfab-options")
 					var selectTitle = document.createElement("h3")
-					selectTitle.classList.add("select-title")
+					selectTitle.classList.add("sketchfab-title")
 					selectTitle.textContent = controls[i].name;
 					customOptions.appendChild(selectTitle)
 					
@@ -279,7 +277,7 @@ var success = function(api) {
 					for (var j=0; j<Object.keys(controls[i].configuration.designations).length; ++j) {
 						
 						let customOption = document.createElement("span")
-						customOption.classList.add("custom-option");
+						customOption.classList.add("sketchfab-option");
 						if (j===0) {
 							customOption.classList.add("selected");
 						}
@@ -292,12 +290,12 @@ var success = function(api) {
 							var nameCode = this.id.split("-")[0]
 							if (!this.classList.contains('selected')) {
 								
-								this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+								this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
 								this.classList.add('selected');
-								this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+								this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 							}							
 				
-							var allCategorySelects = document.querySelectorAll(".custom-select__trigger span.category")
+							var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.category")
 							var allowAnimations = true;
 							for (var k=0; k<allCategorySelects.length; ++k) {
 								var controlIndex = allCategorySelects[k].id.split("-")[1]
@@ -307,7 +305,7 @@ var success = function(api) {
 									allowAnimations = false;
 								}
 							}
-							var animationButtons = document.querySelectorAll("#animation-buttons button")
+							var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
 							for (var k=0; k<animationButtons.length; ++k) {
 								animationButtons[k].disabled = true;
 							}
@@ -322,15 +320,15 @@ var success = function(api) {
 					}
 
 					wrapper.addEventListener('click', function() {
-						this.querySelector('.custom-select').classList.toggle('open');	
+						this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
 						
-						var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+						var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
 						var selectedPrefixes = [];
 						var primaryLetterCode = "";
 						
 						for (var j=0; j<allCategorySelects.length; ++j) {
 							selectedPrefixes.push(allCategorySelects[j].textContent);
-							if(allCategorySelects[j].className.includes("primary")) {
+							if(allCategorySelects[j].className.includes("sketchfab-category")) {
 								for (var k=0; k<groupingOptions.length; ++k) {
 									if (groupingOptions[k].designation === allCategorySelects[j].textContent) {
 										primaryLetterCode = groupingOptions[k].capitalLetter;
@@ -366,14 +364,14 @@ var success = function(api) {
 			//show/hide to OG specification
 			if (isElementCategoryControlled) {
 				window.addEventListener('click', function(e) {
-					for (const select of document.querySelectorAll('.custom-select')) {
+					for (const select of document.querySelectorAll('.sketchfab-select')) {
 						if (!select.contains(e.target)) {
-							select.classList.remove('open');
+							select.classList.remove('sketchfab-select-open');
 						}
 					}
 				});
 				
-				var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+				var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
 				var selectedPrefixes = [];
 				
 				for (var i=0; i<allCategorySelects.length; ++i) {
@@ -393,7 +391,7 @@ var success = function(api) {
 						allowAnimations = false;
 					}
 				}
-				var animationButtons = document.querySelectorAll("#animation-buttons button")
+				var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
 				for (var k=0; k<animationButtons.length; ++k) {
 					animationButtons[k].disabled = true;
 				}
@@ -436,17 +434,17 @@ var success = function(api) {
 					for (j=0; j<surfaceAttributeNameMap[surfaceName].length; ++j) {
 						if(j === 0) {
 							var singleControlContainer = document.createElement("div");
-							singleControlContainer.classList.add("single-control-container")
+							singleControlContainer.classList.add("sketchfab-single-control-container")
 							
 							var wrapper = document.createElement("div")
-							wrapper.classList.add("custom-select-wrapper")
+							wrapper.classList.add("sketchfab-select-wrapper")
 							/* set wrapper width */
 							wrapper.style.width = (appWidth/4) + "px";
 							
 							var select = document.createElement("div")
-							select.classList.add("custom-select")
+							select.classList.add("sketchfab-select")
 							var selectTrigger = document.createElement("div")
-							selectTrigger.classList.add("custom-select__trigger")
+							selectTrigger.classList.add("sketchfab-select__trigger")
 							var triggerSpan = document.createElement("span")
 							triggerSpan.id = "primarySurfaceElement-" + surfaceName;
 							triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
@@ -454,13 +452,13 @@ var success = function(api) {
 							triggerSpan.classList.add(surfaceName + "-triggerSpan")
 							selectTrigger.appendChild(triggerSpan)
 							var arrow = document.createElement("div")
-							arrow.classList.add("arrow")
+							arrow.classList.add("sketchfab-select-arrow")
 							selectTrigger.appendChild(arrow)
 							
 							var customOptions = document.createElement("div")
-							customOptions.classList.add("custom-options")
+							customOptions.classList.add("sketchfab-options")
 							var selectTitle = document.createElement("h3")
-							selectTitle.classList.add("select-title")
+							selectTitle.classList.add("sketchfab-title")
 							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
 							customOptions.appendChild(selectTitle)
 							
@@ -470,7 +468,7 @@ var success = function(api) {
 							for (var k=0; k<Object.keys(surfaceOptionMap[surfaceName]).length; ++k) {
 								
 								let customOption = document.createElement("span")
-								customOption.classList.add("custom-option");
+								customOption.classList.add("sketchfab-option");
 								if (k===0) {
 									customOption.classList.add("selected");
 								}
@@ -484,9 +482,9 @@ var success = function(api) {
 									var currentSurfaceName = this.id.split("-")[1]
 									var surfaceElementIndex = this.id.split("-")[2]
 									if (!this.classList.contains('selected')) {										
-										this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+										this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
 										this.classList.add('selected');
-										this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+										this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 									}
 									var subPrimaryOptionArrays = document.getElementsByClassName(currentSurfaceName + "-options")
 									var primaryAttributeName = surfaceAttributeNameMap[currentSurfaceName][0]
@@ -498,7 +496,7 @@ var success = function(api) {
 										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
 											
 											let customOption = document.createElement("span")
-											customOption.classList.add("custom-option");
+											customOption.classList.add("sketchfab-option");
 											if (m===0) {
 												customOption.classList.add("selected");
 											}
@@ -512,9 +510,9 @@ var success = function(api) {
 												
 												if (!this.classList.contains('selected')) {
 													
-													this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+													this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
 													this.classList.add('selected');
-													this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+													this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 												}
 												var currentSurfaceName = this.id.split("-")[1]
 												var attributeIndex = this.id.split("-")[2]
@@ -534,9 +532,9 @@ var success = function(api) {
 							}
 
 							wrapper.addEventListener('click', function() {
-								this.querySelector('.custom-select').classList.toggle('open');	
+								this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
 								
-								var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+								var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
 								var selectedPrefixes = [];
 								var primaryLetterCode = "";
 							})
@@ -544,30 +542,30 @@ var success = function(api) {
 							controlsContainer.appendChild(singleControlContainer);
 						} else {
 							var singleControlContainer = document.createElement("div");
-							singleControlContainer.classList.add("single-control-container")
+							singleControlContainer.classList.add("sketchfab-single-control-container")
 							
 							var wrapper = document.createElement("div")
-							wrapper.classList.add("custom-select-wrapper")
+							wrapper.classList.add("sketchfab-select-wrapper")
 							wrapper.style.width = (appWidth/4) + "px";
 							var select = document.createElement("div")
-							select.classList.add("custom-select")
+							select.classList.add("sketchfab-select")
 							var selectTrigger = document.createElement("div")
-							selectTrigger.classList.add("custom-select__trigger")
+							selectTrigger.classList.add("sketchfab-select__trigger")
 							var triggerSpan = document.createElement("span")
 							triggerSpan.textContent = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][0]
 							triggerSpan.id = "triggerSpan-" + surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-" + j;
 							triggerSpan.classList.add(surfaceName + "-triggerSpan")
 							selectTrigger.appendChild(triggerSpan)
 							var arrow = document.createElement("div")
-							arrow.classList.add("arrow")
+							arrow.classList.add("sketchfab-select-arrow")
 							selectTrigger.appendChild(arrow)
 							
 							var customOptions = document.createElement("div")
 							customOptions.id = surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-options";
-							customOptions.classList.add("custom-options")
+							customOptions.classList.add("sketchfab-options")
 							customOptions.classList.add(surfaceName + "-options")
 							var selectTitle = document.createElement("h3")
-							selectTitle.classList.add("select-title")
+							selectTitle.classList.add("sketchfab-title")
 							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
 							customOptions.appendChild(selectTitle)
 							
@@ -578,7 +576,7 @@ var success = function(api) {
 							for (var k=0; k<surfaceOptionMap[surfaceName][primaryInitialValue][j-1].length; ++k) {
 								
 								let customOption = document.createElement("span")
-								customOption.classList.add("custom-option");
+								customOption.classList.add("sketchfab-option");
 								if (k===0) {
 									customOption.classList.add("selected");
 								}
@@ -592,9 +590,9 @@ var success = function(api) {
 									
 									if (!this.classList.contains('selected')) {
 										
-										this.parentNode.querySelector('.custom-option.selected').classList.remove('selected');
+										this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
 										this.classList.add('selected');
-										this.closest('.custom-select').querySelector('.custom-select__trigger span').textContent = nameCode;								
+										this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 									}
 									var currentSurfaceName = this.id.split("-")[1]
 									var attributeIndex = this.id.split("-")[2]
@@ -606,9 +604,9 @@ var success = function(api) {
 							}
 							
 							wrapper.addEventListener('click', function() {
-								this.querySelector('.custom-select').classList.toggle('open');	
+								this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
 								
-								var allCategorySelects = document.querySelectorAll(".custom-select__trigger span")
+								var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
 								var selectedPrefixes = [];
 								var primaryLetterCode = "";		
 							})
@@ -696,9 +694,6 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
-
-
-
 
 
 `
