@@ -346,6 +346,9 @@ var success = function(api) {
 					}
 					triggerSpan.textContent = Object.keys(controls[i].configuration.designations)[0]
 					triggerSpan.id = "triggerSpan-" + i;
+					if(controls[i].configuration.isPrimary) {
+						triggerSpan.classList.add("primary")
+					}
 					selectTrigger.appendChild(triggerSpan)
 					var arrow = document.createElement("div")
 					arrow.classList.add("arrow")
@@ -508,7 +511,7 @@ var success = function(api) {
 					var primaryInitialValue = Object.keys(surfaceOptionMap[surfaceName])[0]
 					
 					for (j=0; j<surfaceAttributeNameMap[surfaceName].length; ++j) {
-						if(j === 0) { //primary attributes
+						if(j === 0) {
 							var singleControlContainer = document.createElement("div");
 							singleControlContainer.classList.add("single-control-container")
 							
@@ -526,8 +529,6 @@ var success = function(api) {
 							triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
 							triggerSpan.id = "triggerSpan-" + i;
 							triggerSpan.classList.add(surfaceName + "-triggerSpan")
-							triggerSpan.classList.add("primary")
-							
 							selectTrigger.appendChild(triggerSpan)
 							var arrow = document.createElement("div")
 							arrow.classList.add("arrow")
@@ -569,7 +570,6 @@ var success = function(api) {
 									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
 										var subPrimaryOptionElementName = subPrimaryOptionArrays[l].id.split("-")[1]
 										subPrimaryOptionArrays[l].innerHTML = "";
-										
 										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
 										triggerSpan.textContent = surfaceOptionMap[currentSurfaceName][nameCode][l][0]
 										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
@@ -600,8 +600,7 @@ var success = function(api) {
 											})
 											
 											subPrimaryOptionArrays[l].appendChild(customOption)
-										}
-										
+										}										
 									}
 									
 									configureMaterials(currentSurfaceName, primaryAttributeName, api)
@@ -713,6 +712,7 @@ client.init(uid, {
 });
 
 var configureMaterials = function(currentSurfaceName, currentElementName, api) {
+							
 	//get array of selected values
 	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-triggerSpan")
 	
@@ -773,6 +773,8 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
+
+
 
 
 
