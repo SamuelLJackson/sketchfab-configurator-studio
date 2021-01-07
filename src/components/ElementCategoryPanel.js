@@ -77,6 +77,7 @@ export default props => {
               <input 
                 type="checkbox" 
                 checked={option.configuration.allowsAnimation.includes(groupingOption.designation)}
+                disabled={option.configuration.designations[groupingOption.designation] == undefined}
                 onChange={() => {
                   let newConfiguration = {};                  
                   let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
