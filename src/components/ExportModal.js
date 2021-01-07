@@ -309,10 +309,6 @@ var success = function(api) {
 							for (var k=0; k<allCategorySelects.length; ++k) {
 								var controlIndex = allCategorySelects[k].id.split("-")[1]
 								var nameCode = allCategorySelects[k].textContent;
-								console.log("nameCode:")
-								console.log(nameCode)
-								console.log("controls[controlIndex].configuration.allowsAnimation:")
-								console.log(controls[controlIndex].configuration.allowsAnimation)
 								if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
 									allowAnimations = false;
 								}
@@ -340,8 +336,8 @@ var success = function(api) {
 						var primaryLetterCode = "";
 						
 						for (var j=0; j<allCategorySelects.length; ++j) {
-							selectedPrefixes.push(allCategorySelects[j].textContent);
 							if(allCategorySelects[j].className.includes("sketchfab-category")) {
+								selectedPrefixes.push(allCategorySelects[j].textContent);
 								for (var k=0; k<groupingOptions.length; ++k) {
 									if (groupingOptions[k].designation === allCategorySelects[j].textContent) {
 										primaryLetterCode = groupingOptions[k].capitalLetter;
@@ -363,6 +359,9 @@ var success = function(api) {
 							
 							if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
 									letterCode.includes(primaryLetterCode)) {
+								if(mainDesignation == "SGBCC") {
+									api.show(650)										
+								}
 								
 								api.show(sceneGraph[indexContainingCodes].instanceID);											
 							}
