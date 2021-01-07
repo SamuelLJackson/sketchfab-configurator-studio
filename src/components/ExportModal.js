@@ -165,9 +165,17 @@ var success = function(api) {
 					animationButton.textContent = controls[i].name;
 					animationButton.addEventListener('click', function(e) {
 						var animationId = e.target.id.split("-")[1]
+						console.log("animationId:")
+						console.log(animationId)
 						var startTime = animationObjects[animationId].startTime;
 						var endTime = animationObjects[animationId].endTime;
 						var animationUID = animationObjects[animationId].uid;
+						console.log("startTime:")
+						console.log(startTime)
+						console.log("endTime:")
+						console.log(endTime)
+						console.log("animationUID:")
+						console.log(animationUID)
 						currentAnimationEndTime = endTime;
 						api.setCurrentAnimationByUID(animationUID);
 						api.seekTo(startTime);
@@ -287,6 +295,7 @@ var success = function(api) {
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function() {
+							console.log("BEGIN: customOption.click")
 							var nameCode = this.id.split("-")[0]
 							if (!this.classList.contains('selected')) {
 								
@@ -295,12 +304,15 @@ var success = function(api) {
 								this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 							}							
 				
-							var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.category")
+							var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
 							var allowAnimations = true;
 							for (var k=0; k<allCategorySelects.length; ++k) {
 								var controlIndex = allCategorySelects[k].id.split("-")[1]
 								var nameCode = allCategorySelects[k].textContent;
-								
+								console.log("nameCode:")
+								console.log(nameCode)
+								console.log("controls[controlIndex].configuration.allowsAnimation:")
+								console.log(controls[controlIndex].configuration.allowsAnimation)
 								if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
 									allowAnimations = false;
 								}
@@ -314,6 +326,7 @@ var success = function(api) {
 									animationButtons[k].disabled = false;
 								}						
 							}
+							console.log("END: customOption.click")
 						})
 						
 						customOptions.appendChild(customOption)
@@ -371,7 +384,7 @@ var success = function(api) {
 					}
 				});
 				
-				var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
+				var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
 				var selectedPrefixes = [];
 				
 				for (var i=0; i<allCategorySelects.length; ++i) {
@@ -694,6 +707,8 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
+
+
 
 
 `
