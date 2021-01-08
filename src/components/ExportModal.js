@@ -165,17 +165,11 @@ var success = function(api) {
 					animationButton.textContent = controls[i].name;
 					animationButton.addEventListener('click', function(e) {
 						var animationId = e.target.id.split("-")[1]
-						console.log("animationId:")
-						console.log(animationId)
+						
 						var startTime = animationObjects[animationId].startTime;
 						var endTime = animationObjects[animationId].endTime;
 						var animationUID = animationObjects[animationId].uid;
-						console.log("startTime:")
-						console.log(startTime)
-						console.log("endTime:")
-						console.log(endTime)
-						console.log("animationUID:")
-						console.log(animationUID)
+						
 						currentAnimationEndTime = endTime;
 						api.setCurrentAnimationByUID(animationUID);
 						api.seekTo(startTime);
@@ -295,7 +289,6 @@ var success = function(api) {
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function() {
-							console.log("BEGIN: customOption.click")
 							var nameCode = this.id.split("-")[0]
 							if (!this.classList.contains('selected')) {
 								
@@ -322,7 +315,6 @@ var success = function(api) {
 									animationButtons[k].disabled = false;
 								}						
 							}
-							console.log("END: customOption.click")
 						})
 						
 						customOptions.appendChild(customOption)
@@ -356,12 +348,14 @@ var success = function(api) {
 							var mainDesignation = nodeNameArray[0];
 							var letterCode = nodeNameArray[1];
 							api.hide(sceneGraph[indexContainingCodes].instanceID);
+							if(selectedPrefixes.includes("SGBCC")) {
+								if (sceneGraph[indexContainingCodes].name == "JBXCC-C-Housing") {
+									api.show(sceneGraph[indexContainingCodes].instanceID)										
+								}									
+							}
 							
 							if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
 									letterCode.includes(primaryLetterCode)) {
-								if(mainDesignation == "SGBCC") {
-									api.show(650)										
-								}
 								
 								api.show(sceneGraph[indexContainingCodes].instanceID);											
 							}
@@ -503,6 +497,12 @@ var success = function(api) {
 									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
 										var subPrimaryOptionElementName = subPrimaryOptionArrays[l].id.split("-")[1]
 										subPrimaryOptionArrays[l].innerHTML = "";
+										
+										var selectTitle = document.createElement("h3")
+										selectTitle.classList.add("sketchfab-title")
+										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][j];
+										subPrimaryOptionArrays[l].appendChild(selectTitle)
+										
 										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
 										triggerSpan.textContent = surfaceOptionMap[currentSurfaceName][nameCode][l][0]
 										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
@@ -515,7 +515,7 @@ var success = function(api) {
 											var name = surfaceOptionMap[currentSurfaceName][nameCode][l][m]
 											var humanReadable = materialNameSegmentMap[name];
 											customOption.setAttribute("data-value", name)
-											customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
+											customOption.id = name + "-" + currentSurfaceName + "-" + j + "-" + k + "-" + i;
 											customOption.innerHTML = name + " - " + humanReadable;
 											customOption.addEventListener('click', function() {
 												var nameCode = this.id.split("-")[0]
@@ -529,6 +529,7 @@ var success = function(api) {
 												var currentSurfaceName = this.id.split("-")[1]
 												var attributeIndex = this.id.split("-")[2]
 												var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
+
 												configureMaterials(currentSurfaceName, attributeName, api)
 											})
 											
@@ -651,6 +652,7 @@ var configureMaterials = function(currentSurfaceName, currentElementName, api) {
 	
 	//build name string via accessing selected values
 	var materialNameString = currentSurfaceName;
+	
 	for (var k=0; k<relevantSelects.length; ++k) {
 		materialNameString += "-" + relevantSelects[k].textContent;
 	}
@@ -706,6 +708,7 @@ var configureInitialSurfaces = function(api) {
 		}
 	}			
 }
+
 
 
 
