@@ -315,6 +315,20 @@ var success = function(api) {
 									animationButtons[k].disabled = false;
 								}						
 							}
+							
+							var ico2ptrcOption = document.querySelector("[data-value='ICO2PTRC']")
+							var jbxccOption = document.querySelector("[data-value='JBXCC']")
+							if (nameCode === "JBXCC") {
+								ico2ptrcOption.style.display = "none";
+							} else {
+								ico2ptrcOption.style.display = "block";
+							}
+							
+							if (nameCode === "ICO2PTRC") {
+								jbxccOption.style.display = "none";
+							} else {
+								jbxccOption.style.display = "block";
+							}
 						})
 						
 						customOptions.appendChild(customOption)
