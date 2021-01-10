@@ -58,7 +58,6 @@ export const viewerSlice = createSlice({
 
       if(action.payload === "category") {
         defaultConfiguration = {
-          isPrimary: false,
           designations: {},
           allowsAnimation: [],  
         }

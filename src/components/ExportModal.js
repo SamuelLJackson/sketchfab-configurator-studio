@@ -65,7 +65,7 @@ const createJSExport = (configurationMaps) => {
 `
 // Sketchfab Viewer API: Change Texture/material
 var version = '1.8.2';
-var uid = '${modelId === '' ? 'f373c5bab8e7489fa12db2071471fe4e' : modelId}';
+var uid = '${modelId === '' ? '66e17931c39e4042ac5aa8764bee7f5a' : modelId}';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
@@ -117,9 +117,6 @@ var buildNodeNameArray = function(children, depth) {
 	}
 }
 
-var apiSkfb, pollTime;
-
-
 pollTime = function() {
 	apiSkfb.getCurrentTime(function(err, time) {
 		
@@ -135,6 +132,10 @@ var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
 		api.addEventListener('viewerready', function() {
+			categorySelectObserver = new MutationObserver(function(mutationsList, categorySelectObserver) {
+				setVisibleNodes(api);
+			});
+			
 			api.pause();
             api.getSceneGraph(function(err, result) {
                 if (err) {
@@ -243,38 +244,8 @@ var success = function(api) {
 				} else if (controls[i].type === "category") {	
 					isElementCategoryControlled = true;
 					
-					var wrapper = document.createElement("div")
-					wrapper.classList.add("sketchfab-select-wrapper")
-					wrapper.style.width = (appWidth/4) + "px";
-					var select = document.createElement("div")
-					select.classList.add("sketchfab-select")
-					var selectTrigger = document.createElement("div")
-					selectTrigger.classList.add("sketchfab-select__trigger")
-					var triggerSpan = document.createElement("span")
-					if (controls[i].configuration.isPrimary == true) {
-						triggerSpan.id = "primaryCategory";
-					}
-					triggerSpan.textContent = Object.keys(controls[i].configuration.designations)[0]
-					triggerSpan.id = "triggerSpan-" + i;
-					if(controls[i].configuration.isPrimary) {
-						triggerSpan.classList.add("sketchfab-category")
-					}
-					triggerSpan.classList.add("sketchfab-category")
-					selectTrigger.appendChild(triggerSpan)
-					var arrow = document.createElement("div")
-					arrow.classList.add("sketchfab-select-arrow")
-					selectTrigger.appendChild(arrow)
-					
-					var customOptions = document.createElement("div")
-					customOptions.classList.add("sketchfab-options")
-					var selectTitle = document.createElement("h3")
-					selectTitle.classList.add("sketchfab-title")
-					selectTitle.textContent = controls[i].name;
-					customOptions.appendChild(selectTitle)
-					
-					select.appendChild(selectTrigger)
-					select.appendChild(customOptions)
-					wrapper.appendChild(select)	
+					var wrapper = generateSelect(i);
+					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
 					for (var j=0; j<Object.keys(controls[i].configuration.designations).length; ++j) {
 						
@@ -288,93 +259,13 @@ var success = function(api) {
 						customOption.setAttribute("data-value", name)
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
-						customOption.addEventListener('click', function() {
-							var nameCode = this.id.split("-")[0]
-							if (!this.classList.contains('selected')) {
-								
-								this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
-								this.classList.add('selected');
-								this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
-							}							
-				
-							var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
-							var allowAnimations = true;
-							for (var k=0; k<allCategorySelects.length; ++k) {
-								var controlIndex = allCategorySelects[k].id.split("-")[1]
-								var nameCode = allCategorySelects[k].textContent;
-								if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
-									allowAnimations = false;
-								}
-							}
-							var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
-							for (var k=0; k<animationButtons.length; ++k) {
-								animationButtons[k].disabled = true;
-							}
-							if (allowAnimations) {
-								for (var k=0; k<animationButtons.length; ++k) {
-									animationButtons[k].disabled = false;
-								}						
-							}
-							
-							var ico2ptrcOption = document.querySelector("[data-value='ICO2PTRC']")
-							var jbxccOption = document.querySelector("[data-value='JBXCC']")
-							if (nameCode === "JBXCC") {
-								ico2ptrcOption.style.display = "none";
-							} else {
-								ico2ptrcOption.style.display = "block";
-							}
-							
-							if (nameCode === "ICO2PTRC") {
-								jbxccOption.style.display = "none";
-							} else {
-								jbxccOption.style.display = "block";
-							}
+						customOption.addEventListener('click', function(e) {
+							handleUpdateSelect(e)
+							disableAnimations();
 						})
 						
 						customOptions.appendChild(customOption)
 					}
-
-					wrapper.addEventListener('click', function() {
-						this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
-						
-						var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
-						var selectedPrefixes = [];
-						var primaryLetterCode = "";
-						
-						for (var j=0; j<allCategorySelects.length; ++j) {
-							if(allCategorySelects[j].className.includes("sketchfab-category")) {
-								selectedPrefixes.push(allCategorySelects[j].textContent);
-								for (var k=0; k<groupingOptions.length; ++k) {
-									if (groupingOptions[k].designation === allCategorySelects[j].textContent) {
-										primaryLetterCode = groupingOptions[k].capitalLetter;
-									}
-								}
-							}
-						}
-						
-						for (var j=0; j<sceneGraph.length; ++j) {
-							var indexContainingCodes = j;
-							if (sceneGraph[j].name === "MatrixTransform") {
-								indexContainingCodes = j - 1;
-							}
-							
-							var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
-							var mainDesignation = nodeNameArray[0];
-							var letterCode = nodeNameArray[1];
-							api.hide(sceneGraph[indexContainingCodes].instanceID);
-							if(selectedPrefixes.includes("SGBCC")) {
-								if (sceneGraph[indexContainingCodes].name == "JBXCC-C-Housing") {
-									api.show(sceneGraph[indexContainingCodes].instanceID)										
-								}									
-							}
-							
-							if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
-									letterCode.includes(primaryLetterCode)) {
-								
-								api.show(sceneGraph[indexContainingCodes].instanceID);											
-							}
-						}		
-					})
 					
 					singleControlContainer.appendChild(wrapper);		
 				}
@@ -390,55 +281,8 @@ var success = function(api) {
 						}
 					}
 				});
-				
-				var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
-				var selectedPrefixes = [];
-				
-				for (var i=0; i<allCategorySelects.length; ++i) {
-					selectedPrefixes.push(allCategorySelects[i].textContent);
-				}
-									
-				var primaryLetterCode = "";
-				var allowAnimations = true;
-				for (var i=0; i<allCategorySelects.length; ++i) {
-					selectedPrefixes.push(allCategorySelects[i].value);
-					if(allCategorySelects[i].id === "primaryCategory") {
-						primaryLetterCode = groupingOptions[i].capitalLetter;
-					}
-					var controlIndex = allCategorySelects[i].id.split("-")[1]
-					var nameCode = allCategorySelects[i].textContent;
-					if (controls[controlIndex].configuration.allowsAnimation.indexOf(nameCode) == -1) {
-						allowAnimations = false;
-					}
-				}
-				var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
-				for (var k=0; k<animationButtons.length; ++k) {
-					animationButtons[k].disabled = true;
-				}
-				if (allowAnimations) {
-					for (var k=0; k<animationButtons.length; ++k) {
-						animationButtons[k].disabled = false;
-					}						
-				}
-				
-				for (var i=0; i<sceneGraph.length; ++i) {
-					var indexContainingCodes = i;
-					if (sceneGraph[i].name === "MatrixTransform") {
-						indexContainingCodes = i - 1;
-					}
-					
-					var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
-					var mainDesignation = nodeNameArray[0];
-					var letterCode = nodeNameArray[1];
-					
-					api.hide(sceneGraph[indexContainingCodes].instanceID);
-					
-					if (selectedPrefixes.indexOf(mainDesignation) > -1 && 
-							letterCode.includes(primaryLetterCode)) {
-						
-						api.show(sceneGraph[indexContainingCodes].instanceID);											
-					}
-				}		
+				setVisibleNodes(api);
+				disableAnimations();
 			}
 			
 			if (animations.length > 0) {
@@ -456,35 +300,9 @@ var success = function(api) {
 							var singleControlContainer = document.createElement("div");
 							singleControlContainer.classList.add("sketchfab-single-control-container")
 							
-							var wrapper = document.createElement("div")
-							wrapper.classList.add("sketchfab-select-wrapper")
-							/* set wrapper width */
-							wrapper.style.width = (appWidth/4) + "px";
+							var wrapper = generateSurfaceSelect(surfaceName, i, j)
+							var customOptions = wrapper.querySelector(".sketchfab-options")
 							
-							var select = document.createElement("div")
-							select.classList.add("sketchfab-select")
-							var selectTrigger = document.createElement("div")
-							selectTrigger.classList.add("sketchfab-select__trigger")
-							var triggerSpan = document.createElement("span")
-							triggerSpan.id = "primarySurfaceElement-" + surfaceName;
-							triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
-							triggerSpan.id = "triggerSpan-" + i;
-							triggerSpan.classList.add(surfaceName + "-triggerSpan")
-							selectTrigger.appendChild(triggerSpan)
-							var arrow = document.createElement("div")
-							arrow.classList.add("sketchfab-select-arrow")
-							selectTrigger.appendChild(arrow)
-							
-							var customOptions = document.createElement("div")
-							customOptions.classList.add("sketchfab-options")
-							var selectTitle = document.createElement("h3")
-							selectTitle.classList.add("sketchfab-title")
-							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
-							customOptions.appendChild(selectTitle)
-							
-							select.appendChild(selectTrigger)
-							select.appendChild(customOptions)
-							wrapper.appendChild(select)	
 							for (var k=0; k<Object.keys(surfaceOptionMap[surfaceName]).length; ++k) {
 								
 								let customOption = document.createElement("span")
@@ -497,15 +315,12 @@ var success = function(api) {
 								customOption.setAttribute("data-value", name)
 								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
 								customOption.innerHTML = name + " - " + humanReadable;
-								customOption.addEventListener('click', function() {
+								customOption.addEventListener('click', function(e) {
+									handleUpdateSelect(e)
+									
 									var nameCode = this.id.split("-")[0]
 									var currentSurfaceName = this.id.split("-")[1]
 									var surfaceElementIndex = this.id.split("-")[2]
-									if (!this.classList.contains('selected')) {										
-										this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
-										this.classList.add('selected');
-										this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
-									}
 									var subPrimaryOptionArrays = document.getElementsByClassName(currentSurfaceName + "-options")
 									var primaryAttributeName = surfaceAttributeNameMap[currentSurfaceName][0]
 									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
@@ -514,7 +329,7 @@ var success = function(api) {
 										
 										var selectTitle = document.createElement("h3")
 										selectTitle.classList.add("sketchfab-title")
-										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][j];
+										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][l+1];
 										subPrimaryOptionArrays[l].appendChild(selectTitle)
 										
 										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
@@ -531,40 +346,17 @@ var success = function(api) {
 											customOption.setAttribute("data-value", name)
 											customOption.id = name + "-" + currentSurfaceName + "-" + j + "-" + k + "-" + i;
 											customOption.innerHTML = name + " - " + humanReadable;
-											customOption.addEventListener('click', function() {
-												var nameCode = this.id.split("-")[0]
-												
-												if (!this.classList.contains('selected')) {
-													
-													this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
-													this.classList.add('selected');
-													this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
-												}
-												var currentSurfaceName = this.id.split("-")[1]
-												var attributeIndex = this.id.split("-")[2]
-												var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
-
-												configureMaterials(currentSurfaceName, attributeName, api)
-											})
+											customOption.addEventListener('click', e => setNonPrimarySurfaceConfiguration(e, api))
 											
 											subPrimaryOptionArrays[l].appendChild(customOption)
 										}										
 									}
 									
 									configureMaterials(currentSurfaceName, primaryAttributeName, api)
-								})
-								
+								})								
 								
 								customOptions.appendChild(customOption)
 							}
-
-							wrapper.addEventListener('click', function() {
-								this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
-								
-								var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
-								var selectedPrefixes = [];
-								var primaryLetterCode = "";
-							})
 							singleControlContainer.appendChild(wrapper);		
 							controlsContainer.appendChild(singleControlContainer);
 						} else {
@@ -574,15 +366,19 @@ var success = function(api) {
 							var wrapper = document.createElement("div")
 							wrapper.classList.add("sketchfab-select-wrapper")
 							wrapper.style.width = (appWidth/4) + "px";
+							
 							var select = document.createElement("div")
 							select.classList.add("sketchfab-select")
+							
 							var selectTrigger = document.createElement("div")
 							selectTrigger.classList.add("sketchfab-select__trigger")
+							
 							var triggerSpan = document.createElement("span")
 							triggerSpan.textContent = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][0]
 							triggerSpan.id = "triggerSpan-" + surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-" + j;
 							triggerSpan.classList.add(surfaceName + "-triggerSpan")
 							selectTrigger.appendChild(triggerSpan)
+							
 							var arrow = document.createElement("div")
 							arrow.classList.add("sketchfab-select-arrow")
 							selectTrigger.appendChild(arrow)
@@ -591,6 +387,7 @@ var success = function(api) {
 							customOptions.id = surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-options";
 							customOptions.classList.add("sketchfab-options")
 							customOptions.classList.add(surfaceName + "-options")
+							
 							var selectTitle = document.createElement("h3")
 							selectTitle.classList.add("sketchfab-title")
 							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
@@ -612,31 +409,15 @@ var success = function(api) {
 								customOption.setAttribute("data-value", name)
 								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
 								customOption.innerHTML = name + " - " + humanReadable;
-								customOption.addEventListener('click', function() {
-									var nameCode = this.id.split("-")[0]
-									
-									if (!this.classList.contains('selected')) {
-										
-										this.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
-										this.classList.add('selected');
-										this.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
-									}
-									var currentSurfaceName = this.id.split("-")[1]
-									var attributeIndex = this.id.split("-")[2]
-									var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
-									configureMaterials(currentSurfaceName, attributeName, api)
-								})
+								customOption.addEventListener('click', e => setNonPrimarySurfaceConfiguration(e, api))
 								
 								customOptions.appendChild(customOption)
 							}
 							
 							wrapper.addEventListener('click', function() {
 								this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
-								
-								var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
-								var selectedPrefixes = [];
-								var primaryLetterCode = "";		
 							})
+							
 							singleControlContainer.appendChild(wrapper);		
 							controlsContainer.appendChild(singleControlContainer);
 						}
@@ -723,8 +504,204 @@ var configureInitialSurfaces = function(api) {
 	}			
 }
 
+const setVisibleNodes = function(api) {
+	
+	var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
+	var selectedPrefixes = [];
+	
+	for (var j=0; j<allCategorySelects.length; ++j) {
+		if(allCategorySelects[j].className.includes("sketchfab-category")) {
+			selectedPrefixes.push(allCategorySelects[j].textContent);
+		}
+	}
+	
+	var allLetters = [];
+	var relevantNodes = [];
+	
+	for (var j=0; j<sceneGraph.length; ++j) {
+		var indexContainingCodes = j;
+		var isMatrixTransform = false;
+		if (sceneGraph[j].name === "MatrixTransform") {
+			indexContainingCodes = j - 1;
+			isMatrixTransform = true;
+		}
+		
+		var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
+		var currentNodeDesignation = nodeNameArray[0];
+		var currentNodeLetterCode = nodeNameArray[1];
+		api.hide(sceneGraph[indexContainingCodes].instanceID);
+		if(selectedPrefixes.includes("SGBCC")) {
+			if (sceneGraph[indexContainingCodes].name == "JBXCC-C-Housing") {
+				api.show(sceneGraph[indexContainingCodes].instanceID)										
+			}									
+		}		
+		
+		if (selectedPrefixes.includes(currentNodeDesignation)) {
+			for (var k=0; k<currentNodeLetterCode.length; ++k) {
+				allLetters.push(currentNodeLetterCode[k]);
+				relevantNodes.push({letterCode: currentNodeLetterCode[k], instanceID: sceneGraph[j].instanceID})								
+			}
+		}
+	}		
+	
+	var commonLetter = mode(allLetters)[0]
+	
+	for (var j=0; j<relevantNodes.length; ++j) {
+		if (relevantNodes[j].letterCode.indexOf(commonLetter) != -1) {
+			api.show(relevantNodes[j].instanceID);
+		}
+	}
+}
 
+const mode = arr => { 
+	if(arr.filter((x,index) => arr.indexOf(x) == index).length == arr.length) {
+		return arr; 
+	} else {
+		return mode(arr.sort((x,index)=>x-index).map((x,index)=>arr.indexOf(x)!=index ? x : null ).filter(x=>x!=null))
+	}		
+}
 
+var setNonPrimarySurfaceConfiguration = function(e, api) {
+	handleUpdateSelect(e);
+	var currentSurfaceName = e.target.id.split("-")[1]
+	var attributeIndex = e.target.id.split("-")[2]
+	var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
+	configureMaterials(currentSurfaceName, attributeName, api)
+}
+
+var handleUpdateSelect = function(e) {
+	var nameCode = e.target.id.split("-")[0]
+	
+	if (!e.target.classList.contains('selected')) {
+		
+		e.target.parentNode.querySelector('.sketchfab-option.selected').classList.remove('selected');
+		e.target.classList.add('selected');
+		e.target.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
+	}
+}
+
+var disableAnimations = function() {		
+	var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
+	var allowAnimations = true;
+	var displayJbxcc = true;
+	var displayICO2PAndW = true;
+	for (var k=0; k<allCategorySelects.length; ++k) {
+		var controlIndex = allCategorySelects[k].id.split("-")[1]
+		var currentNameCode = allCategorySelects[k].textContent;
+		if (controls[controlIndex].configuration.allowsAnimation.indexOf(currentNameCode) == -1) {
+			allowAnimations = false;
+		}
+		if (currentNameCode === "ICO2PTRC" || currentNameCode === "ICO2WTRC") {
+			displayJbxcc = false;
+		}
+		if (currentNameCode === "JBXCC") {
+			displayICO2PAndW = false;
+		}
+	}
+	var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
+	for (var k=0; k<animationButtons.length; ++k) {
+		animationButtons[k].disabled = true;
+	}
+	if (allowAnimations) {
+		for (var k=0; k<animationButtons.length; ++k) {
+			animationButtons[k].disabled = false;
+		}						
+	}
+	
+	var ico2ptrcOption = document.querySelector("[data-value='ICO2PTRC']")
+	ico2ptrcOption.style.display = "none";
+	var jbxccOption = document.querySelector("[data-value='JBXCC']")
+	jbxccOption.style.display = "none";
+	var ico2wtrcOption = document.querySelector("[data-value='ICO2WTRC']")
+		ico2wtrcOption.style.display = "none";
+	if (displayICO2PAndW) {
+		ico2ptrcOption.style.display = "block";
+		ico2wtrcOption.style.display = "block";
+	}
+	
+	if (displayJbxcc) {
+		jbxccOption.style.display = "block";
+	}
+}
+
+var generateSelect = function(controlIndex) {
+					
+	var wrapper = document.createElement("div")
+	wrapper.classList.add("sketchfab-select-wrapper")
+	wrapper.style.width = (appWidth/4) + "px";
+	
+	var select = document.createElement("div")
+	select.classList.add("sketchfab-select")
+	
+	var selectTrigger = document.createElement("div")
+	selectTrigger.classList.add("sketchfab-select__trigger")
+	
+	var triggerSpan = document.createElement("span")
+	triggerSpan.textContent = Object.keys(controls[controlIndex].configuration.designations)[0]
+	triggerSpan.id = "triggerSpan-" + controlIndex;
+	triggerSpan.classList.add("sketchfab-category")
+	selectTrigger.appendChild(triggerSpan)
+	
+	var arrow = document.createElement("div")
+	arrow.classList.add("sketchfab-select-arrow")
+	selectTrigger.appendChild(arrow)					
+	select.appendChild(selectTrigger)
+	
+	var customOptions = document.createElement("div")
+	customOptions.classList.add("sketchfab-options")
+	var selectTitle = document.createElement("h3")
+	selectTitle.classList.add("sketchfab-title")
+	selectTitle.textContent = controls[controlIndex].name;
+	customOptions.appendChild(selectTitle)
+	select.appendChild(customOptions)
+	wrapper.appendChild(select)	
+
+	wrapper.addEventListener('click', function() {
+		this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
+	})
+
+	categorySelectObserver.observe(triggerSpan, {characterData: false, childList: true, attributes: false});
+	
+	return wrapper;
+}
+
+var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) {
+	var wrapper = document.createElement("div")
+	wrapper.classList.add("sketchfab-select-wrapper")
+	
+	wrapper.style.width = (appWidth/4) + "px";
+	
+	var select = document.createElement("div")
+	select.classList.add("sketchfab-select")
+	var selectTrigger = document.createElement("div")
+	selectTrigger.classList.add("sketchfab-select__trigger")
+	var triggerSpan = document.createElement("span")
+	triggerSpan.id = "primarySurfaceElement-" + surfaceName;
+	triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
+	triggerSpan.id = "triggerSpan-" + surfaceIndex;
+	triggerSpan.classList.add(surfaceName + "-triggerSpan")
+	selectTrigger.appendChild(triggerSpan)
+	var arrow = document.createElement("div")
+	arrow.classList.add("sketchfab-select-arrow")
+	selectTrigger.appendChild(arrow)
+	
+	var customOptions = document.createElement("div")
+	customOptions.classList.add("sketchfab-options")
+	var selectTitle = document.createElement("h3")
+	selectTitle.classList.add("sketchfab-title")
+	selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][attributeIndex];
+	customOptions.appendChild(selectTitle)
+	
+	select.appendChild(selectTrigger)
+	select.appendChild(customOptions)
+	wrapper.appendChild(select)	
+
+	wrapper.addEventListener('click', function() {
+		this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
+	})
+	
+	return wrapper;
+}
 
 
 `

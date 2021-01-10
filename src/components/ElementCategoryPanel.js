@@ -54,7 +54,6 @@ export default props => {
                     if (newDesignations[groupingOption.designation] != undefined) {
                       delete newDesignations[groupingOption.designation];
                       newConfiguration = {
-                        isPrimary: option.configuration.isPrimary,
                         designations: newDesignations,
                         allowsAnimation: option.configuration.allowsAnimation.filter(a => a != groupingOption.designation)
                       }
@@ -63,7 +62,6 @@ export default props => {
                       let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
                       newDisablesAnimation.push(groupingOption.designation)
                       newConfiguration = {
-                        isPrimary: option.configuration.isPrimary,
                         designations: newDesignations,
                         allowsAnimation: newDisablesAnimation,
                       }
@@ -83,7 +81,6 @@ export default props => {
                   let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
                   if (option.configuration.allowsAnimation.includes(groupingOption.designation)) {
                     newConfiguration = {
-                      isPrimary: option.configuration.isPrimary,
                       designations: newDesignations,
                       allowsAnimation: option.configuration.allowsAnimation.filter(a => a != groupingOption.designation)
                     }
@@ -91,7 +88,6 @@ export default props => {
                     let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
                     newDisablesAnimation.push(groupingOption.designation)
                     newConfiguration = {
-                      isPrimary: option.configuration.isPrimary,
                       designations: newDesignations,
                       allowsAnimation: newDisablesAnimation,
                     }
@@ -111,7 +107,6 @@ export default props => {
                   let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
                   newDesignations[groupingOption.designation] = e.target.value;
                   let newConfiguration = {
-                    isPrimary: option.configuration.isPrimary,
                     designations: newDesignations,
                     allowsAnimation: option.configuration.allowsAnimation.map(a => a),
                   }
@@ -126,21 +121,6 @@ export default props => {
   
     return (
       <div className="grouping__container">
-        <div style={{display: "flex", borderBottom: "black 1px solid", borderTop: "black 1px solid"}}>
-          <input 
-            type="checkbox" 
-            checked={option.configuration.isPrimary}
-            onChange={(e) => {
-              console.log("\n\n\n\n\ne.target.checked")
-              console.log(e.target.checked)
-              console.log(e.target.value)
-              console.log("\n\n\n")
-              let newConfiguration = {...option.configuration, isPrimary: e.target.checked}
-              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-            }}
-          />
-          <div>Primary Category?</div>
-        </div>
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>
           {renderDesignationMultiselect()}
         </div>
