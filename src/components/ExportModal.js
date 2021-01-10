@@ -329,7 +329,7 @@ var success = function(api) {
 										
 										var selectTitle = document.createElement("h3")
 										selectTitle.classList.add("sketchfab-title")
-										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][l+1];
+										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][surfaceElementIndex];
 										subPrimaryOptionArrays[l].appendChild(selectTitle)
 										
 										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
