@@ -591,7 +591,7 @@ var disableAnimations = function() {
 		if (controls[controlIndex].configuration.allowsAnimation.indexOf(currentNameCode) == -1) {
 			allowAnimations = false;
 		}
-		if (currentNameCode === "ICO2PTRC" || currentNameCode === "ICO2WTRC") {
+		if (currentNameCode === "ICO2PTRC" || currentNameCode === "ICO2STRC(Wall)") {
 			displayJbxcc = false;
 		}
 		if (currentNameCode === "JBXCC") {
@@ -612,7 +612,7 @@ var disableAnimations = function() {
 	ico2ptrcOption.style.display = "none";
 	var jbxccOption = document.querySelector("[data-value='JBXCC']")
 	jbxccOption.style.display = "none";
-	var ico2wtrcOption = document.querySelector("[data-value='ICO2WTRC']")
+	var ico2wtrcOption = document.querySelector("[data-value='ICO2STRC(Wall)']")
 		ico2wtrcOption.style.display = "none";
 	if (displayICO2PAndW) {
 		ico2ptrcOption.style.display = "block";
