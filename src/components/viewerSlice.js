@@ -39,6 +39,7 @@ export const viewerSlice = createSlice({
     },
     setSceneGraph: (state, action) => {
       buildSceneGraph(state, action.payload.children, 0);
+      buildCategoryOptions(state)
     },
     setSceneGraphIsVisible: (state, action) => {
       const { id, value } = action.payload;
@@ -217,6 +218,35 @@ var buildSceneGraph = function(state, children, depth) {
 			buildSceneGraph(state, children[i].children, depth+1);
 		}
 	}
+}
+
+var buildCategoryOptions = (state) => {   
+
+  let uniqueStrings = [];
+  let categoryOptions = [];
+  for (let i=0; i<state.sceneGraph.length; ++i) {
+    let nodeNameArray = state.sceneGraph[i].name.split("-").filter(string => string != "")
+    let mainDesignation = nodeNameArray[0];
+    let capitalLetter = nodeNameArray[1];
+    let detailedTitle = nodeNameArray[2];
+    for (let i=3; i<nodeNameArray.length; ++i) {
+      detailedTitle += nodeNameArray[i];
+    }
+
+    const irrelevantStrings = ["Group", "RootNode", "MatrixTransform"];
+    if (uniqueStrings.indexOf(mainDesignation) == -1 &&
+      irrelevantStrings.indexOf(mainDesignation) == -1) {
+      uniqueStrings.push(mainDesignation);
+      categoryOptions.push({
+        instanceID: state.sceneGraph[i].instanceID,
+        designation: mainDesignation,
+        capitalLetter: capitalLetter,
+        detailedTitle: detailedTitle,
+        isAvailable: true,
+      })
+    }
+  }
+  state.groupingOptions = categoryOptions;
 }
 
 export default viewerSlice.reducer;

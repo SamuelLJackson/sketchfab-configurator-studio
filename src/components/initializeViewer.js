@@ -17,7 +17,7 @@ export default modelId => dispatch => {
   
     var iframe = document.getElementById('api-frame');
     var version = '1.8.2';
-    var DEFAULT_URLID = 'f373c5bab8e7489fa12db2071471fe4e';
+    var DEFAULT_URLID = '66e17931c39e4042ac5aa8764bee7f5a';
     var DEFAULT_PREFIX = 'seat ';		
     
     var CONFIG = {

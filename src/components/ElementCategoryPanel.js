@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  selectSceneGraph,
   updateControl,
+  selectGroupingOptions,
   setGroupingOptions,
 } from './viewerSlice';
 
@@ -10,57 +10,66 @@ export default props => {
 
     const dispatch = useDispatch();
     const { option } = props;
-    const sceneGraph = useSelector(selectSceneGraph);
-
-    let uniqueStrings = [];
-    let categoryOptions = [];
-    for (let i=0; i<sceneGraph.length; ++i) {
-      let nodeNameArray = sceneGraph[i].name.split("-").filter(string => string != "")
-      let mainDesignation = nodeNameArray[0];
-      let capitalLetter = nodeNameArray[1];
-      let detailedTitle = nodeNameArray[2];
-      for (let i=3; i<nodeNameArray.length; ++i) {
-        detailedTitle += nodeNameArray[i];
-      }
-
-      const irrelevantStrings = ["Group", "RootNode", "MatrixTransform"];
-      if (uniqueStrings.indexOf(mainDesignation) == -1 &&
-        irrelevantStrings.indexOf(mainDesignation) == -1) {
-        uniqueStrings.push(mainDesignation);
-        categoryOptions.push({
-          instanceID: sceneGraph[i].instanceID,
-          designation: mainDesignation,
-          capitalLetter: capitalLetter,
-          detailedTitle: detailedTitle,
-        })
-      }
-    }
-    dispatch(setGroupingOptions(categoryOptions))
+    const categoryElements = useSelector(selectGroupingOptions);
 
     const renderDesignationMultiselect = () => {
-      return categoryOptions.map((groupingOption, index) => {
+      return categoryElements.map((categoryElement, index) => {
         
-        return (
-          <div key={`element-${option.id}-${index}`}>
-            <div style={{display: "flex"}}>
-              <div style={{display: "flex", flex: "1 1 auto"}}>
+        let controlContainsElement = option.configuration.designations[categoryElement.designation] != undefined
+
+        if (categoryElement.isAvailable || controlContainsElement) {
+        
+          return (
+            <div key={`element-${option.id}-${index}`}>
+              <div style={{display: "flex"}}>
+                <div style={{display: "flex", flex: "1 1 auto"}}>
+                  <input 
+                    type="checkbox" 
+                    checked={controlContainsElement}
+                    onChange={() => {                 
+                      let newCategoryElements = JSON.parse(JSON.stringify(categoryElements))
+                      let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
+                      let newConfiguration = {};
+                      
+                      if (newDesignations[categoryElement.designation] != undefined) {
+                        delete newDesignations[categoryElement.designation];
+                        newConfiguration = {
+                          designations: newDesignations,
+                          allowsAnimation: option.configuration.allowsAnimation.filter(a => a != categoryElement.designation)
+                        }
+                        newCategoryElements[index].isAvailable = true;
+                      } else {
+                        newDesignations[categoryElement.designation] = "";
+                        let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
+                        newDisablesAnimation.push(categoryElement.designation)
+                        newConfiguration = {
+                          designations: newDesignations,
+                          allowsAnimation: newDisablesAnimation,
+                        }
+                        newCategoryElements[index].isAvailable = false;
+                      }
+                      dispatch(setGroupingOptions(newCategoryElements))
+                      dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
+                    }}
+                  />
+                  <div>{categoryElement.designation}</div>
+                </div>
+                <div>Animation:</div>
                 <input 
                   type="checkbox" 
-                  checked={option.configuration.designations[groupingOption.designation] != undefined}
-                  onChange={() => {                 
+                  checked={option.configuration.allowsAnimation.includes(categoryElement.designation)}
+                  disabled={option.configuration.designations[categoryElement.designation] == undefined}
+                  onChange={() => {
+                    let newConfiguration = {};                  
                     let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                    let newConfiguration = {};
-                    
-                    if (newDesignations[groupingOption.designation] != undefined) {
-                      delete newDesignations[groupingOption.designation];
+                    if (option.configuration.allowsAnimation.includes(categoryElement.designation)) {
                       newConfiguration = {
                         designations: newDesignations,
-                        allowsAnimation: option.configuration.allowsAnimation.filter(a => a != groupingOption.designation)
+                        allowsAnimation: option.configuration.allowsAnimation.filter(a => a != categoryElement.designation)
                       }
                     } else {
-                      newDesignations[groupingOption.designation] = "";
                       let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
-                      newDisablesAnimation.push(groupingOption.designation)
+                      newDisablesAnimation.push(categoryElement.designation)
                       newConfiguration = {
                         designations: newDesignations,
                         allowsAnimation: newDisablesAnimation,
@@ -69,53 +78,30 @@ export default props => {
                     dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
                   }}
                 />
-                <div>{groupingOption.designation}</div>
               </div>
-              <div>Animation:</div>
-              <input 
-                type="checkbox" 
-                checked={option.configuration.allowsAnimation.includes(groupingOption.designation)}
-                disabled={option.configuration.designations[groupingOption.designation] == undefined}
-                onChange={() => {
-                  let newConfiguration = {};                  
-                  let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                  if (option.configuration.allowsAnimation.includes(groupingOption.designation)) {
-                    newConfiguration = {
+              <div style={{display: "flex"}}>
+                <div>Readable Name:</div>
+                <input
+                  type="text"
+                  placeholder="Enter human readable name"
+                  disabled={option.configuration.designations[categoryElement.designation] == undefined}
+                  value={option.configuration.designations[categoryElement.designation]}
+                  onChange={e => {
+                    let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
+                    newDesignations[categoryElement.designation] = e.target.value;
+                    let newConfiguration = {
                       designations: newDesignations,
-                      allowsAnimation: option.configuration.allowsAnimation.filter(a => a != groupingOption.designation)
+                      allowsAnimation: option.configuration.allowsAnimation.map(a => a),
                     }
-                  } else {
-                    let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
-                    newDisablesAnimation.push(groupingOption.designation)
-                    newConfiguration = {
-                      designations: newDesignations,
-                      allowsAnimation: newDisablesAnimation,
-                    }
-                  }
-                  dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-                }}
-              />
+                    dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))                  
+                  }}
+                />
+              </div>
             </div>
-            <div style={{display: "flex"}}>
-              <div>Readable Name:</div>
-              <input
-                type="text"
-                placeholder="Enter human readable name"
-                disabled={option.configuration.designations[groupingOption.designation] == undefined}
-                value={option.configuration.designations[groupingOption.designation]}
-                onChange={e => {
-                  let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                  newDesignations[groupingOption.designation] = e.target.value;
-                  let newConfiguration = {
-                    designations: newDesignations,
-                    allowsAnimation: option.configuration.allowsAnimation.map(a => a),
-                  }
-                  dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))                  
-                }}
-              />
-            </div>
-          </div>
-        )
+          )
+
+        }
+        return null;
       })
     }
   
