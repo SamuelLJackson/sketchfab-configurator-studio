@@ -1,9 +1,11 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  updateControl,
   selectGroupingOptions,
+  selectHiddenCategoryConfigurations,
   setGroupingOptions,
+  setHiddenCategoryConfigurations,
+  updateControl,
 } from './viewerSlice';
 
 export default props => {
@@ -11,13 +13,15 @@ export default props => {
     const dispatch = useDispatch();
     const { option } = props;
     const categoryElements = useSelector(selectGroupingOptions);
+    const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
 
-    const renderDesignationMultiselect = () => {
+    const renderDesignationMultiselect = () => {     
+
       return categoryElements.map((categoryElement, index) => {
         
-        let controlContainsElement = option.configuration.designations[categoryElement.designation] != undefined
+        let categoryContainsCurrentElement = option.configuration.designations[categoryElement.designation] != undefined
 
-        if (categoryElement.isAvailable || controlContainsElement) {
+        if (categoryElement.isAvailable || categoryContainsCurrentElement) {
         
           return (
             <div key={`element-${option.id}-${index}`}>
@@ -25,7 +29,7 @@ export default props => {
                 <div style={{display: "flex", flex: "1 1 auto"}}>
                   <input 
                     type="checkbox" 
-                    checked={controlContainsElement}
+                    checked={categoryContainsCurrentElement}
                     onChange={() => {                 
                       let newCategoryElements = JSON.parse(JSON.stringify(categoryElements))
                       let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
@@ -97,12 +101,64 @@ export default props => {
                   }}
                 />
               </div>
+              {renderDisableMultiSelect(index)}
             </div>
           )
 
         }
         return null;
       })
+    }
+
+    const renderDisableMultiSelect = (index) => {
+    
+      let currentElementDesignation = categoryElements[index].designation
+      let categoryContainsCurrentElement = option.configuration.designations[currentElementDesignation] != undefined
+      
+      let otherSelectedElements = categoryElements.filter(element => !element.isAvailable && option.configuration.designations[element.designation] == undefined)
+      if (categoryContainsCurrentElement && otherSelectedElements.length > 0) {
+        console.log("otherSelectedElements:")
+        console.log(otherSelectedElements)
+        return (
+          <div style={{textAlign: "left", marginLeft: 16}}>
+            <div style={{marginLeft: 4}}>Disable when selected:</div>
+            {otherSelectedElements.map(element => {
+              let showChecked = false;
+              if (hiddenCategoryConfigurations[currentElementDesignation] != undefined) {
+                if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
+                  showChecked = true;
+                }
+              }
+              return(
+              <div style={{display: "flex"}}>
+                <input 
+                  type="checkbox" 
+                  checked={showChecked}
+                  onChange={() => {        
+                    let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
+                    if(showChecked) {
+                      newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenConfigElement => hiddenConfigElement.designation != element.designation)
+                      newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenConfigElement => hiddenConfigElement.designation != currentElementDesignation)
+                    } else {
+                      if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
+                        newHiddenCategoryConfigurations[currentElementDesignation] = [];
+                      }
+                      newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
+                      if(newHiddenCategoryConfigurations[element.designation] === undefined) {
+                        newHiddenCategoryConfigurations[element.designation] = [];
+                      }
+                      newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
+                    }
+
+                    dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
+                  }}
+                />
+                <div>{element.designation}</div>
+              </div>
+            )})}
+          </div>
+        )
+      }
     }
   
     return (

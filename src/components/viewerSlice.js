@@ -16,6 +16,7 @@ const initialState = {
   materialNameSegmentMap: {},
   surfaceAttributeNameMap: {},
   groupingOptions: [],
+  hiddenCategoryConfigurations: {},
 };
 
 export const viewerSlice = createSlice({
@@ -110,6 +111,9 @@ export const viewerSlice = createSlice({
     setGroupingOptions: (state, action) => {
       state.groupingOptions = action.payload;
     },
+    setHiddenCategoryConfigurations: (state, action) => {
+      state.hiddenCategoryConfigurations = action.payload;
+    },
     setAllNodesVisible: (state, action) => {
       for(let i=0; i<Object.keys(state.sceneGraphIsVisible).length; ++i) {
         if(action.payload) {
@@ -134,6 +138,7 @@ export const {
   setSceneGraphIsVisible,
   setViewMode,
   setGroupingOptions,
+  setHiddenCategoryConfigurations,
   setSurfaceOptionMap,
   setSurfaceConfigurationMode,
   setMaterialNameSegmentMap,
@@ -171,6 +176,8 @@ export const selectMaterialNameSegmentMap = state => state.viewer.materialNameSe
 export const selectSurfaceAttributeNameMap = state => state.viewer.surfaceAttributeNameMap;
 
 export const selectGroupingOptions = state => state.viewer.groupingOptions;
+
+export const selectHiddenCategoryConfigurations = state => state.viewer.hiddenCategoryConfigurations;
 
 export const toggleModalDisplay = () => dispatch => {
   const modal = document.getElementById('modal');
@@ -246,6 +253,7 @@ var buildCategoryOptions = (state) => {
       })
     }
   }
+  categoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})
   state.groupingOptions = categoryOptions;
 }
 

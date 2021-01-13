@@ -10,6 +10,7 @@ import {
 	selectMaterialNameSegmentMap,
 	selectSurfaceAttributeNameMap,
 	selectGroupingOptions,
+	selectHiddenCategoryConfigurations,
 } from './viewerSlice';
 
 export default () => {
@@ -23,6 +24,7 @@ export default () => {
 	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
 	const surfaceAttributeNameMap = useSelector(selectSurfaceAttributeNameMap)
 	const groupingOptions = useSelector(selectGroupingOptions);
+	const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
 
 	const configurationMaps = {
 		controls, 
@@ -33,6 +35,7 @@ export default () => {
 		materialNameSegmentMap,
 		surfaceAttributeNameMap,
 		groupingOptions,		
+		hiddenCategoryConfigurations,
 	}
 
     return (
@@ -59,6 +62,7 @@ const createJSExport = (configurationMaps) => {
 		materialNameSegmentMap,
 		surfaceAttributeNameMap,
 		groupingOptions,	
+		hiddenCategoryConfigurations,
 	} = configurationMaps;
 
 	return (
@@ -80,6 +84,7 @@ var controls = ${JSON.stringify(controls)}
 var sceneGraph = ${JSON.stringify(sceneGraph)}
 
 var groupingOptions = ${JSON.stringify(groupingOptions)}
+var hiddenCategoryConfigurations = ${JSON.stringify(hiddenCategoryConfigurations)}
 
 var surfaceConfigurationMode = ${surfaceConfigurationMode};
 var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
@@ -127,7 +132,6 @@ pollTime = function() {
 	});
 };
 
-var globalTestMaterialID = "";
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
@@ -260,7 +264,31 @@ var success = function(api) {
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function(e) {
-							handleUpdateSelect(e)
+							handleUpdateSelect(e);
+							handleHidingOptions(e);
+							var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
+							for (var k=0; k<allCategoryOptions.length; ++k) {
+								allCategoryOptions[k].style.visibility = "visible";
+							}
+							var optionName = e.target.id.split("-")[0]
+							var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
+													.filter(select => !select.classList.contains("sketchfab-select-open"))
+													.map(select => select.querySelector(".sketchfab-select-value").textContent)
+													
+							currentCategorySelections.push(optionName)
+							
+							for (var k=0; k<currentCategorySelections.length; ++k) {
+								var selectionName = currentCategorySelections[k];
+								if (hiddenCategoryConfigurations[selectionName] !== undefined) {
+									for (var l=0; l<hiddenCategoryConfigurations[selectionName].length; ++l) {
+										var nameToHide = hiddenCategoryConfigurations[selectionName][l]
+										var optionToHide = document.querySelector("[data-value='" + nameToHide + "']")
+										optionToHide.style.visibility = "hidden"										
+									}
+									break;
+								}
+							}
+							
 							disableAnimations();
 						})
 						
@@ -504,15 +532,13 @@ var configureInitialSurfaces = function(api) {
 	}			
 }
 
-const setVisibleNodes = function(api) {
+var setVisibleNodes = function(api) {
 	
-	var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span")
+	var allCategorySelects = document.querySelectorAll(".sketchfab-category span.sketchfab-select-value")
 	var selectedPrefixes = [];
 	
 	for (var j=0; j<allCategorySelects.length; ++j) {
-		if(allCategorySelects[j].className.includes("sketchfab-category")) {
-			selectedPrefixes.push(allCategorySelects[j].textContent);
-		}
+		selectedPrefixes.push(allCategorySelects[j].textContent);
 	}
 	
 	var allLetters = [];
@@ -553,7 +579,7 @@ const setVisibleNodes = function(api) {
 	}
 }
 
-const mode = arr => { 
+var mode = function(arr) { 
 	if(arr.filter((x,index) => arr.indexOf(x) == index).length == arr.length) {
 		return arr; 
 	} else {
@@ -580,22 +606,40 @@ var handleUpdateSelect = function(e) {
 	}
 }
 
+
+var handleHidingOptions = function(e) {
+	var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
+	for (var k=0; k<allCategoryOptions.length; ++k) {
+		allCategoryOptions[k].style.visibility = "visible";
+	}
+	var optionName = e.target.id.split("-")[0]
+	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
+							.filter(select => !select.classList.contains("sketchfab-select-open"))
+							.map(select => select.querySelector(".sketchfab-select-value").textContent)
+							
+	currentCategorySelections.push(optionName)
+	
+	for (var k=0; k<currentCategorySelections.length; ++k) {
+		var selectionName = currentCategorySelections[k];
+		if (hiddenCategoryConfigurations[selectionName] !== undefined) {
+			for (var l=0; l<hiddenCategoryConfigurations[selectionName].length; ++l) {
+				var nameToHide = hiddenCategoryConfigurations[selectionName][l]
+				var optionToHide = document.querySelector("[data-value='" + nameToHide + "']")
+				optionToHide.style.visibility = "hidden"										
+			}
+			break;
+		}
+	}
+}
+
 var disableAnimations = function() {		
-	var allCategorySelects = document.querySelectorAll(".sketchfab-select__trigger span.sketchfab-category")
+	var allCategorySelects = document.querySelectorAll(".sketchfab-category span.sketchfab-select-value")
 	var allowAnimations = true;
-	var displayJbxcc = true;
-	var displayICO2PAndW = true;
 	for (var k=0; k<allCategorySelects.length; ++k) {
 		var controlIndex = allCategorySelects[k].id.split("-")[1]
 		var currentNameCode = allCategorySelects[k].textContent;
 		if (controls[controlIndex].configuration.allowsAnimation.indexOf(currentNameCode) == -1) {
 			allowAnimations = false;
-		}
-		if (currentNameCode === "ICO2PTRC" || currentNameCode === "ICO2STRC(Wall)") {
-			displayJbxcc = false;
-		}
-		if (currentNameCode === "JBXCC") {
-			displayICO2PAndW = false;
 		}
 	}
 	var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
@@ -607,27 +651,13 @@ var disableAnimations = function() {
 			animationButtons[k].disabled = false;
 		}						
 	}
-	
-	var ico2ptrcOption = document.querySelector("[data-value='ICO2PTRC']")
-	ico2ptrcOption.style.display = "none";
-	var jbxccOption = document.querySelector("[data-value='JBXCC']")
-	jbxccOption.style.display = "none";
-	var ico2wtrcOption = document.querySelector("[data-value='ICO2STRC(Wall)']")
-		ico2wtrcOption.style.display = "none";
-	if (displayICO2PAndW) {
-		ico2ptrcOption.style.display = "block";
-		ico2wtrcOption.style.display = "block";
-	}
-	
-	if (displayJbxcc) {
-		jbxccOption.style.display = "block";
-	}
 }
 
 var generateSelect = function(controlIndex) {
 					
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
+	wrapper.classList.add("sketchfab-category")
 	wrapper.style.width = (appWidth/4) + "px";
 	
 	var select = document.createElement("div")
@@ -639,7 +669,7 @@ var generateSelect = function(controlIndex) {
 	var triggerSpan = document.createElement("span")
 	triggerSpan.textContent = Object.keys(controls[controlIndex].configuration.designations)[0]
 	triggerSpan.id = "triggerSpan-" + controlIndex;
-	triggerSpan.classList.add("sketchfab-category")
+	triggerSpan.classList.add("sketchfab-select-value")
 	selectTrigger.appendChild(triggerSpan)
 	
 	var arrow = document.createElement("div")
@@ -702,7 +732,6 @@ var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) 
 	
 	return wrapper;
 }
-
 
 `
 )
