@@ -58,6 +58,8 @@ var buildSurfaceOptions = (materials) => {
     let surfaceOptionMap = {};
     let materialNameSegmentMap = {};
     let surfaceAttributeNameMap = {};
+
+    let surfaceControls = [];
     
     for (let i=0; i<materials.length; ++i) {
       var matches = materials[i].name.match(/[a-zA-Z]*-[A-Z]+-[a-zA-Z]+/g);
@@ -80,13 +82,20 @@ var buildSurfaceOptions = (materials) => {
         if (isNewUniqueGeometry) {
           surfaceOptionMap[geometryName] = {}
 
+
+          surfaceControls.push({name: "Attribute 1", geometryName: geometryName, options: [materialOptions[0]]})
+
           surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
           surfaceOptionMap[geometryName][materialOptions[0]] = [];
           for (let j=1; j<materialOptions.length; ++j) {
             surfaceAttributeNameMap[geometryName].push("Attribute Name")
+            surfaceControls.push({name: `Attribute ${j}`, geometryName: geometryName, options: [materialOptions[j]]})
             surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
           }
         } else {
+
+          
+
           let isNewUniquePrimaryValue = surfaceOptionMap[geometryName][primaryValue] === undefined
           if (isNewUniquePrimaryValue) {
             surfaceOptionMap[geometryName][primaryValue] = [];
@@ -105,7 +114,10 @@ var buildSurfaceOptions = (materials) => {
         }
       }
     }
-    
+    console.log('\n\n\n')
+    console.log("surfaceControls:")
+    console.log(surfaceControls)
+    console.log('\n\n\n')
     return {
         surfaceOptionMap,
         materialNameSegmentMap,
