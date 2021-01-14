@@ -3,8 +3,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
 	toggleModalDisplay, 
 	selectControls, 
-	selectSceneGraph, 
 	selectModelId,
+	selectSceneGraph, 
+	selectMaterials,
 	selectSurfaceOptionMap,
 	selectSurfaceConfigurationMode,
 	selectMaterialNameSegmentMap,
@@ -19,6 +20,7 @@ export default () => {
 	const controls = useSelector(selectControls);
 	const modelId = useSelector(selectModelId);
 	const sceneGraph = useSelector(selectSceneGraph);
+	const materials = useSelector(selectMaterials);
 	const surfaceOptionMap = useSelector(selectSurfaceOptionMap);
 	const surfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
 	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
@@ -30,6 +32,7 @@ export default () => {
 		controls, 
 		modelId, 
 		sceneGraph, 
+		materials,
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
@@ -57,6 +60,7 @@ const createJSExport = (configurationMaps) => {
 		controls, 
 		modelId, 
 		sceneGraph, 
+		materials,
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
@@ -73,7 +77,7 @@ var uid = '${modelId === '' ? '66e17931c39e4042ac5aa8764bee7f5a' : modelId}';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
-var myMaterials;
+var myMaterials = ${JSON.stringify(materials)}
 
 var error = function() {
 	console.error('Sketchfab API error');
@@ -97,7 +101,6 @@ var controlsContainer = document.getElementById('sketchfab-lower-controls');
 var toggleableItems = {};
 var toggleableGroups = {};
 
-var nameArrays = [];
 var currentAnimation = "";
 var currentAnimationEndTime = 0;
 var isElementCategoryControlled = false;
@@ -141,22 +144,6 @@ var success = function(api) {
 			});
 			
 			api.pause();
-            api.getSceneGraph(function(err, result) {
-                if (err) {
-                    console.log('Error getting nodes');
-                    return;
-                }
-				buildNodeNameArray(result.children, 0);
-				console.log("sceneGraph[0]:")
-				console.log(result);
-            });
-			
-			api.getMaterialList(function(err, materials) {
-				myMaterials = materials;
-				if (surfaceConfigurationMode) {
-					configureInitialSurfaces(api)
-				}
-			});
 			
 			var animations = [];
 			for (let i = 0; i < controls.length; ++i) {	
@@ -265,12 +252,12 @@ var success = function(api) {
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function(e) {
 							handleUpdateSelect(e);
-							handleHidingOptions(e);
+							var optionName = e.target.id.split("-")[0]
+							handleHidingOptions(optionName);
 							var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
 							for (var k=0; k<allCategoryOptions.length; ++k) {
 								allCategoryOptions[k].style.visibility = "visible";
 							}
-							var optionName = e.target.id.split("-")[0]
 							var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
 													.filter(select => !select.classList.contains("sketchfab-select-open"))
 													.map(select => select.querySelector(".sketchfab-select-value").textContent)
@@ -310,6 +297,7 @@ var success = function(api) {
 					}
 				});
 				setVisibleNodes(api);
+				handleHidingOptions();
 				disableAnimations();
 			}
 			
@@ -459,8 +447,8 @@ var success = function(api) {
 client.init(uid, {
 	success: success,
 	error: error,
-	autostart: 1,
-	preload: 1,
+	autostart: 0,
+	preload: 0,
 	ui_animations: 0,
 	ui_watermark: 0,
 	ui_inspector: 0,
@@ -607,12 +595,12 @@ var handleUpdateSelect = function(e) {
 }
 
 
-var handleHidingOptions = function(e) {
+var handleHidingOptions = function(optionName="") {
 	var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
 	for (var k=0; k<allCategoryOptions.length; ++k) {
 		allCategoryOptions[k].style.visibility = "visible";
 	}
-	var optionName = e.target.id.split("-")[0]
+	
 	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
 							.filter(select => !select.classList.contains("sketchfab-select-open"))
 							.map(select => select.querySelector(".sketchfab-select-value").textContent)
