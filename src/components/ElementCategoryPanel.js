@@ -137,15 +137,8 @@ export default props => {
                   onChange={() => {        
                     let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
                     if(showChecked) {
-                      console.log("\n\nshowChecked")
-                      console.log(element.designation)
-                      console.log(currentElementDesignation)
-                      console.log(newHiddenCategoryConfigurations[currentElementDesignation])
-                      console.log(newHiddenCategoryConfigurations[element.designation])
                       newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
                       newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
-                      console.log(newHiddenCategoryConfigurations[currentElementDesignation])
-                      console.log(newHiddenCategoryConfigurations[element.designation])
                     } else {
                       if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
                         newHiddenCategoryConfigurations[currentElementDesignation] = [];
