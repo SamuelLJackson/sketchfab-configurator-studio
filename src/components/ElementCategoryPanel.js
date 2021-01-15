@@ -113,9 +113,9 @@ export default props => {
     const renderDisableMultiSelect = (index) => {
     
       let currentElementDesignation = categoryElements[index].designation
-      let categoryContainsCurrentElement = option.configuration.designations[currentElementDesignation] != undefined
+      let categoryContainsCurrentElement = option.configuration.designations[currentElementDesignation] !== undefined
       
-      let otherSelectedElements = categoryElements.filter(element => !element.isAvailable && option.configuration.designations[element.designation] == undefined)
+      let otherSelectedElements = categoryElements.filter(element => !element.isAvailable && option.configuration.designations[element.designation] === undefined)
       if (categoryContainsCurrentElement && otherSelectedElements.length > 0) {
         console.log("otherSelectedElements:")
         console.log(otherSelectedElements)
@@ -124,7 +124,7 @@ export default props => {
             <div style={{marginLeft: 4}}>Disable when selected:</div>
             {otherSelectedElements.map(element => {
               let showChecked = false;
-              if (hiddenCategoryConfigurations[currentElementDesignation] != undefined) {
+              if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
                 if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
                   showChecked = true;
                 }
@@ -137,8 +137,15 @@ export default props => {
                   onChange={() => {        
                     let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
                     if(showChecked) {
-                      newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenConfigElement => hiddenConfigElement.designation != element.designation)
-                      newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenConfigElement => hiddenConfigElement.designation != currentElementDesignation)
+                      console.log("\n\nshowChecked")
+                      console.log(element.designation)
+                      console.log(currentElementDesignation)
+                      console.log(newHiddenCategoryConfigurations[currentElementDesignation])
+                      console.log(newHiddenCategoryConfigurations[element.designation])
+                      newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
+                      newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
+                      console.log(newHiddenCategoryConfigurations[currentElementDesignation])
+                      console.log(newHiddenCategoryConfigurations[element.designation])
                     } else {
                       if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
                         newHiddenCategoryConfigurations[currentElementDesignation] = [];
