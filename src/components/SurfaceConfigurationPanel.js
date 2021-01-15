@@ -8,7 +8,7 @@ import {
   selectSurfaceAttributeNameMap,
 } from './viewerSlice';
 
-export default () => {
+const SurfaceConfigurationPanel = () => {
 
     const dispatch = useDispatch();
     const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap);
@@ -63,3 +63,5 @@ export default () => {
       </div>
     )
 }
+
+export default SurfaceConfigurationPanel;

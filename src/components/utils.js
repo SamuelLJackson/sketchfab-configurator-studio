@@ -94,7 +94,15 @@ var buildSurfaceOptions = (materials) => {
           }
         } else {
 
-          
+          for (var j=0; j<surfaceControls.length; ++j) {
+            if (surfaceControls[j].geometryName === geometryName) {
+              surfaceControls[j].options.push(materialOptions[0])
+              for (var k=1; k<materialOptions.length; ++k) {
+                surfaceControls[j+k].options.push(materialOptions[k])
+              }
+              break;
+            }
+          }
 
           let isNewUniquePrimaryValue = surfaceOptionMap[geometryName][primaryValue] === undefined
           if (isNewUniquePrimaryValue) {

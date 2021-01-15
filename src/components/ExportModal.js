@@ -14,7 +14,7 @@ import {
 	selectHiddenCategoryConfigurations,
 } from './viewerSlice';
 
-export default () => {
+const ExportModal = () => {
 
     const dispatch = useDispatch();
 	const controls = useSelector(selectControls);
@@ -724,3 +724,5 @@ var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) 
 `
 )
 }
+
+export default ExportModal;

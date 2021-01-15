@@ -14,7 +14,7 @@ import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import AnimationPanel from './AnimationPanel';
 import { ReactSortable } from 'react-sortablejs';
 
-export default () => {  
+const OptionPanel = () => {  
   
   const options = useSelector(selectControls);
   const disableButtons = useSelector(selectDisableButtons);
@@ -115,3 +115,5 @@ const renderOptions = (options, dispatch) => {
     </div>
   )
 }
+
+export default OptionPanel;

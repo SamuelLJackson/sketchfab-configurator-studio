@@ -12,7 +12,7 @@ import {
     setSurfaceAttributeNameMap,
 } from './viewerSlice';
 
-export default modelId => dispatch => {
+const initializeViewer = modelId => dispatch => {
 
     dispatch(setControls([]));
   
@@ -196,3 +196,5 @@ export default modelId => dispatch => {
   
     Configurator.init(CONFIG, iframe);
   };
+
+export default initializeViewer;

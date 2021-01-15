@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { createControl, toggleOptionChoiceModalDisplay } from './viewerSlice';
 
-export default () => {
+const OptionChoiceModal = () => {
     const dispatch = useDispatch();
 
     return (
@@ -33,3 +33,5 @@ export default () => {
         </div>
     )
 }
+
+export default OptionChoiceModal;

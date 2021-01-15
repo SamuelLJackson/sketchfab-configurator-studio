@@ -5,7 +5,7 @@ import {
   updateControl,
 } from './viewerSlice';
 
-export default props => {
+const AnimationPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
@@ -65,3 +65,5 @@ export default props => {
       </div>
     )
 }
+
+export default AnimationPanel;

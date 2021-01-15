@@ -1,12 +1,13 @@
 import React from 'react';
 
-export default () => {
+const Viewer = () => {
 
     return (        
         <div class="viewer">
             <iframe 
                 src="" 
                 id="api-frame" 
+                title="sketchfab-viewer"
                 allowfullscreen mozallowfullscreen="true" 
                 webkitallowfullscreen="true"
             ></iframe>
@@ -14,3 +15,5 @@ export default () => {
         </div>
     )
 }
+
+export default Viewer;

@@ -6,7 +6,7 @@ import {
 } from './viewerSlice';
 import hexRgb from 'hex-rgb';
 
-export default props => {
+const ColorPanel = props => {
 
     const dispatch = useDispatch(); 
     const { option } = props
@@ -26,7 +26,7 @@ export default props => {
           id="addColor"
           className="add__button"
           onClick={() => {
-            if(option.additionalColors == undefined || option.additionalColors == null) {
+            if(option.additionalColors === undefined || option.additionalColors === null) {
                 const transferObject = {
                   id: option.id, 
                   key: "additionalColors", 
@@ -124,3 +124,5 @@ const renderColorsOption = (option, materials, dispatch) => {
       </select>
     )
 }
+
+export default ColorPanel;

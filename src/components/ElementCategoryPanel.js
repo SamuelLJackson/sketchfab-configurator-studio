@@ -8,7 +8,7 @@ import {
   updateControl,
 } from './viewerSlice';
 
-export default props => {
+const ElementCategoryPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
@@ -19,7 +19,7 @@ export default props => {
 
       return categoryElements.map((categoryElement, index) => {
         
-        let categoryContainsCurrentElement = option.configuration.designations[categoryElement.designation] != undefined
+        let categoryContainsCurrentElement = option.configuration.designations[categoryElement.designation] !== undefined
 
         if (categoryElement.isAvailable || categoryContainsCurrentElement) {
         
@@ -39,7 +39,7 @@ export default props => {
                         delete newDesignations[categoryElement.designation];
                         newConfiguration = {
                           designations: newDesignations,
-                          allowsAnimation: option.configuration.allowsAnimation.filter(a => a != categoryElement.designation)
+                          allowsAnimation: option.configuration.allowsAnimation.filter(a => a !== categoryElement.designation)
                         }
                         newCategoryElements[index].isAvailable = true;
                       } else {
@@ -169,3 +169,5 @@ export default props => {
       </div>
     )
 }
+
+export default ElementCategoryPanel;
