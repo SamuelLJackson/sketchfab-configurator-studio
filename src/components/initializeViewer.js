@@ -4,6 +4,7 @@ import {
     setSketchfabAPI,
     setAnimations,
     setControls,
+    setTextureControls,
     toggleDisableButtons,
     setSceneGraph,
     setMaterials,
@@ -184,6 +185,7 @@ const initializeViewer = modelId => dispatch => {
                             dispatch(setMaterialNameSegmentMap(surfaceOptions.materialNameSegmentMap))
                             dispatch(setSurfaceOptionMap(surfaceOptions.surfaceOptionMap))
                             dispatch(setSurfaceAttributeNameMap(surfaceOptions.surfaceAttributeNameMap))
+                            dispatch(setTextureControls(surfaceOptions.surfaceControls))
                         });
                     }.bind(this));
                 }.bind(this),

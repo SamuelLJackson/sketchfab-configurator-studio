@@ -7,6 +7,7 @@ const initialState = {
   animations: [],
   sceneGraph: [],
   controls: [],
+  textureControls: [],
   disableButtons: true,
   latestControlId: 0,
   sketchfabAPI: null,
@@ -81,6 +82,16 @@ export const viewerSlice = createSlice({
     setControls: (state, action) => {
       state.controls = action.payload;
     },
+    setTextureControls: (state, action) => { 
+      for (var i=0; i<action.payload.length; ++i) {
+        state.latestControlId = state.latestControlId += 1;
+        action.payload[i].id = state.latestControlId;
+      }     
+      state.textureControls = action.payload;
+    },
+    addTextureControls: (state) => {
+      state.controls = state.controls.concat(state.textureControls)
+    },
     toggleDisableButtons: (state) => {
       state.disableButtons = false;
     },
@@ -135,6 +146,8 @@ export const {
   toggleDisableButtons,
   updateControl,
   setControls,
+  setTextureControls,
+  addTextureControls,
   setSceneGraph,
   setSceneGraphIsVisible,
   setViewMode,
@@ -157,6 +170,8 @@ export const selectMaterials = state => state.materials;
 export const selectAnimations = state => state.animations;
 
 export const selectControls = state => state.controls;
+
+export const selectTextureControls = state => state.controls;
 
 export const selectDisableButtons = state => state.disableButtons;
 

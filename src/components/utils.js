@@ -74,8 +74,6 @@ var buildSurfaceOptions = (materials) => {
         for (let j=0; j<materialOptions.length; ++j) {
           materialNameSegmentMap[materialOptions[j]] = materialOptions[j];
         }
-        console.log("\n\nmaterialNameSegmentMap")
-        console.log(materialNameSegmentMap)
 
         // generate select display
         let isNewUniqueGeometry = surfaceOptionMap[geometryName] === undefined;
@@ -83,22 +81,49 @@ var buildSurfaceOptions = (materials) => {
           surfaceOptionMap[geometryName] = {}
 
 
-          surfaceControls.push({name: "Attribute 1", geometryName: geometryName, options: [materialOptions[0]]})
+          surfaceControls.push({
+            name: geometryName + " - Attribute 1", 
+            configuration: {
+              isPrimary: true,
+              ordering: 0,
+              geometryName: geometryName, 
+              options: [materialOptions[0]]
+            },
+            entity: {instanceID: 0},
+            entityIndex: "none",
+            isExpanded: true,
+            type: "textureConfiguration",            
+          })
 
           surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
           surfaceOptionMap[geometryName][materialOptions[0]] = [];
           for (let j=1; j<materialOptions.length; ++j) {
             surfaceAttributeNameMap[geometryName].push("Attribute Name")
-            surfaceControls.push({name: `Attribute ${j}`, geometryName: geometryName, options: [materialOptions[j]]})
+            surfaceControls.push({
+              name: `${geometryName} - Attribute ${j+1}`, 
+              configuration: {
+                isPrimary: false,
+                ordering: j,
+                geometryName: geometryName, 
+                options: [materialOptions[j]]
+              },
+              entity: {instanceID: 0},
+              entityIndex: "none",
+              isExpanded: true,
+              type: "textureConfiguration",        
+            })
             surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
           }
         } else {
-
           for (var j=0; j<surfaceControls.length; ++j) {
-            if (surfaceControls[j].geometryName === geometryName) {
-              surfaceControls[j].options.push(materialOptions[0])
+            if (surfaceControls[j].configuration.geometryName === geometryName) {
+              if(surfaceControls[j].configuration.options.includes(materialOptions[0]) === false) {
+                surfaceControls[j].configuration.options.push(materialOptions[0])
+              }
               for (var k=1; k<materialOptions.length; ++k) {
-                surfaceControls[j+k].options.push(materialOptions[k])
+                if (surfaceControls[j+k].configuration.options.includes(materialOptions[k]) === false) {
+                  surfaceControls[j+k].configuration.options.push(materialOptions[k])
+                }
               }
               break;
             }
@@ -122,14 +147,12 @@ var buildSurfaceOptions = (materials) => {
         }
       }
     }
-    console.log('\n\n\n')
-    console.log("surfaceControls:")
-    console.log(surfaceControls)
-    console.log('\n\n\n')
+    
     return {
         surfaceOptionMap,
         materialNameSegmentMap,
         surfaceAttributeNameMap,
+        surfaceControls,
     }
 }
 
