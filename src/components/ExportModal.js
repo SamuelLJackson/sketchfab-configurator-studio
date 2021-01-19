@@ -179,6 +179,37 @@ var success = function(api) {
 				var singleControlContainer = document.createElement("div");
 				singleControlContainer.classList.add("sketchfab-single-control-container");		
 											
+				if (controls[i].type === "textureConfiguration") {		
+					const { geometryName, options, isPrimary, ordering } = controls[i].configuration
+					
+					var initialValue = options[0];
+					var wrapper = generateTextureSelect(geometryName, controls[i].name, initialValue)
+					wrapper.classList.add("sketchfab-texture-category")
+					wrapper.id = geometryName + "-" + ordering;
+					var customOptions = wrapper.querySelector(".sketchfab-options")
+					
+						for (var j=0; j<options.length; ++j) {
+							let customOption = document.createElement("span")
+							customOption.classList.add("sketchfab-option");
+							if (j===0) {
+								customOption.classList.add("selected");
+							}
+							var name = options[j];
+							var humanReadable = materialNameSegmentMap[name];
+							customOption.setAttribute("data-value", name)
+							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
+							customOption.innerHTML = name + " - " + humanReadable;
+							customOption.addEventListener('click', e => {
+								handleUpdateSelect(e);			
+								handleHidingTextureOptions(api)
+							})
+								
+							
+							customOptions.appendChild(customOption)
+						}
+						singleControlContainer.appendChild(wrapper);
+						
+				}
 				if (controls[i].type == "color") {
 					var resetBut = document.createElement("button");
 					resetBut.innerHTML = "Reset";
@@ -303,142 +334,10 @@ var success = function(api) {
 			
 			if (animations.length > 0) {
 				pollTime();			
-			}
+			}			
 			
 			if (surfaceConfigurationMode) {
-				
-				for (var i=0; i<Object.keys(surfaceOptionMap).length; ++i) {
-					var surfaceName = Object.keys(surfaceOptionMap)[i]
-					var primaryInitialValue = Object.keys(surfaceOptionMap[surfaceName])[0]
-					
-					for (j=0; j<surfaceAttributeNameMap[surfaceName].length; ++j) {
-						if(j === 0) {
-							var singleControlContainer = document.createElement("div");
-							singleControlContainer.classList.add("sketchfab-single-control-container")
-							
-							var wrapper = generateSurfaceSelect(surfaceName, i, j)
-							var customOptions = wrapper.querySelector(".sketchfab-options")
-							
-							for (var k=0; k<Object.keys(surfaceOptionMap[surfaceName]).length; ++k) {
-								
-								let customOption = document.createElement("span")
-								customOption.classList.add("sketchfab-option");
-								if (k===0) {
-									customOption.classList.add("selected");
-								}
-								var name = Object.keys(surfaceOptionMap[surfaceName])[k]
-								var humanReadable = materialNameSegmentMap[name];
-								customOption.setAttribute("data-value", name)
-								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
-								customOption.innerHTML = name + " - " + humanReadable;
-								customOption.addEventListener('click', function(e) {
-									handleUpdateSelect(e)
-									
-									var nameCode = this.id.split("-")[0]
-									var currentSurfaceName = this.id.split("-")[1]
-									var surfaceElementIndex = this.id.split("-")[2]
-									var subPrimaryOptionArrays = document.getElementsByClassName(currentSurfaceName + "-options")
-									var primaryAttributeName = surfaceAttributeNameMap[currentSurfaceName][0]
-									for(var l=0; l<subPrimaryOptionArrays.length; ++l) {
-										var subPrimaryOptionElementName = subPrimaryOptionArrays[l].id.split("-")[1]
-										subPrimaryOptionArrays[l].innerHTML = "";
-										
-										var selectTitle = document.createElement("h3")
-										selectTitle.classList.add("sketchfab-title")
-										selectTitle.textContent = currentSurfaceName + " - " + surfaceAttributeNameMap[currentSurfaceName][surfaceElementIndex];
-										subPrimaryOptionArrays[l].appendChild(selectTitle)
-										
-										var triggerSpan = document.getElementById("triggerSpan" + "-" + currentSurfaceName + "-" + surfaceAttributeNameMap[currentSurfaceName][l+1] + "-" + (l+1))
-										triggerSpan.textContent = surfaceOptionMap[currentSurfaceName][nameCode][l][0]
-										for (var m=0; m<surfaceOptionMap[currentSurfaceName][nameCode][l].length; ++m) {
-											
-											let customOption = document.createElement("span")
-											customOption.classList.add("sketchfab-option");
-											if (m===0) {
-												customOption.classList.add("selected");
-											}
-											var name = surfaceOptionMap[currentSurfaceName][nameCode][l][m]
-											var humanReadable = materialNameSegmentMap[name];
-											customOption.setAttribute("data-value", name)
-											customOption.id = name + "-" + currentSurfaceName + "-" + j + "-" + k + "-" + i;
-											customOption.innerHTML = name + " - " + humanReadable;
-											customOption.addEventListener('click', e => setNonPrimarySurfaceConfiguration(e, api))
-											
-											subPrimaryOptionArrays[l].appendChild(customOption)
-										}										
-									}
-									
-									configureMaterials(currentSurfaceName, primaryAttributeName, api)
-								})								
-								
-								customOptions.appendChild(customOption)
-							}
-							singleControlContainer.appendChild(wrapper);		
-							controlsContainer.appendChild(singleControlContainer);
-						} else {
-							var singleControlContainer = document.createElement("div");
-							singleControlContainer.classList.add("sketchfab-single-control-container")
-							
-							var wrapper = document.createElement("div")
-							wrapper.classList.add("sketchfab-select-wrapper")
-							wrapper.style.width = (appWidth/4) + "px";
-							
-							var select = document.createElement("div")
-							select.classList.add("sketchfab-select")
-							
-							var selectTrigger = document.createElement("div")
-							selectTrigger.classList.add("sketchfab-select__trigger")
-							
-							var triggerSpan = document.createElement("span")
-							triggerSpan.textContent = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][0]
-							triggerSpan.id = "triggerSpan-" + surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-" + j;
-							triggerSpan.classList.add(surfaceName + "-triggerSpan")
-							selectTrigger.appendChild(triggerSpan)
-							
-							var arrow = document.createElement("div")
-							arrow.classList.add("sketchfab-select-arrow")
-							selectTrigger.appendChild(arrow)
-							
-							var customOptions = document.createElement("div")
-							customOptions.id = surfaceName + "-" + surfaceAttributeNameMap[surfaceName][j] + "-options";
-							customOptions.classList.add("sketchfab-options")
-							customOptions.classList.add(surfaceName + "-options")
-							
-							var selectTitle = document.createElement("h3")
-							selectTitle.classList.add("sketchfab-title")
-							selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][j];
-							customOptions.appendChild(selectTitle)
-							
-							select.appendChild(selectTrigger)
-							select.appendChild(customOptions)
-							wrapper.appendChild(select)	
-								
-							for (var k=0; k<surfaceOptionMap[surfaceName][primaryInitialValue][j-1].length; ++k) {
-								
-								let customOption = document.createElement("span")
-								customOption.classList.add("sketchfab-option");
-								if (k===0) {
-									customOption.classList.add("selected");
-								}
-								var name = surfaceOptionMap[surfaceName][primaryInitialValue][j-1][k]
-								var humanReadable = materialNameSegmentMap[name];
-								customOption.setAttribute("data-value", name)
-								customOption.id = name + "-" + surfaceName + "-" + j + "-" + k + "-" + i;
-								customOption.innerHTML = name + " - " + humanReadable;
-								customOption.addEventListener('click', e => setNonPrimarySurfaceConfiguration(e, api))
-								
-								customOptions.appendChild(customOption)
-							}
-							
-							wrapper.addEventListener('click', function() {
-								this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
-							})
-							
-							singleControlContainer.appendChild(wrapper);		
-							controlsContainer.appendChild(singleControlContainer);
-						}
-					}
-				}
+				handleHidingTextureOptions(api)
 			}
 		});
 	});
@@ -456,27 +355,75 @@ client.init(uid, {
 	ui_infos: 0,
 });
 
-var configureMaterials = function(currentSurfaceName, currentElementName, api) {
-							
-	//get array of selected values
-	var relevantSelects = document.getElementsByClassName(currentSurfaceName + "-triggerSpan")
+var handleHidingTextureOptions = function(api) {
+	console.log("BEGIN: handleHidingTextureOptions")
 	
+	var textureSelects = document.getElementsByClassName("sketchfab-texture-category")	
+	for (var i=0; i<textureSelects.length; ++i) {
+		var options = textureSelects[i].getElementsByClassName("sketchfab-option");
+		var geometryName = textureSelects[i].id.split("-")[0]
+		var ordering = textureSelects[i].id.split("-")[1]
+		var isPrimary = Number(ordering) === 0;
+		if (!isPrimary) {
+			var currentInitialPrimarySelection = document.getElementById(geometryName + "-0").querySelector(".sketchfab-select__trigger span").textContent;
+			var availableOptions = surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1]
+			var previouslyAvailableOptions =  Array.from(options).filter(op => op.style.display === "block").map(op => op.getAttribute("data-value"))
+			let equal = availableOptions.length == previouslyAvailableOptions.length && availableOptions.every((element, index)=> element === previouslyAvailableOptions[index] );
+			
+			var triggerSpan = textureSelects[i].querySelector(".sketchfab-select__trigger span")
+			
+			if (!equal) {
+				var newValue = availableOptions[0];
+				triggerSpan.textContent = newValue;
+				for (var j=0; j<options.length; ++j) {
+					options[j].classList.remove("selected")
+					var optionValue = options[j].getAttribute("data-value")
+					if (optionValue === newValue) {
+						options[j].classList.add("selected")
+					}
+					options[j].style.display = "none"
+					var optionValue = options[j].getAttribute("data-value")
+					if (availableOptions.includes(optionValue)) {
+						options[j].style.display = "block"
+					}
+				}
+			}
+		}
+	}
+	for (var i=0; i<textureSelects.length; ++i) {
+		var geometryName = textureSelects[i].id.split("-")[0]
+		configureMaterials(geometryName, api)		
+	}
+
+	console.log("END: handleHidingTextureOptions")
+}
+
+var configureMaterials = function(geometryName, api) {
+	console.log("BEGIN: configureMaterials")
+	console.log(arguments)
+	//get array of selected values
+	var relevantSelects = document.getElementsByClassName(geometryName + "-triggerSpan")
+	console.log("relevantSelects:")
+	console.log(relevantSelects)
 	//build name string via accessing selected values
-	var materialNameString = currentSurfaceName;
+	var materialNameString = geometryName + "-";
 	
 	for (var k=0; k<relevantSelects.length; ++k) {
-		materialNameString += "-" + relevantSelects[k].textContent;
+		materialNameString += relevantSelects[k].textContent + "-";
 	}
-	
+	console.log("materialNameString:")
+	console.log(materialNameString)
 	var newMaterial;
 	for (var k=0; k<myMaterials.length; ++k) {
 		if (myMaterials[k].name.startsWith(materialNameString)) {
 			newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
 		}
 	}
+	console.log("newMaterial:")
+	console.log(newMaterial)
 	
 	for (var k=0; k<myMaterials.length; ++k) {
-		if (myMaterials[k].name === currentSurfaceName) {
+		if (myMaterials[k].name === geometryName) {
 			myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
 			myMaterials[k].reflection = newMaterial.reflection;
 			myMaterials[k].reflector = newMaterial.reflector;
@@ -484,40 +431,7 @@ var configureMaterials = function(currentSurfaceName, currentElementName, api) {
 			api.setMaterial(myMaterials[k], function() {console.log("material updated")})
 		}
 	}
-}
-
-var configureInitialSurfaces = function(api) {
-	
-	var surfaceNames = Object.keys(surfaceOptionMap)				
-	
-	for (var i=0; i<surfaceNames.length; ++i) {
-		var currentSurfaceName = surfaceNames[i];
-
-		var firstPrimaryOption = Object.keys(surfaceOptionMap[currentSurfaceName])[0]
-		var optionsArray = surfaceOptionMap[currentSurfaceName][firstPrimaryOption]
-		var materialNameString = currentSurfaceName + "-" + firstPrimaryOption;
-		
-		
-		for (var k=0; k<optionsArray.length; ++k) {
-			materialNameString += "-" + optionsArray[k][0];
-		}
-		
-		var newMaterial;
-		for (var k=0; k<myMaterials.length; ++k) {
-			if (myMaterials[k].name.startsWith(materialNameString)) {
-				newMaterial = JSON.parse(JSON.stringify(myMaterials[k]));
-			}
-		}
-		for (var k=0; k<myMaterials.length; ++k) {
-			if (myMaterials[k].name === currentSurfaceName) {
-				myMaterials[k].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-				myMaterials[k].reflection = newMaterial.reflection;
-				myMaterials[k].reflector = newMaterial.reflector;
-				myMaterials[k].shadeless = newMaterial.shadeless;
-				api.setMaterial(myMaterials[k], function() {console.log("material updated")})
-			}
-		}
-	}			
+	console.log("END: configureMaterials")
 }
 
 var setVisibleNodes = function(api) {
@@ -576,14 +490,17 @@ var mode = function(arr) {
 }
 
 var setNonPrimarySurfaceConfiguration = function(e, api) {
+	console.log("BEGIN: setNonPrimarySurfaceConfiguration")
 	handleUpdateSelect(e);
-	var currentSurfaceName = e.target.id.split("-")[1]
+	var geometryName = e.target.id.split("-")[1]
 	var attributeIndex = e.target.id.split("-")[2]
-	var attributeName = surfaceAttributeNameMap[currentSurfaceName][attributeIndex]
-	configureMaterials(currentSurfaceName, attributeName, api)
+	configureMaterials(geometryName, api)
+	
+	console.log("END: setNonPrimarySurfaceConfiguration")
 }
 
 var handleUpdateSelect = function(e) {
+	console.log("BEGIN: handleUpdateSelect")
 	var nameCode = e.target.id.split("-")[0]
 	
 	if (!e.target.classList.contains('selected')) {
@@ -592,6 +509,7 @@ var handleUpdateSelect = function(e) {
 		e.target.classList.add('selected');
 		e.target.closest('.sketchfab-select').querySelector('.sketchfab-select__trigger span').textContent = nameCode;								
 	}
+	console.log("END: handleUpdateSelect")
 }
 
 
@@ -683,7 +601,7 @@ var generateSelect = function(controlIndex) {
 	return wrapper;
 }
 
-var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) {
+var generateTextureSelect = function(geometryName, selectName, initialValue) {
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
 	
@@ -694,10 +612,8 @@ var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) 
 	var selectTrigger = document.createElement("div")
 	selectTrigger.classList.add("sketchfab-select__trigger")
 	var triggerSpan = document.createElement("span")
-	triggerSpan.id = "primarySurfaceElement-" + surfaceName;
-	triggerSpan.textContent = Object.keys(surfaceOptionMap[surfaceName])[0]
-	triggerSpan.id = "triggerSpan-" + surfaceIndex;
-	triggerSpan.classList.add(surfaceName + "-triggerSpan")
+	triggerSpan.textContent = initialValue;
+	triggerSpan.classList.add(geometryName + "-triggerSpan")
 	selectTrigger.appendChild(triggerSpan)
 	var arrow = document.createElement("div")
 	arrow.classList.add("sketchfab-select-arrow")
@@ -707,7 +623,7 @@ var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) 
 	customOptions.classList.add("sketchfab-options")
 	var selectTitle = document.createElement("h3")
 	selectTitle.classList.add("sketchfab-title")
-	selectTitle.textContent = surfaceName + " - " + surfaceAttributeNameMap[surfaceName][attributeIndex];
+	selectTitle.textContent = selectName;
 	customOptions.appendChild(selectTitle)
 	
 	select.appendChild(selectTrigger)
@@ -720,6 +636,7 @@ var generateSurfaceSelect = function(surfaceName, surfaceIndex, attributeIndex) 
 	
 	return wrapper;
 }
+
 
 `
 )
