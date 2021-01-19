@@ -8,7 +8,7 @@ import {
   setAllNodesVisible,
 } from './viewerSlice';
 
-export default () => {
+const NodePanel = () => {
     const dispatch = useDispatch()
     const sceneGraph = useSelector(selectSceneGraph);
     const sketchfabAPI = useSelector(selectSketchfabAPI);
@@ -67,3 +67,5 @@ const addDashes = number => {
 
     return dashes;
 }
+
+export default NodePanel;

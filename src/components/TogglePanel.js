@@ -5,7 +5,7 @@ import {
   updateControl,
 } from './viewerSlice';
 
-export default props => {
+const TogglePanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
@@ -35,3 +35,5 @@ const addDashes = number => {
 
     return dashes;
 }
+
+export default TogglePanel;

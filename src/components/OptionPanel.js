@@ -7,14 +7,15 @@ import {
   updateControl,
   setControls,
 } from './viewerSlice';
+import AnimationPanel from './AnimationPanel';
 import ColorPanel from './ColorPanel';
-import TogglePanel from './TogglePanel';
 import ElementCategoryPanel from './ElementCategoryPanel'
 import SurfaceConfiguration from './SurfaceConfigurationPanel';
-import AnimationPanel from './AnimationPanel';
+import TextureConfigurationPanel from './TextureCategoryPanel';
+import TogglePanel from './TogglePanel';
 import { ReactSortable } from 'react-sortablejs';
 
-export default () => {  
+const OptionPanel = () => {  
   
   const options = useSelector(selectControls);
   const disableButtons = useSelector(selectDisableButtons);
@@ -22,16 +23,18 @@ export default () => {
   const dispatch = useDispatch();
 
 const renderPanel = (option) => {
-  if (option.type === "color") {
-    return <ColorPanel option={option} />;
-  } else if (option.type === "toggle") {
-    return <TogglePanel option={option} />;
-  } else if (option.type === "animation") {
+  if (option.type === "animation") {
     return <AnimationPanel option={option} />;
+  } else if (option.type === "color") {
+    return <ColorPanel option={option} />;
   } else if (option.type === "category") {
-    return <ElementCategoryPanel option ={option} />;
+    return <ElementCategoryPanel option={option} />;
   } else if (option.type === "surfaceConfiguration") {
     return <SurfaceConfiguration />;
+  } else if (option.type === "textureConfiguration") {
+    return <TextureConfigurationPanel option={option} />;
+  } else if (option.type === "toggle") {
+    return <TogglePanel option={option} />;
   }
 }
 
@@ -115,3 +118,5 @@ const renderOptions = (options, dispatch) => {
     </div>
   )
 }
+
+export default OptionPanel;

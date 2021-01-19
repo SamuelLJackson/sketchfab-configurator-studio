@@ -8,17 +8,17 @@ import {
 import OptionPanel from './OptionPanel';
 import NodePanel from './NodePanel';
 
-export default () => {
+const ControlMenu = () => {
     const dispatch = useDispatch();
     const viewMode = useSelector(selectViewMode);
     const disableButtons = useSelector(selectDisableButtons);
 
     let nodesButtonStyles = {
-        backgroundColor: viewMode == "nodes" ? "white" : "gray"
+        backgroundColor: viewMode === "nodes" ? "white" : "gray"
     }
 
     let optionsButtonStyles = {
-        backgroundColor: viewMode == "options" ? "white" : "gray"
+        backgroundColor: viewMode === "options" ? "white" : "gray"
     }
 
     const renderPanel = (viewMode) => {
@@ -48,3 +48,5 @@ export default () => {
         </div>
     )
 }
+
+export default ControlMenu;

@@ -7,8 +7,9 @@ import {
   setHiddenCategoryConfigurations,
   updateControl,
 } from './viewerSlice';
+import { ReactSortable } from 'react-sortablejs';
 
-export default props => {
+const ElementCategoryPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
@@ -19,7 +20,13 @@ export default props => {
 
       return categoryElements.map((categoryElement, index) => {
         
-        let categoryContainsCurrentElement = option.configuration.designations[categoryElement.designation] != undefined
+        let categoryContainsCurrentElement = false;
+        for (let i=0; i<option.configuration.designations.length; ++i) {
+          if (option.configuration.designations[i].name === categoryElement.designation) {
+            categoryContainsCurrentElement = true;
+            break;
+          }
+        }
 
         if (categoryElement.isAvailable || categoryContainsCurrentElement) {
         
@@ -34,23 +41,23 @@ export default props => {
                       let newCategoryElements = JSON.parse(JSON.stringify(categoryElements))
                       let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
                       let newConfiguration = {};
-                      
-                      if (newDesignations[categoryElement.designation] != undefined) {
-                        delete newDesignations[categoryElement.designation];
-                        newConfiguration = {
-                          designations: newDesignations,
-                          allowsAnimation: option.configuration.allowsAnimation.filter(a => a != categoryElement.designation)
-                        }
-                        newCategoryElements[index].isAvailable = true;
-                      } else {
-                        newDesignations[categoryElement.designation] = "";
-                        let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
-                        newDisablesAnimation.push(categoryElement.designation)
-                        newConfiguration = {
-                          designations: newDesignations,
-                          allowsAnimation: newDisablesAnimation,
-                        }
+
+                      let filteredDesignations = newDesignations.filter(des => des.name !== categoryElement.designation)                      
+                      newCategoryElements[index].isAvailable = true;
+
+                      let newDisablesAnimation = option.configuration.allowsAnimation.filter(a => a !== categoryElement.designation)
+
+                      if (newDesignations.length === filteredDesignations.length) {
+                        filteredDesignations.push({name: categoryElement.designation, humanReadable: categoryElement.designation})
                         newCategoryElements[index].isAvailable = false;
+                        var selectedElement = newCategoryElements.splice(index, 1)[0]
+                        var numberOfSelectedElements = filteredDesignations.length;
+                        newCategoryElements.splice(numberOfSelectedElements-1, 0, selectedElement)
+                        newDisablesAnimation.push(categoryElement.designation)
+                      }
+                      newConfiguration = {
+                        designations: filteredDesignations,
+                        allowsAnimation: newDisablesAnimation,
                       }
                       dispatch(setGroupingOptions(newCategoryElements))
                       dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
@@ -62,7 +69,7 @@ export default props => {
                 <input 
                   type="checkbox" 
                   checked={option.configuration.allowsAnimation.includes(categoryElement.designation)}
-                  disabled={option.configuration.designations[categoryElement.designation] == undefined}
+                  disabled={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 0}
                   onChange={() => {
                     let newConfiguration = {};                  
                     let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
@@ -88,11 +95,15 @@ export default props => {
                 <input
                   type="text"
                   placeholder="Enter human readable name"
-                  disabled={option.configuration.designations[categoryElement.designation] == undefined}
-                  value={option.configuration.designations[categoryElement.designation]}
+                  disabled={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 0}
+                  value={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 1 ? option.configuration.designations.filter(element => element.name === categoryElement.designation)[0].humanReadable : ""}
                   onChange={e => {
                     let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                    newDesignations[categoryElement.designation] = e.target.value;
+                    for (let i=0; i<newDesignations.length; ++i) {
+                      if (newDesignations[i].name === categoryElement.designation) {
+                        newDesignations[i].humanReadable = e.target.value;
+                      }
+                    }
                     let newConfiguration = {
                       designations: newDesignations,
                       allowsAnimation: option.configuration.allowsAnimation.map(a => a),
@@ -164,8 +175,12 @@ export default props => {
     return (
       <div className="grouping__container">
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>
-          {renderDesignationMultiselect()}
+          <ReactSortable list={categoryElements} setList={categoryElements => dispatch(setGroupingOptions(categoryElements))}>
+            {renderDesignationMultiselect()}          
+          </ReactSortable>
         </div>
       </div>
     )
 }
+
+export default ElementCategoryPanel;

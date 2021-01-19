@@ -1,8 +1,10 @@
 import Sketchfab from '@sketchfab/viewer-api';
+import { buildSurfaceOptions } from './utils'
 import {
     setSketchfabAPI,
     setAnimations,
     setControls,
+    setTextureControls,
     toggleDisableButtons,
     setSceneGraph,
     setMaterials,
@@ -11,7 +13,7 @@ import {
     setSurfaceAttributeNameMap,
 } from './viewerSlice';
 
-export default modelId => dispatch => {
+const initializeViewer = modelId => dispatch => {
 
     dispatch(setControls([]));
   
@@ -177,61 +179,13 @@ export default modelId => dispatch => {
   
                         api.getMaterialList(function(err, materials) {
                             dispatch(setMaterials(materials));
-  
-                            let surfaceOptionMap = {};
-                            let materialNameSegmentMap = {};
-                            let surfaceAttributeNameMap = {};
                             
-                            for (let i=0; i<materials.length; ++i) {
-                              var matches = materials[i].name.match(/[a-zA-Z]*-[A-Z]+-[a-zA-Z]+/g);
+                            let surfaceOptions = buildSurfaceOptions(materials)
                             
-                              if (matches !== null) {
-                                let materialNameArray = materials[i].name.split("-").filter(string => string != "")
-                                let geometryName = materialNameArray[0];
-                                let materialOptions = materials[i].name.match(/[A-Z]+-/g).map(option => option.replace("-", ""));
-                                let primaryValue = materialOptions[0];
-                                
-                                // generate material name segment map
-                                for (let j=0; j<materialOptions.length; ++j) {
-                                  materialNameSegmentMap[materialOptions[j]] = materialOptions[j];
-                                }
-                                console.log("\n\nmaterialNameSegmentMap")
-                                console.log(materialNameSegmentMap)
-  
-                                // generate select display
-                                let isNewUniqueGeometry = surfaceOptionMap[geometryName] === undefined;
-                                if (isNewUniqueGeometry) {
-                                  surfaceOptionMap[geometryName] = {}
-  
-                                  surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
-                                  surfaceOptionMap[geometryName][materialOptions[0]] = [];
-                                  for (let j=1; j<materialOptions.length; ++j) {
-                                    surfaceAttributeNameMap[geometryName].push("Attribute Name")
-                                    surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
-                                  }
-                                } else {
-                                  let isNewUniquePrimaryValue = surfaceOptionMap[geometryName][primaryValue] === undefined
-                                  if (isNewUniquePrimaryValue) {
-                                    surfaceOptionMap[geometryName][primaryValue] = [];
-                                    for (let j=1; j<materialOptions.length; ++j) {
-                                      surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
-                                    }
-                                  } else {
-                                    for (let j=1; j<materialOptions.length; ++j) {
-                                      let currentAttributeOptions = surfaceOptionMap[geometryName][primaryValue][j-1];
-                                      let isNewUniqueValue = currentAttributeOptions.indexOf(materialOptions[j]) === -1;
-                                      if (isNewUniqueValue) {
-                                        currentAttributeOptions.push(materialOptions[j])
-                                      }
-                                    }                                  
-                                  }
-                                }
-                              }
-                            }
-                            
-                            dispatch(setMaterialNameSegmentMap(materialNameSegmentMap))
-                            dispatch(setSurfaceOptionMap(surfaceOptionMap))
-                            dispatch(setSurfaceAttributeNameMap(surfaceAttributeNameMap))
+                            dispatch(setMaterialNameSegmentMap(surfaceOptions.materialNameSegmentMap))
+                            dispatch(setSurfaceOptionMap(surfaceOptions.surfaceOptionMap))
+                            dispatch(setSurfaceAttributeNameMap(surfaceOptions.surfaceAttributeNameMap))
+                            dispatch(setTextureControls(surfaceOptions.surfaceControls))
                         });
                     }.bind(this));
                 }.bind(this),
@@ -244,3 +198,5 @@ export default modelId => dispatch => {
   
     Configurator.init(CONFIG, iframe);
   };
+
+export default initializeViewer;
