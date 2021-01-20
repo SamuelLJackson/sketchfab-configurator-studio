@@ -9,8 +9,6 @@ import {
 	selectSurfaceOptionMap,
 	selectSurfaceConfigurationMode,
 	selectMaterialNameSegmentMap,
-	selectSurfaceAttributeNameMap,
-	selectGroupingOptions,
 	selectHiddenCategoryConfigurations,
 } from './viewerSlice';
 
@@ -24,7 +22,6 @@ const ExportModal = () => {
 	const surfaceOptionMap = useSelector(selectSurfaceOptionMap);
 	const surfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
 	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
-	const surfaceAttributeNameMap = useSelector(selectSurfaceAttributeNameMap)
 	const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
 
 	const configurationMaps = {
@@ -35,7 +32,6 @@ const ExportModal = () => {
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
-		surfaceAttributeNameMap,
 		hiddenCategoryConfigurations,
 	}
 
@@ -62,7 +58,6 @@ const createJSExport = (configurationMaps) => {
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
-		surfaceAttributeNameMap,
 		hiddenCategoryConfigurations,
 	} = configurationMaps;
 
@@ -89,7 +84,6 @@ var hiddenCategoryConfigurations = ${JSON.stringify(hiddenCategoryConfigurations
 var surfaceConfigurationMode = ${surfaceConfigurationMode};
 var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
 var materialNameSegmentMap = ${JSON.stringify(materialNameSegmentMap)};
-var surfaceAttributeNameMap = ${JSON.stringify(surfaceAttributeNameMap)};
 
 var animationObjects = {};
 
@@ -213,7 +207,7 @@ var success = function(api) {
 				} else if (controls[i].type === "geometryCategory") {	
 					isElementCategoryControlled = true;
 					
-					var wrapper = initializeCategorySelect(i);
+					var wrapper = initializeGeometrySelect(i);
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
 					for (var j=0; j<controls[i].configuration.geometries.length; ++j) {
@@ -262,11 +256,11 @@ var success = function(api) {
 					}
 					
 					singleControlContainer.appendChild(wrapper);		
-				} else if (controls[i].type === "textureConfiguration") {		
+				} else if (controls[i].type === "textureCategory") {		
 					const { geometryName, options, isPrimary, ordering } = controls[i].configuration
 					
-					var initialValue = options[0];
-					var wrapper = generateTextureSelect(geometryName, controls[i].name, initialValue)
+					var initialValue = options[0].name;
+					var wrapper = initializeTextureSelect(geometryName, controls[i].name, initialValue)
 					wrapper.classList.add("sketchfab-texture-category")
 					wrapper.id = geometryName + "-" + ordering;
 					var customOptions = wrapper.querySelector(".sketchfab-options")
@@ -277,8 +271,8 @@ var success = function(api) {
 							if (j===0) {
 								customOption.classList.add("selected");
 							}
-							var name = options[j];
-							var humanReadable = materialNameSegmentMap[name];
+							const { name, humanReadable } = options[j];
+							
 							customOption.setAttribute("data-value", name)
 							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
 							customOption.innerHTML = name + " - " + humanReadable;
@@ -558,7 +552,7 @@ var disableAnimations = function() {
 	}
 }
 
-var initializeCategorySelect = function(controlIndex) {
+var initializeGeometrySelect = function(controlIndex) {
 					
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
@@ -600,7 +594,7 @@ var initializeCategorySelect = function(controlIndex) {
 	return wrapper;
 }
 
-var generateTextureSelect = function(geometryName, selectName, initialValue) {
+var initializeTextureSelect = function(geometryName, selectName, initialValue) {
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
 	

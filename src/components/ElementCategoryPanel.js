@@ -231,7 +231,7 @@ const ElementCategoryPanel = props => {
     return (
       <div className="grouping__container">
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>
-          <div style={{display: "flex", color: "blue", fontWeight: "bold"}}>Selected Geometries:</div>
+          <div style={{display: "flex", color: "blue", fontWeight: "bold"}}>Selected Geometries: {option.configuration.geometries.length}</div>
           <div style={{borderBottom: "1px solid black"}}>
             <ReactSortable list={selectedGeometries} setList={selectedGeometries => setSelectedGeometries(selectedGeometries)}>
               {renderSelectedGeometryMultiselect()}     

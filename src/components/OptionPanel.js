@@ -10,7 +10,6 @@ import {
 import AnimationPanel from './AnimationPanel';
 import ColorPanel from './ColorPanel';
 import ElementCategoryPanel from './ElementCategoryPanel'
-import SurfaceConfiguration from './SurfaceConfigurationPanel';
 import TextureConfigurationPanel from './TextureCategoryPanel';
 import TogglePanel from './TogglePanel';
 import { ReactSortable } from 'react-sortablejs';
@@ -29,9 +28,7 @@ const renderPanel = (option) => {
     return <ColorPanel option={option} />;
   } else if (option.type === "geometryCategory") {
     return <ElementCategoryPanel option={option} />;
-  } else if (option.type === "surfaceConfiguration") {
-    return <SurfaceConfiguration />;
-  } else if (option.type === "textureConfiguration") {
+  } else if (option.type === "textureCategory") {
     return <TextureConfigurationPanel option={option} />;
   } else if (option.type === "toggle") {
     return <TogglePanel option={option} />;

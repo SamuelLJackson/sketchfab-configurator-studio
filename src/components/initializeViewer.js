@@ -1,5 +1,5 @@
 import Sketchfab from '@sketchfab/viewer-api';
-import { buildSurfaceOptions } from './utils'
+import { buildTextureOptions } from './utils'
 import {
     setSketchfabAPI,
     setAnimations,
@@ -180,7 +180,7 @@ const initializeViewer = modelId => dispatch => {
                         api.getMaterialList(function(err, materials) {
                             dispatch(setMaterials(materials));
                             
-                            let surfaceOptions = buildSurfaceOptions(materials)
+                            let surfaceOptions = buildTextureOptions(materials)
                             
                             dispatch(setMaterialNameSegmentMap(surfaceOptions.materialNameSegmentMap))
                             dispatch(setSurfaceOptionMap(surfaceOptions.surfaceOptionMap))

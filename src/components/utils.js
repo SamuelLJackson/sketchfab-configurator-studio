@@ -55,7 +55,7 @@ var buildCategoryOptions = (state) => {
   state.groupingOptions = geometryCategoryOptions;
 }
 
-var buildSurfaceOptions = (materials) => {  
+var buildTextureOptions = (materials) => {  
     let surfaceOptionMap = {};
     let materialNameSegmentMap = {};
     let surfaceAttributeNameMap = {};
@@ -88,12 +88,12 @@ var buildSurfaceOptions = (materials) => {
               isPrimary: true,
               ordering: 0,
               geometryName: geometryName, 
-              options: [materialOptions[0]]
+              options: [{name: materialOptions[0], humanReadable: materialOptions[0]}]
             },
             entity: {instanceID: 0},
             entityIndex: "none",
             isExpanded: true,
-            type: "textureConfiguration",            
+            type: "textureCategory",            
           })
 
           surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
@@ -106,24 +106,39 @@ var buildSurfaceOptions = (materials) => {
                 isPrimary: false,
                 ordering: j,
                 geometryName: geometryName, 
-                options: [materialOptions[j]]
+                options: [{name: materialOptions[j], humanReadable: materialOptions[j]}]
               },
               entity: {instanceID: 0},
               entityIndex: "none",
               isExpanded: true,
-              type: "textureConfiguration",        
+              type: "textureCategory",        
             })
             surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
           }
         } else {
           for (var j=0; j<surfaceControls.length; ++j) {
             if (surfaceControls[j].configuration.geometryName === geometryName) {
-              if(surfaceControls[j].configuration.options.includes(materialOptions[0]) === false) {
-                surfaceControls[j].configuration.options.push(materialOptions[0])
+
+              var optionExists = false;
+              for (var k=0; k<surfaceControls[j].configuration.options.length; ++k) {
+                if (surfaceControls[j].configuration.options[k].name === materialOptions[0]) {
+                  optionExists = true;
+                  break;
+                }
+              }
+              if(optionExists === false) {
+                surfaceControls[j].configuration.options.push({name: materialOptions[0], humanReadable: materialOptions[0]})
               }
               for (var k=1; k<materialOptions.length; ++k) {
-                if (surfaceControls[j+k].configuration.options.includes(materialOptions[k]) === false) {
-                  surfaceControls[j+k].configuration.options.push(materialOptions[k])
+                var optionExists = false;
+                for (var l=0; l<surfaceControls[j+k].configuration.options.length; ++l) {
+                  if (surfaceControls[j+k].configuration.options[l].name === materialOptions[k]) {
+                    optionExists = true;
+                    break;
+                  }
+                }
+                if (optionExists === false) {
+                  surfaceControls[j+k].configuration.options.push({name: materialOptions[k], humanReadable: materialOptions[k]})
                 }
               }
               break;
@@ -160,5 +175,5 @@ var buildSurfaceOptions = (materials) => {
 module.exports = {
     buildSceneGraph,
     buildCategoryOptions,
-    buildSurfaceOptions,
+    buildTextureOptions,
 }

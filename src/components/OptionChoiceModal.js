@@ -28,7 +28,7 @@ const OptionChoiceModal = () => {
                     dispatch(createControl("geometryCategory"));
                     dispatch(toggleOptionChoiceModalDisplay());
                 }}>Geometry Category</div>
-                <div className="control-choice" style={{color: isSurfaceConfigurationMode ? "gray" : "black"}} onClick={() => {
+                <div className="control-choice" style={{visibility: isSurfaceConfigurationMode ? "hidden" : "visible"}} onClick={() => {
                     if (isSurfaceConfigurationMode === false) {
                         dispatch(toggleOptionChoiceModalDisplay());
                         dispatch(addTextureControls())
