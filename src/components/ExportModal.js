@@ -25,7 +25,6 @@ const ExportModal = () => {
 	const surfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
 	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
 	const surfaceAttributeNameMap = useSelector(selectSurfaceAttributeNameMap)
-	const groupingOptions = useSelector(selectGroupingOptions);
 	const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
 
 	const configurationMaps = {
@@ -37,7 +36,6 @@ const ExportModal = () => {
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
 		surfaceAttributeNameMap,
-		groupingOptions,		
 		hiddenCategoryConfigurations,
 	}
 
@@ -65,7 +63,6 @@ const createJSExport = (configurationMaps) => {
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
 		surfaceAttributeNameMap,
-		groupingOptions,	
 		hiddenCategoryConfigurations,
 	} = configurationMaps;
 
@@ -87,7 +84,6 @@ var controls = ${JSON.stringify(controls)}
 
 var sceneGraph = ${JSON.stringify(sceneGraph)}
 
-var groupingOptions = ${JSON.stringify(groupingOptions)}
 var hiddenCategoryConfigurations = ${JSON.stringify(hiddenCategoryConfigurations)}
 
 var surfaceConfigurationMode = ${surfaceConfigurationMode};
@@ -173,43 +169,10 @@ var success = function(api) {
 					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].configuration.startTime), endTime: Number(controls[i].configuration.endTime), uid: controls[i].configuration.animationUID}; 
 					continue;
 				}
-				if (controls[i].type == "surfaceConfiguration") {
-					continue;
-				}
 				var singleControlContainer = document.createElement("div");
 				singleControlContainer.classList.add("sketchfab-single-control-container");		
 											
-				if (controls[i].type === "textureConfiguration") {		
-					const { geometryName, options, isPrimary, ordering } = controls[i].configuration
-					
-					var initialValue = options[0];
-					var wrapper = generateTextureSelect(geometryName, controls[i].name, initialValue)
-					wrapper.classList.add("sketchfab-texture-category")
-					wrapper.id = geometryName + "-" + ordering;
-					var customOptions = wrapper.querySelector(".sketchfab-options")
-					
-						for (var j=0; j<options.length; ++j) {
-							let customOption = document.createElement("span")
-							customOption.classList.add("sketchfab-option");
-							if (j===0) {
-								customOption.classList.add("selected");
-							}
-							var name = options[j];
-							var humanReadable = materialNameSegmentMap[name];
-							customOption.setAttribute("data-value", name)
-							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
-							customOption.innerHTML = name + " - " + humanReadable;
-							customOption.addEventListener('click', e => {
-								handleUpdateSelect(e);			
-								handleHidingTextureOptions(api)
-							})
-								
-							
-							customOptions.appendChild(customOption)
-						}
-						singleControlContainer.appendChild(wrapper);
-						
-				}
+				
 				if (controls[i].type == "color") {
 					var resetBut = document.createElement("button");
 					resetBut.innerHTML = "Reset";
@@ -247,49 +210,33 @@ var success = function(api) {
 						}
 						singleControlContainer.appendChild(colorBut);
 					}	
-				} else if (controls[i].type == "toggle") {
-					toggleableItems[String(controls[i].entity.instanceID)] = "visible";
-					var toggleBut = document.createElement("button");
-					toggleBut.innerHTML = "Toggle " + controls[i].name;
-					toggleBut.id = controls[i].entity.instanceID;
-					toggleBut.onclick = function(e) {
-						var isVisible = toggleableItems[e.target.id];
-						if (isVisible == "visible") {
-							api.hide(e.target.id);
-							toggleableItems[String(controls[i].entity.instanceID)] = "hidden";
-						} else {
-							api.show(e.target.id);
-							toggleableItems[String(controls[i].entity.instanceID)] = "visible";
-						}
-					}
-					singleControlContainer.appendChild(toggleBut);
-				} else if (controls[i].type === "category") {	
+				} else if (controls[i].type === "geometryCategory") {	
 					isElementCategoryControlled = true;
 					
 					var wrapper = initializeCategorySelect(i);
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
-					for (var j=0; j<controls[i].configuration.designations.length; ++j) {
+					for (var j=0; j<controls[i].configuration.geometries.length; ++j) {
 						
 						let customOption = document.createElement("span")
 						customOption.classList.add("sketchfab-option");
 						if (j===0) {
 							customOption.classList.add("selected");
 						}
-						var name = controls[i].configuration.designations[j].name;
-						var humanReadable = controls[i].configuration.designations[j].humanReadable;
+						var name = controls[i].configuration.geometries[j].designation;
+						var humanReadable = controls[i].configuration.geometries[j].humanReadable;
 						customOption.setAttribute("data-value", name)
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
 						customOption.addEventListener('click', function(e) {
 							handleUpdateSelect(e);
-							var optionName = e.target.id.split("-")[0]
-							handleHidingOptions(optionName);
-							var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
+							var idArray = e.target.id.split("-")
+							var optionName = idArray[0]
+							var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
 							for (var k=0; k<allCategoryOptions.length; ++k) {
 								allCategoryOptions[k].style.visibility = "visible";
 							}
-							var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
+							var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
 													.filter(select => !select.classList.contains("sketchfab-select-open"))
 													.map(select => select.querySelector(".sketchfab-select-value").textContent)
 													
@@ -308,12 +255,59 @@ var success = function(api) {
 							}
 							
 							disableAnimations();
+							handleHidingOptions(optionName);
 						})
 						
 						customOptions.appendChild(customOption)
 					}
 					
 					singleControlContainer.appendChild(wrapper);		
+				} else if (controls[i].type === "textureConfiguration") {		
+					const { geometryName, options, isPrimary, ordering } = controls[i].configuration
+					
+					var initialValue = options[0];
+					var wrapper = generateTextureSelect(geometryName, controls[i].name, initialValue)
+					wrapper.classList.add("sketchfab-texture-category")
+					wrapper.id = geometryName + "-" + ordering;
+					var customOptions = wrapper.querySelector(".sketchfab-options")
+					
+						for (var j=0; j<options.length; ++j) {
+							let customOption = document.createElement("span")
+							customOption.classList.add("sketchfab-option");
+							if (j===0) {
+								customOption.classList.add("selected");
+							}
+							var name = options[j];
+							var humanReadable = materialNameSegmentMap[name];
+							customOption.setAttribute("data-value", name)
+							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
+							customOption.innerHTML = name + " - " + humanReadable;
+							customOption.addEventListener('click', e => {
+								handleUpdateSelect(e);			
+								handleHidingTextureOptions(api)
+							})
+								
+							
+							customOptions.appendChild(customOption)
+						}
+						singleControlContainer.appendChild(wrapper);
+						
+				} else if (controls[i].type == "toggle") {
+					toggleableItems[String(controls[i].entity.instanceID)] = "visible";
+					var toggleBut = document.createElement("button");
+					toggleBut.innerHTML = "Toggle " + controls[i].name;
+					toggleBut.id = controls[i].entity.instanceID;
+					toggleBut.onclick = function(e) {
+						var isVisible = toggleableItems[e.target.id];
+						if (isVisible == "visible") {
+							api.hide(e.target.id);
+							toggleableItems[String(controls[i].entity.instanceID)] = "hidden";
+						} else {
+							api.show(e.target.id);
+							toggleableItems[String(controls[i].entity.instanceID)] = "visible";
+						}
+					}
+					singleControlContainer.appendChild(toggleBut);
 				}
 				controlsContainer.appendChild(singleControlContainer);
 			}
@@ -436,7 +430,7 @@ var configureMaterials = function(geometryName, api) {
 
 var setVisibleNodes = function(api) {
 	
-	var allCategorySelects = document.querySelectorAll(".sketchfab-category span.sketchfab-select-value")
+	var allCategorySelects = document.querySelectorAll(".sketchfab-geometry-category span.sketchfab-select-value")
 	var selectedPrefixes = [];
 	
 	for (var j=0; j<allCategorySelects.length; ++j) {
@@ -514,12 +508,12 @@ var handleUpdateSelect = function(e) {
 
 
 var handleHidingOptions = function(optionName="") {
-	var allCategoryOptions = document.querySelectorAll(".sketchfab-category .sketchfab-option")
+	var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
 	for (var k=0; k<allCategoryOptions.length; ++k) {
 		allCategoryOptions[k].style.visibility = "visible";
 	}
 	
-	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-category .sketchfab-select"))
+	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
 							.filter(select => !select.classList.contains("sketchfab-select-open"))
 							.map(select => select.querySelector(".sketchfab-select-value").textContent)
 							
@@ -539,22 +533,27 @@ var handleHidingOptions = function(optionName="") {
 }
 
 var disableAnimations = function() {		
-	var allCategorySelects = document.querySelectorAll(".sketchfab-category span.sketchfab-select-value")
+	var allCategorySelects = document.querySelectorAll(".sketchfab-geometry-category span.sketchfab-select-value")
 	var allowAnimations = true;
-	for (var k=0; k<allCategorySelects.length; ++k) {
-		var controlIndex = allCategorySelects[k].id.split("-")[1]
-		var currentNameCode = allCategorySelects[k].textContent;
-		if (controls[controlIndex].configuration.allowsAnimation.indexOf(currentNameCode) == -1) {
-			allowAnimations = false;
+	for (var i=0; i<allCategorySelects.length; ++i) {
+		var controlIndex = allCategorySelects[i].id.split("-")[1]
+		var currentNameCode = allCategorySelects[i].textContent;
+		for (var j=0; j<controls[controlIndex].configuration.geometries.length; ++j) {
+			if (controls[controlIndex].configuration.geometries[j].designation === currentNameCode) {
+				console.log("found matching geometry in control")
+				if (controls[controlIndex].configuration.geometries[j].allowsAnimation === false) {
+					allowAnimations = false;
+				}
+			}
 		}
 	}
 	var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
-	for (var k=0; k<animationButtons.length; ++k) {
-		animationButtons[k].disabled = true;
+	for (var i=0; i<animationButtons.length; ++i) {
+		animationButtons[i].disabled = true;
 	}
 	if (allowAnimations) {
-		for (var k=0; k<animationButtons.length; ++k) {
-			animationButtons[k].disabled = false;
+		for (var i=0; i<animationButtons.length; ++i) {
+			animationButtons[i].disabled = false;
 		}						
 	}
 }
@@ -563,7 +562,7 @@ var initializeCategorySelect = function(controlIndex) {
 					
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
-	wrapper.classList.add("sketchfab-category")
+	wrapper.classList.add("sketchfab-geometry-category")
 	wrapper.style.width = (appWidth/4) + "px";
 	
 	var select = document.createElement("div")
@@ -573,7 +572,7 @@ var initializeCategorySelect = function(controlIndex) {
 	selectTrigger.classList.add("sketchfab-select__trigger")
 	
 	var triggerSpan = document.createElement("span")
-	triggerSpan.textContent = controls[controlIndex].configuration.designations[0].name;
+	triggerSpan.textContent = controls[controlIndex].configuration.geometries[0].designation;
 	triggerSpan.id = "triggerSpan-" + controlIndex;
 	triggerSpan.classList.add("sketchfab-select-value")
 	selectTrigger.appendChild(triggerSpan)
@@ -636,6 +635,8 @@ var generateTextureSelect = function(geometryName, selectName, initialValue) {
 	
 	return wrapper;
 }
+
+
 
 
 `

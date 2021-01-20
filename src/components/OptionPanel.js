@@ -27,7 +27,7 @@ const renderPanel = (option) => {
     return <AnimationPanel option={option} />;
   } else if (option.type === "color") {
     return <ColorPanel option={option} />;
-  } else if (option.type === "category") {
+  } else if (option.type === "geometryCategory") {
     return <ElementCategoryPanel option={option} />;
   } else if (option.type === "surfaceConfiguration") {
     return <SurfaceConfiguration />;

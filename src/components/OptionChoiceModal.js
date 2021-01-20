@@ -25,9 +25,9 @@ const OptionChoiceModal = () => {
                 }}
                 >Color</div>
                 <div className="control-choice" onClick={() => {
-                    dispatch(createControl("category"));
+                    dispatch(createControl("geometryCategory"));
                     dispatch(toggleOptionChoiceModalDisplay());
-                }}>Element Category</div>
+                }}>Geometry Category</div>
                 <div className="control-choice" style={{color: isSurfaceConfigurationMode ? "gray" : "black"}} onClick={() => {
                     if (isSurfaceConfigurationMode === false) {
                         dispatch(toggleOptionChoiceModalDisplay());

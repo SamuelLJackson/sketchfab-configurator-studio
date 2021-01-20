@@ -176,7 +176,7 @@ button, input {
 }
 
 input[type="text"] {
-  width: 150px;
+  width: 228px;
 }
 
 .single-option__panels__container {
@@ -199,6 +199,16 @@ input[type="text"] {
   display: flex;
   align-items: baseline;
   flex-direction: column;
+}
+
+.geometry-option {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.geometry-option:hover {
+  color: white;
+  background-color: blue;
 }
 
 #nodeControls {

@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectGroupingOptions,
   selectHiddenCategoryConfigurations,
-  setGroupingOptions,
+  selectControls,
+  setUnselectedGeometries,
   setHiddenCategoryConfigurations,
   updateControl,
 } from './viewerSlice';
@@ -13,171 +14,231 @@ const ElementCategoryPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
-    const categoryElements = useSelector(selectGroupingOptions);
+    const unselectedGeometries = useSelector(selectGroupingOptions);
+    const selectedGeometries = option.configuration.geometries;
     const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
+    const controls = useSelector(selectControls)
 
-    const renderDesignationMultiselect = () => {     
-
-      return categoryElements.map((categoryElement, index) => {
-        
-        let categoryContainsCurrentElement = false;
-        for (let i=0; i<option.configuration.designations.length; ++i) {
-          if (option.configuration.designations[i].name === categoryElement.designation) {
-            categoryContainsCurrentElement = true;
-            break;
-          }
-        }
-
-        if (categoryElement.isAvailable || categoryContainsCurrentElement) {
-        
-          return (
-            <div key={`element-${option.id}-${index}`}>
-              <div style={{display: "flex"}}>
-                <div style={{display: "flex", flex: "1 1 auto"}}>
-                  <input 
-                    type="checkbox" 
-                    checked={categoryContainsCurrentElement}
-                    onChange={() => {                 
-                      let newCategoryElements = JSON.parse(JSON.stringify(categoryElements))
-                      let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                      let newConfiguration = {};
-
-                      let filteredDesignations = newDesignations.filter(des => des.name !== categoryElement.designation)                      
-                      newCategoryElements[index].isAvailable = true;
-
-                      let newDisablesAnimation = option.configuration.allowsAnimation.filter(a => a !== categoryElement.designation)
-
-                      if (newDesignations.length === filteredDesignations.length) {
-                        filteredDesignations.push({name: categoryElement.designation, humanReadable: categoryElement.designation})
-                        newCategoryElements[index].isAvailable = false;
-                        var selectedElement = newCategoryElements.splice(index, 1)[0]
-                        var numberOfSelectedElements = filteredDesignations.length;
-                        newCategoryElements.splice(numberOfSelectedElements-1, 0, selectedElement)
-                        newDisablesAnimation.push(categoryElement.designation)
-                      }
-                      newConfiguration = {
-                        designations: filteredDesignations,
-                        allowsAnimation: newDisablesAnimation,
-                      }
-                      dispatch(setGroupingOptions(newCategoryElements))
-                      dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-                    }}
-                  />
-                  <div>{categoryElement.designation}</div>
-                </div>
-                <div>Animation:</div>
-                <input 
-                  type="checkbox" 
-                  checked={option.configuration.allowsAnimation.includes(categoryElement.designation)}
-                  disabled={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 0}
-                  onChange={() => {
-                    let newConfiguration = {};                  
-                    let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                    if (option.configuration.allowsAnimation.includes(categoryElement.designation)) {
-                      newConfiguration = {
-                        designations: newDesignations,
-                        allowsAnimation: option.configuration.allowsAnimation.filter(a => a != categoryElement.designation)
-                      }
-                    } else {
-                      let newDisablesAnimation = option.configuration.allowsAnimation.map(a => a)
-                      newDisablesAnimation.push(categoryElement.designation)
-                      newConfiguration = {
-                        designations: newDesignations,
-                        allowsAnimation: newDisablesAnimation,
-                      }
-                    }
-                    dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-                  }}
-                />
-              </div>
-              <div style={{display: "flex"}}>
-                <div>Readable Name:</div>
-                <input
-                  type="text"
-                  placeholder="Enter human readable name"
-                  disabled={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 0}
-                  value={option.configuration.designations.filter(element => element.name === categoryElement.designation).length === 1 ? option.configuration.designations.filter(element => element.name === categoryElement.designation)[0].humanReadable : ""}
-                  onChange={e => {
-                    let newDesignations = JSON.parse(JSON.stringify(option.configuration.designations));
-                    for (let i=0; i<newDesignations.length; ++i) {
-                      if (newDesignations[i].name === categoryElement.designation) {
-                        newDesignations[i].humanReadable = e.target.value;
-                      }
-                    }
-                    let newConfiguration = {
-                      designations: newDesignations,
-                      allowsAnimation: option.configuration.allowsAnimation.map(a => a),
-                    }
-                    dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))                  
-                  }}
-                />
-              </div>
-              {renderDisableMultiSelect(index)}
+    const renderUnselectedGeometryMultiselect = () => unselectedGeometries.map((geometry, index) => (
+            <div 
+              key={`element-${option.id}-${index}`} 
+              className="geometry-option"
+              style={{display: "flex"}} 
+              onClick={() => {
+                let newUnselectedGeometries = JSON.parse(JSON.stringify(unselectedGeometries))
+                let selectedGeometry = newUnselectedGeometries.splice(index, 1)[0]
+                let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+                newConfiguration.geometries.push(selectedGeometry)
+                dispatch(updateControl({ id: option.id, key: "configuration", value: newConfiguration }))
+                dispatch(setUnselectedGeometries(newUnselectedGeometries))
+              }}
+            >
+              <div>{geometry.designation}</div>
             </div>
-          )
+          ))
 
-        }
-        return null;
+    const renderSelectedGeometryMultiselect = () => {     
+
+      return selectedGeometries.map((geometry, index) => {
+        
+        return (
+          <div style={{display: "flex"}}>
+          <div key={`element-${option.id}-${index}`}>
+            <div style={{display: "flex"}}>
+              <div style={{display: "flex", flex: "1 1 auto", fontWeight: "bold"}}>
+                <div>{geometry.designation}</div>
+              </div>
+              <div>Animation:</div>
+              <input 
+                type="checkbox" 
+                checked={geometry.allowsAnimation}
+                onChange={() => {
+                  let newGeometries = JSON.parse(JSON.stringify(selectedGeometries))
+                  newGeometries[index].allowsAnimation = !geometry.allowsAnimation;
+                  setSelectedGeometries(newGeometries)
+                }}
+              />
+            </div>
+            <div style={{display: "flex"}}>
+              <div>Name:</div>
+              <input
+                type="text"
+                placeholder="Enter human readable name"
+                value={geometry.humanReadable}
+                onChange={e => {
+                  let newGeometries = JSON.parse(JSON.stringify(selectedGeometries))
+                  newGeometries[index].humanReadable = e.target.value;
+                  setSelectedGeometries(newGeometries)
+                }}
+              />
+            </div>
+            {renderDisableMultiSelect(geometry.designation)}
+          </div>
+          <div style={{display: "flex", flex: "1 1 auto"}}>
+              <button 
+                title="Remove option"
+                onClick={() => {
+                  let newUnselectedGeometries = JSON.parse(JSON.stringify(unselectedGeometries))
+                  let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+                  let unSelectedGeometry = newConfiguration.geometries.splice(index, 1)[0]
+                  newUnselectedGeometries.unshift(unSelectedGeometry)
+                  dispatch(updateControl({ id: option.id, key: "configuration", value: newConfiguration }))
+                  dispatch(setUnselectedGeometries(newUnselectedGeometries))
+                }}
+              >
+                <svg 
+                  fill="currentColor" 
+                  preserveAspectRatio="xMidYMid meet" 
+                  height="1em" 
+                  width="1em" 
+                  viewBox="0 0 40 40" 
+                  style={{verticalAlign: "middle"}}
+                >
+                  <g>
+                    <path d="m15.9 30.7v-15.7q0-0.3-0.2-0.5t-0.5-0.2h-1.4q-0.3 0-0.5 0.2t-0.2 0.5v15.7q0 0.3 0.2 
+                    0.5t0.5 0.2h1.4q0.3 0 0.5-0.2t0.2-0.5z m5.7 0v-15.7q0-0.3-0.2-0.5t-0.5-0.2h-1.4q-0.3 0-0.5 
+                    0.2t-0.2 0.5v15.7q0 0.3 0.2 0.5t0.5 0.2h1.4q0.3 0 0.5-0.2t0.2-0.5z m5.8 
+                    0v-15.7q0-0.3-0.2-0.5t-0.6-0.2h-1.4q-0.3 0-0.5 0.2t-0.2 0.5v15.7q0 0.3 0.2 0.5t0.5 
+                    0.2h1.4q0.4 0 0.6-0.2t0.2-0.5z m-12.2-22.1h10l-1.1-2.6q-0.1-0.2-0.3-0.3h-7.1q-0.2 
+                    0.1-0.4 0.3z m20.7 0.7v1.4q0 0.3-0.2 0.5t-0.5 0.2h-2.1v21.2q0 1.8-1.1 3.2t-2.5 
+                    1.3h-18.6q-1.4 0-2.5-1.3t-1-3.1v-21.3h-2.2q-0.3 0-0.5-0.2t-0.2-0.5v-1.4q0-0.3 
+                    0.2-0.5t0.5-0.2h6.9l1.6-3.8q0.3-0.8 1.2-1.4t1.7-0.5h7.2q0.9 0 1.8 0.5t1.2 1.4l1.5 
+                    3.8h6.9q0.3 0 0.5 0.2t0.2 0.5z"></path>
+                  </g>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )
       })
     }
 
-    const renderDisableMultiSelect = (index) => {
+    const renderDisableMultiSelect = (currentElementDesignation) => {
     
-      let currentElementDesignation = categoryElements[index].designation
-      let categoryContainsCurrentElement = option.configuration.designations[currentElementDesignation] !== undefined
-      
-      let otherSelectedElements = categoryElements.filter(element => !element.isAvailable && option.configuration.designations[element.designation] === undefined)
-      if (categoryContainsCurrentElement && otherSelectedElements.length > 0) {
-        console.log("otherSelectedElements:")
-        console.log(otherSelectedElements)
-        return (
-          <div style={{textAlign: "left", marginLeft: 16}}>
-            <div style={{marginLeft: 4}}>Disable when selected:</div>
-            {otherSelectedElements.map(element => {
-              let showChecked = false;
-              if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
-                if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
-                  showChecked = true;
-                }
+      var multiSelects = [];
+      for (let i=0; i<controls.length; ++i) {
+        if (controls[i].type === "geometryCategory" && controls[i].id !== option.id) {
+          
+          var multiSelect = controls[i].configuration.geometries.map(element => {
+            let showChecked = false;
+            
+            if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
+              if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
+                showChecked = true;
               }
-              return(
-              <div style={{display: "flex"}}>
-                <input 
-                  type="checkbox" 
-                  checked={showChecked}
-                  onChange={() => {        
-                    let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
-                    if(showChecked) {
-                      newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
-                      newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
-                    } else {
-                      if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
-                        newHiddenCategoryConfigurations[currentElementDesignation] = [];
-                      }
-                      newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
-                      if(newHiddenCategoryConfigurations[element.designation] === undefined) {
-                        newHiddenCategoryConfigurations[element.designation] = [];
-                      }
-                      newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
+            }
+            return (
+            <div style={{display: "flex"}}>
+              <input 
+                type="checkbox" 
+                checked={showChecked}
+                onChange={() => {        
+                  let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
+                  if(showChecked) {
+                    newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
+                    newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
+                  } else {
+                    if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
+                      newHiddenCategoryConfigurations[currentElementDesignation] = [];
                     }
+                    newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
+                    if(newHiddenCategoryConfigurations[element.designation] === undefined) {
+                      newHiddenCategoryConfigurations[element.designation] = [];
+                    }
+                    newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
+                  }
 
-                    dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
-                  }}
-                />
-                <div>{element.designation}</div>
-              </div>
-            )})}
-          </div>
-        )
+                  dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
+                }}
+              />
+              <div>{element.designation}</div>
+            </div>            
+            )
+          })
+          multiSelects.push(
+            <div>
+              <div style={{marginLeft: 4, color: "blue"}}>{controls[i].name}</div>
+              {multiSelect}
+            </div>
+          )
+        }
       }
+      return (
+        <div style={{textAlign: "left", marginLeft: 16}}>
+          <div style={{marginLeft: 4}}>Disable when selected:</div>
+          {multiSelects}
+        </div>
+      )
+    }
+
+    const renderDisableMultiSelectOld = (index) => {
+    
+      var multiSelects = [];
+      for (let i=0; i<controls.length; ++i) {
+        if (controls[i].type === "geometryCategory" && controls[i].id !== option.id) {
+          var multiSelect = controls[i].configuration.geometries.map(element => {
+            let showChecked = false;
+            var currentElementDesignation = element.designation;
+            if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
+              if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
+                showChecked = true;
+              }
+            }
+            return (
+            <div style={{display: "flex"}}>
+              <input 
+                type="checkbox" 
+                checked={showChecked}
+                onChange={() => {        
+                  let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
+                  if(showChecked) {
+                    newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
+                    newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
+                  } else {
+                    if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
+                      newHiddenCategoryConfigurations[currentElementDesignation] = [];
+                    }
+                    newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
+                    if(newHiddenCategoryConfigurations[element.designation] === undefined) {
+                      newHiddenCategoryConfigurations[element.designation] = [];
+                    }
+                    newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
+                  }
+
+                  dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
+                }}
+              />
+              <div>{element.designation}</div>
+            </div>            
+            )
+          })
+          multiSelects.push(
+            <div>
+              <div>{controls[i].name}</div>
+              {multiSelect}
+            </div>
+          )
+        }
+      }
+    }
+
+    const setSelectedGeometries = (selectedGeometries) => {
+      let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+      newConfiguration.geometries = selectedGeometries
+      dispatch(updateControl({ id: option.id, key: "configuration", value: newConfiguration }))
     }
   
     return (
       <div className="grouping__container">
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>
-          <ReactSortable list={categoryElements} setList={categoryElements => dispatch(setGroupingOptions(categoryElements))}>
-            {renderDesignationMultiselect()}          
-          </ReactSortable>
+          <div style={{display: "flex", color: "blue", fontWeight: "bold"}}>Selected Geometries:</div>
+          <div style={{borderBottom: "1px solid black"}}>
+            <ReactSortable list={selectedGeometries} setList={selectedGeometries => setSelectedGeometries(selectedGeometries)}>
+              {renderSelectedGeometryMultiselect()}     
+            </ReactSortable>
+          </div>
+          <div style={{display: "flex", color: "blue", fontWeight: "bold"}}>Select A Geometry:</div>
+          {renderUnselectedGeometryMultiselect()}          
         </div>
       </div>
     )

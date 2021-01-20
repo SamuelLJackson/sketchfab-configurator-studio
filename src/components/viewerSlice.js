@@ -60,9 +60,10 @@ export const viewerSlice = createSlice({
         }
       }
 
-      if(action.payload === "category") {
+      if(action.payload === "geometryCategory") {
         defaultConfiguration = {
           designations: [],
+          geometries: [],
           allowsAnimation: [],  
         }
       }
@@ -120,7 +121,7 @@ export const viewerSlice = createSlice({
     setSurfaceAttributeNameMap: (state, action) => {
       state.surfaceAttributeNameMap = action.payload;
     },
-    setGroupingOptions: (state, action) => {
+    setUnselectedGeometries: (state, action) => {
       state.groupingOptions = action.payload;
     },
     setHiddenCategoryConfigurations: (state, action) => {
@@ -151,7 +152,7 @@ export const {
   setSceneGraph,
   setSceneGraphIsVisible,
   setViewMode,
-  setGroupingOptions,
+  setUnselectedGeometries,
   setHiddenCategoryConfigurations,
   setSurfaceOptionMap,
   setSurfaceConfigurationMode,

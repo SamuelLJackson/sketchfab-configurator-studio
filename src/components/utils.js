@@ -27,7 +27,7 @@ var buildSceneGraph = function(state, children, depth) {
 var buildCategoryOptions = (state) => {   
 
   let uniqueStrings = [];
-  let categoryOptions = [];
+  let geometryCategoryOptions = [];
   for (let i=0; i<state.sceneGraph.length; ++i) {
     let nodeNameArray = state.sceneGraph[i].name.split("-").filter(string => string != "")
     let mainDesignation = nodeNameArray[0];
@@ -41,17 +41,18 @@ var buildCategoryOptions = (state) => {
     if (uniqueStrings.indexOf(mainDesignation) == -1 &&
       irrelevantStrings.indexOf(mainDesignation) == -1) {
       uniqueStrings.push(mainDesignation);
-      categoryOptions.push({
+      geometryCategoryOptions.push({
         instanceID: state.sceneGraph[i].instanceID,
         designation: mainDesignation,
         capitalLetter: capitalLetter,
         detailedTitle: detailedTitle,
-        isAvailable: true,
+        humanReadable: mainDesignation,
+        allowsAnimation: true,
       })
     }
   }
-  categoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})
-  state.groupingOptions = categoryOptions;
+  geometryCategoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})
+  state.groupingOptions = geometryCategoryOptions;
 }
 
 var buildSurfaceOptions = (materials) => {  
