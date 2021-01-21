@@ -171,57 +171,6 @@ const ElementCategoryPanel = props => {
       )
     }
 
-    const renderDisableMultiSelectOld = (index) => {
-    
-      var multiSelects = [];
-      for (let i=0; i<controls.length; ++i) {
-        if (controls[i].type === "geometryCategory" && controls[i].id !== option.id) {
-          var multiSelect = controls[i].configuration.geometries.map(element => {
-            let showChecked = false;
-            var currentElementDesignation = element.designation;
-            if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
-              if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
-                showChecked = true;
-              }
-            }
-            return (
-            <div style={{display: "flex"}}>
-              <input 
-                type="checkbox" 
-                checked={showChecked}
-                onChange={() => {        
-                  let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
-                  if(showChecked) {
-                    newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
-                    newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
-                  } else {
-                    if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
-                      newHiddenCategoryConfigurations[currentElementDesignation] = [];
-                    }
-                    newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
-                    if(newHiddenCategoryConfigurations[element.designation] === undefined) {
-                      newHiddenCategoryConfigurations[element.designation] = [];
-                    }
-                    newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
-                  }
-
-                  dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
-                }}
-              />
-              <div>{element.designation}</div>
-            </div>            
-            )
-          })
-          multiSelects.push(
-            <div>
-              <div>{controls[i].name}</div>
-              {multiSelect}
-            </div>
-          )
-        }
-      }
-    }
-
     const setSelectedGeometries = (selectedGeometries) => {
       let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
       newConfiguration.geometries = selectedGeometries
@@ -230,6 +179,16 @@ const ElementCategoryPanel = props => {
   
     return (
       <div className="grouping__container">
+        <div style={{display:"flex"}}>
+          <p className="nameFieldTitle">Initial :</p>
+          <select
+            onChange={(e) => {
+              dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))
+            }}
+          >
+            {selectedGeometries.map(geometry => <option value={geometry.designation}>{geometry.designation}</option>)}
+          </select>
+        </div>
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>
           <div style={{display: "flex", color: "blue", fontWeight: "bold"}}>Selected Geometries: {option.configuration.geometries.length}</div>
           <div style={{borderBottom: "1px solid black"}}>

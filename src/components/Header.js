@@ -15,7 +15,7 @@ const Header = () => {
   const dispatch = useDispatch();
   return (
     <div className="header">
-      <h1 className="header__title">Configurator Studio - v1.0.8</h1>
+      <h1 className="header__title">Configurator Studio - v1.0.9</h1>
 
       <div className="header__buttons">
         <input id="model-id-input"

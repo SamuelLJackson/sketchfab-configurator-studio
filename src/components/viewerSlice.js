@@ -65,6 +65,7 @@ export const viewerSlice = createSlice({
           designations: [],
           geometries: [],
           allowsAnimation: [],  
+          initialValue: "",
         }
       }
       state.controls.unshift({
