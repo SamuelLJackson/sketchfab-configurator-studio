@@ -65,17 +65,22 @@ const createJSExport = (configurationMaps) => {
 `
 // Sketchfab Viewer API: Change Texture/material
 var version = '1.8.2';
-var uid = '${modelId === '' ? '66e17931c39e4042ac5aa8764bee7f5a' : modelId}';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
-var myMaterials = ${JSON.stringify(materials)}
+var uid = '${modelId === '' ? '66e17931c39e4042ac5aa8764bee7f5a' : modelId}';
 
-var error = function() {
-	console.error('Sketchfab API error');
-};
+/*
+	COPY THE LINE BELOW
+*/
 
 var controls = ${JSON.stringify(controls)}
+
+/*
+	COPY THE LINE ABOVE
+*/
+
+var myMaterials = ${JSON.stringify(materials)}
 
 var sceneGraph = ${JSON.stringify(sceneGraph)}
 
@@ -332,7 +337,7 @@ var success = function(api) {
 
 client.init(uid, {
 	success: success,
-	error: error,
+	error: () => console.error('Sketchfab API error'),
 	autostart: 0,
 	preload: 0,
 	ui_animations: 0,

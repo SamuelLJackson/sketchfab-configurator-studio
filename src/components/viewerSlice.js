@@ -197,6 +197,17 @@ export const selectGroupingOptions = state => state.groupingOptions;
 
 export const selectHiddenCategoryConfigurations = state => state.hiddenCategoryConfigurations;
 
+export const toggleImportModalDisplay = ()  => dispatch => {
+  const modal = document.getElementById("import-modal")
+
+  const currentStyle = modal.style.display;
+  if (currentStyle === 'block') {
+    modal.style.display = 'none';
+  } else {
+    modal.style.display = 'block';
+  }   
+}
+
 export const toggleModalDisplay = () => dispatch => {
   const modal = document.getElementById('modal');
 
