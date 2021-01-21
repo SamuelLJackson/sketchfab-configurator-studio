@@ -181,11 +181,7 @@ const ElementCategoryPanel = props => {
       <div className="grouping__container">
         <div style={{display:"flex"}}>
           <p className="nameFieldTitle">Initial :</p>
-          <select
-            onChange={(e) => {
-              dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))
-            }}
-          >
+          <select onChange={(e) => dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))}>
             {selectedGeometries.map(geometry => <option value={geometry.designation}>{geometry.designation}</option>)}
           </select>
         </div>

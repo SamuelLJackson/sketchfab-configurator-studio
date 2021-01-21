@@ -257,10 +257,9 @@ var success = function(api) {
 					
 					singleControlContainer.appendChild(wrapper);		
 				} else if (controls[i].type === "textureCategory") {		
-					const { geometryName, options, isPrimary, ordering } = controls[i].configuration
+					const { geometryName, options, isPrimary, ordering} = controls[i].configuration
 					
-					var initialValue = options[0].name;
-					var wrapper = initializeTextureSelect(geometryName, controls[i].name, initialValue)
+					var wrapper = initializeTextureSelect(geometryName, controls[i].name, controls[i].initialValue)
 					wrapper.classList.add("sketchfab-texture-category")
 					wrapper.id = geometryName + "-" + ordering;
 					var customOptions = wrapper.querySelector(".sketchfab-options")
@@ -608,6 +607,9 @@ var initializeGeometrySelect = function(controlIndex) {
 }
 
 var initializeTextureSelect = function(geometryName, selectName, initialValue) {
+	console.log("BEGIN: initializeTextureSelect:")
+	console.log("initialValue:")
+	console.log(initialValue)
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")
 	
@@ -642,6 +644,8 @@ var initializeTextureSelect = function(geometryName, selectName, initialValue) {
 	
 	return wrapper;
 }
+
+
 
 
 

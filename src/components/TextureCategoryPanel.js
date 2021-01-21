@@ -1,36 +1,13 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { 
     updateControl,
-    setMaterialNameSegmentMap,
-    selectMaterialNameSegmentMap,
 } from './viewerSlice';
 import { ReactSortable } from 'react-sortablejs';
 
 const TextureConfigurationPanel = props => {
     const { option } = props;
     const dispatch = useDispatch();
-    const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap);
-
-
-    const renderMaterialNameSegmentMapOld = () => Object.keys(materialNameSegmentMap).map(segment => {
-
-        if (option.configuration.options.includes(segment)) {
-            return (
-                <div>
-                    {segment}
-                    <input 
-                    value={materialNameSegmentMap[segment]} 
-                    onChange={(e) => {
-                        let newMaterialSegmentMap = JSON.parse(JSON.stringify(materialNameSegmentMap))
-                        newMaterialSegmentMap[segment] = e.target.value;
-                        dispatch(setMaterialNameSegmentMap(newMaterialSegmentMap))
-                    }}
-                    />
-                </div>
-            )
-        }
-    })
 
     const renderMaterialNameSegmentMap = () => option.configuration.options.map((designation, index) => (
         <div>
@@ -54,6 +31,12 @@ const TextureConfigurationPanel = props => {
   
     return (
       <div className="grouping__container">
+        <div style={{display:"flex"}}>
+            <p className="nameFieldTitle">Initial :</p>
+            <select onChange={(e) => dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))}>
+                {option.configuration.options.map(designation => <option value={designation.name}>{designation.name}</option>)}
+            </select>
+        </div>
           <div>
             <h4>Code Name Map:</h4>
             <ReactSortable list={option.configuration.options} setList={newOptions => updateOptions(newOptions)}>
