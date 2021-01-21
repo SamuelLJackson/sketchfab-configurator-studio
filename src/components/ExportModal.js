@@ -423,22 +423,23 @@ var configureMaterials = function(geometryName, api) {
 }
 
 var setVisibleNodes = function(api) {
-	
+	console.log("BEGIN: setVisibleNotes")
 	var allCategorySelects = document.querySelectorAll(".sketchfab-geometry-category span.sketchfab-select-value")
 	var selectedPrefixes = [];
 	
-	for (var j=0; j<allCategorySelects.length; ++j) {
-		selectedPrefixes.push(allCategorySelects[j].textContent);
+	var lettersByDesignation = {};
+	for (var i=0; i<allCategorySelects.length; ++i) {
+		selectedPrefixes.push(allCategorySelects[i].textContent);
+		lettersByDesignation[selectedPrefixes[i]] = []
 	}
 	
-	var allLetters = [];
 	var relevantNodes = [];
 	
-	for (var j=0; j<sceneGraph.length; ++j) {
-		var indexContainingCodes = j;
+	for (var i=0; i<sceneGraph.length; ++i) {
+		var indexContainingCodes = i;
 		var isMatrixTransform = false;
-		if (sceneGraph[j].name === "MatrixTransform") {
-			indexContainingCodes = j - 1;
+		if (sceneGraph[i].name === "MatrixTransform") {
+			indexContainingCodes = i - 1;
 			isMatrixTransform = true;
 		}
 		
@@ -453,20 +454,32 @@ var setVisibleNodes = function(api) {
 		}		
 		
 		if (selectedPrefixes.includes(currentNodeDesignation)) {
-			for (var k=0; k<currentNodeLetterCode.length; ++k) {
-				allLetters.push(currentNodeLetterCode[k]);
-				relevantNodes.push({letterCode: currentNodeLetterCode[k], instanceID: sceneGraph[j].instanceID})								
+			for (var j=0; j<currentNodeLetterCode.length; ++j) {
+				if (lettersByDesignation[currentNodeDesignation].indexOf(currentNodeLetterCode[j]) === -1) {
+					lettersByDesignation[currentNodeDesignation].push(currentNodeLetterCode[j])
+				}
+				relevantNodes.push({letterCode: currentNodeLetterCode[j], instanceID: sceneGraph[i].instanceID, name: sceneGraph[i].name})								
 			}
 		}
 	}		
 	
-	var commonLetter = mode(allLetters)[0]
+	var letters = [];
+	var commonLetter = ""
+	for (var i=0; i<Object.values(lettersByDesignation).length; ++i) {
+		if (Object.values(lettersByDesignation)[i].length === 1) {
+			commonLetter = Object.values(lettersByDesignation)[i][0]
+			break;
+		}
+		letters = letters.concat(Object.values(lettersByDesignation)[i])
+		commonLetter = mode(letters)[0]
+	}
 	
-	for (var j=0; j<relevantNodes.length; ++j) {
-		if (relevantNodes[j].letterCode.indexOf(commonLetter) != -1) {
-			api.show(relevantNodes[j].instanceID);
+	for (var i=0; i<relevantNodes.length; ++i) {
+		if (relevantNodes[i].letterCode.indexOf(commonLetter) != -1) {
+			api.show(relevantNodes[i].instanceID);
 		}
 	}
+	console.log("END: sendVisibleNodes")
 }
 
 var mode = function(arr) { 
@@ -504,7 +517,7 @@ var handleUpdateSelect = function(e) {
 var handleHidingOptions = function(optionName="") {
 	var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
 	for (var k=0; k<allCategoryOptions.length; ++k) {
-		allCategoryOptions[k].style.visibility = "visible";
+		allCategoryOptions[k].style.display = "block";
 	}
 	
 	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
@@ -519,7 +532,7 @@ var handleHidingOptions = function(optionName="") {
 			for (var l=0; l<hiddenCategoryConfigurations[selectionName].length; ++l) {
 				var nameToHide = hiddenCategoryConfigurations[selectionName][l]
 				var optionToHide = document.querySelector("[data-value='" + nameToHide + "']")
-				optionToHide.style.visibility = "hidden"										
+				optionToHide.style.display = "none"										
 			}
 			break;
 		}
