@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectModelId, 
   setModelId, 
+  toggleImportModalDisplay,
   toggleModalDisplay,
   selectDisableButtons,
 } from './viewerSlice';
@@ -15,7 +16,7 @@ const Header = () => {
   const dispatch = useDispatch();
   return (
     <div className="header">
-      <h1 className="header__title">Configurator Studio - v1.0.10</h1>
+      <h1 className="header__title">Configurator Studio - v1.0.11</h1>
 
       <div className="header__buttons">
         <input id="model-id-input"
@@ -28,6 +29,11 @@ const Header = () => {
           onClick={() => dispatch(initializeViewer(modelId))}
         >Load Model
         </button>        
+        <button 
+          id="import-javascript"
+          className="header__button"
+          disabled={disableButtons}
+          onClick={() => dispatch(toggleImportModalDisplay())}>Import Configuration</button>
         <button 
           id="export-javascript"
           className="header__button"

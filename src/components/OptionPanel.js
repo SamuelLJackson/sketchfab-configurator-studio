@@ -106,7 +106,7 @@ const renderOptions = (options, dispatch) => {
         className="add-option add__button" 
         disabled={disableButtons}
         onClick={() => dispatch(toggleOptionChoiceModalDisplay())}
-      >+ Add Option</button>
+      >+ Add Configurable Element</button>
       <div className="single-option__panels__container">
         <ReactSortable list={options} setList={options => dispatch(setControls(options))}>
           {renderOptions(options, dispatch)}
