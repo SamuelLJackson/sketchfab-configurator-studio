@@ -182,7 +182,10 @@ const ElementCategoryPanel = props => {
         <div style={{display:"flex"}}>
           <p className="nameFieldTitle">Initial :</p>
           <select onChange={(e) => dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))}>
-            {selectedGeometries.map(geometry => <option value={geometry.designation}>{geometry.designation}</option>)}
+            {selectedGeometries.map(geometry => {
+              let selected = geometry.designation === option.initialValue
+              return (<option selected={selected} value={geometry.designation}>{geometry.designation}</option>)
+            })}
           </select>
         </div>
         <div className="additional-color__container" id={`${option.id}-additionalColors`}>

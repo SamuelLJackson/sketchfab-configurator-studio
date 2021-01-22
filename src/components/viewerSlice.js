@@ -65,7 +65,6 @@ export const viewerSlice = createSlice({
           designations: [],
           geometries: [],
           allowsAnimation: [],  
-          initialValue: "",
         }
       }
       state.controls.unshift({
@@ -75,6 +74,7 @@ export const viewerSlice = createSlice({
         entityIndex: "none",
         entity: {instanceID: 0},
         configuration: defaultConfiguration,
+        initialValue: "",
         isExpanded: true,
       });
     },
