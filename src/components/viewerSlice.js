@@ -82,7 +82,20 @@ export const viewerSlice = createSlice({
       state.viewMode = action.payload
     },
     setControls: (state, action) => {
+        
       state.controls = action.payload;
+      for(let i=0; i<state.controls.length; ++i) {
+        if (state.controls[i].type === "animation") {
+          for (let j=0; j<state.animations.length; ++j) {
+            if (state.controls[i].configuration.animationName === state.animations[j][1]) {
+              state.controls[i].configuration.animationUID = state.animations[j][0]
+            }
+          }
+        }
+        if (state.controls[i].type === "textureCategory") {
+          state.surfaceConfigurationMode = true
+        }
+      }
     },
     setTextureControls: (state, action) => { 
       for (var i=0; i<action.payload.length; ++i) {

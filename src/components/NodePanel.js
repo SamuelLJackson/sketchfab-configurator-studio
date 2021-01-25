@@ -62,7 +62,7 @@ const NodePanel = () => {
 const addDashes = number => {
     var dashes = "";
     for (let i=0; i<number; ++i) {
-        dashes += "--"
+        dashes += i+1 + "_"
     }
 
     return dashes;

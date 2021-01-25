@@ -16,8 +16,8 @@ var buildSceneGraph = function(state, children, depth) {
           materialID: children[i].materialID,
         });
       }
+      state.sceneGraphIsVisible[children[i].instanceID] = true
     }
-    state.sceneGraphIsVisible[children[i].instanceID] = true
 		if (children[i].children != undefined || children[i].children != null) {			
 			buildSceneGraph(state, children[i].children, depth+1);
 		}

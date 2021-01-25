@@ -359,7 +359,8 @@ var handleHidingTextureOptions = function(api) {
 		if (!isPrimary) {
 			var currentInitialPrimarySelection = document.getElementById(geometryName + "-0").querySelector(".sketchfab-select__trigger span").textContent;
 			var availableOptions = surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1]
-			var previouslyAvailableOptions =  Array.from(options).filter(op => op.style.display === "block").map(op => op.getAttribute("data-value"))
+			var previouslyAvailableOptions =  Array.from(options).filter(op => op.style.display === "block").map(op => op.getAttribute("data-value")).sort()
+			
 			let equal = availableOptions.length == previouslyAvailableOptions.length && availableOptions.every((element, index)=> element === previouslyAvailableOptions[index] );
 			
 			var triggerSpan = textureSelects[i].querySelector(".sketchfab-select__trigger span")
@@ -451,19 +452,30 @@ var setVisibleNodes = function(api) {
 		var currentNodeDesignation = nodeNameArray[0];
 		var currentNodeLetterCode = nodeNameArray[1];
 		api.hide(sceneGraph[indexContainingCodes].instanceID);
-		if(selectedPrefixes.includes("SGBCC")) {
-			if (sceneGraph[indexContainingCodes].name == "JBXCC-C-Housing") {
-				api.show(sceneGraph[indexContainingCodes].instanceID)										
-			}									
-		}		
 		
 		if (selectedPrefixes.includes(currentNodeDesignation)) {
 			for (var j=0; j<currentNodeLetterCode.length; ++j) {
 				if (lettersByDesignation[currentNodeDesignation].indexOf(currentNodeLetterCode[j]) === -1) {
 					lettersByDesignation[currentNodeDesignation].push(currentNodeLetterCode[j])
+				}	
+			}					
+			
+			var currentUpstreamDepth = Number(sceneGraph[i].depth)
+			var currentUpstreamIndex = i-1;
+			var upStreamRelevantNodes = []
+			while(currentUpstreamDepth > 2) {
+				if (sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
+					var currentUpstreamDesignation = sceneGraph[currentUpstreamIndex].name.split("-")[0]
+					var currentUpstreamLetterCode = sceneGraph[currentUpstreamIndex].name.split("-")[1]
+					if (currentUpstreamDesignation !== currentNodeDesignation) {
+						upStreamRelevantNodes.push({letterCode: currentUpstreamLetterCode, instanceID: sceneGraph[currentUpstreamIndex].instanceID, name: sceneGraph[currentUpstreamIndex].name})
+					}	
+					currentUpstreamDepth = currentUpstreamDepth - 1;
 				}
-				relevantNodes.push({letterCode: currentNodeLetterCode[j], instanceID: sceneGraph[i].instanceID, name: sceneGraph[i].name})								
+				currentUpstreamIndex = currentUpstreamIndex - 1;
 			}
+			
+			relevantNodes.push({letterCode: currentNodeLetterCode, instanceID: sceneGraph[i].instanceID, name: sceneGraph[i].name, upStreamRelevantNodes: upStreamRelevantNodes})		
 		}
 	}		
 	
@@ -481,9 +493,14 @@ var setVisibleNodes = function(api) {
 	for (var i=0; i<relevantNodes.length; ++i) {
 		if (relevantNodes[i].letterCode.indexOf(commonLetter) != -1) {
 			api.show(relevantNodes[i].instanceID);
+			for (var j=0; j<relevantNodes[i].upStreamRelevantNodes.length; ++j) {
+				console.log("showing upstream node:")
+				console.log(relevantNodes[i].upStreamRelevantNodes[j].name)
+				api.show(relevantNodes[i].upStreamRelevantNodes[j].instanceID)
+			}
 		}
 	}
-	console.log("END: sendVisibleNodes")
+	console.log("END: setVisibleNodes")
 }
 
 var mode = function(arr) { 

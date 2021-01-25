@@ -22,7 +22,8 @@ const ImportModal = () => {
 						let jsInput = document.getElementById("js-input").value;
 						let importString = jsInput.replace("var controls = ", "")
 						let controls = JSON.parse(importString)
-						dispatch(setControls(controls))
+                        dispatch(setControls(controls))
+                        dispatch(toggleImportModalDisplay())
 					}}
 				>Import</button>
 				<input id="js-input" />

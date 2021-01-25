@@ -22,9 +22,13 @@ const AnimationPanel = props => {
             name="animationSelect"
             value={option.configuration.animationUID}
             onChange={(e) => {
+              console.log("\n\n\ne.target:")
+              console.log(e.target)
+              console.log("\n\n\n")
               let newConfiguration = {
                 ...option.configuration,
                 animationUID: e.target.value,
+                animationName: e.target.options[e.target.selectedIndex].textContent,
               }
               dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
             }}
