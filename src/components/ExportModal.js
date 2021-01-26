@@ -130,6 +130,7 @@ pollTime = function() {
 	});
 };
 
+
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
@@ -219,14 +220,14 @@ var success = function(api) {
 						
 						let customOption = document.createElement("span")
 						customOption.classList.add("sketchfab-option");
-						if (j===0) {
-							customOption.classList.add("selected");
-						}
 						var name = controls[i].configuration.geometries[j].designation;
 						var humanReadable = controls[i].configuration.geometries[j].humanReadable;
 						customOption.setAttribute("data-value", name)
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
+						if (controls[i].configuration.geometries[j].designation === controls[i].initialValue) {
+							customOption.classList.add("selected")
+						}
 						customOption.addEventListener('click', function(e) {
 							handleUpdateSelect(e);
 							var idArray = e.target.id.split("-")
@@ -272,10 +273,10 @@ var success = function(api) {
 						for (var j=0; j<options.length; ++j) {
 							let customOption = document.createElement("span")
 							customOption.classList.add("sketchfab-option");
-							if (j===0) {
+							const { name, humanReadable } = options[j];
+							if (name === controls[i].initialValue) {
 								customOption.classList.add("selected");
 							}
-							const { name, humanReadable } = options[j];
 							
 							customOption.setAttribute("data-value", name)
 							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
@@ -358,9 +359,12 @@ var handleHidingTextureOptions = function(api) {
 		var isPrimary = Number(ordering) === 0;
 		if (!isPrimary) {
 			var currentInitialPrimarySelection = document.getElementById(geometryName + "-0").querySelector(".sketchfab-select__trigger span").textContent;
-			var availableOptions = surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1]
+			var availableOptions = surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1].sort()
 			var previouslyAvailableOptions =  Array.from(options).filter(op => op.style.display === "block").map(op => op.getAttribute("data-value")).sort()
-			
+			console.log("availableOptions:")
+			console.log(availableOptions)
+			console.log("previouslyAvailableOptions:")
+			console.log(previouslyAvailableOptions)
 			let equal = availableOptions.length == previouslyAvailableOptions.length && availableOptions.every((element, index)=> element === previouslyAvailableOptions[index] );
 			
 			var triggerSpan = textureSelects[i].querySelector(".sketchfab-select__trigger span")
@@ -470,7 +474,7 @@ var setVisibleNodes = function(api) {
 					if (currentUpstreamDesignation !== currentNodeDesignation) {
 						upStreamRelevantNodes.push({letterCode: currentUpstreamLetterCode, instanceID: sceneGraph[currentUpstreamIndex].instanceID, name: sceneGraph[currentUpstreamIndex].name})
 					}	
-					currentUpstreamDepth = currentUpstreamDepth - 1;
+					currentUpstreamDepth = Number(sceneGraph[currentUpstreamIndex].depth);
 				}
 				currentUpstreamIndex = currentUpstreamIndex - 1;
 			}
@@ -600,7 +604,7 @@ var initializeGeometrySelect = function(controlIndex) {
 	selectTrigger.classList.add("sketchfab-select__trigger")
 	
 	var triggerSpan = document.createElement("span")
-	triggerSpan.textContent = controls[controlIndex].configuration.geometries[0].designation;
+	triggerSpan.textContent = controls[controlIndex].initialValue;
 	triggerSpan.id = "triggerSpan-" + controlIndex;
 	triggerSpan.classList.add("sketchfab-select-value")
 	selectTrigger.appendChild(triggerSpan)
