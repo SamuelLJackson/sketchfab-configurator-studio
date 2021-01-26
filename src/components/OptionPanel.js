@@ -9,7 +9,7 @@ import {
 } from './viewerSlice';
 import AnimationPanel from './AnimationPanel';
 import ColorPanel from './ColorPanel';
-import ElementCategoryPanel from './ElementCategoryPanel'
+import GeometryCategoryPanel from './GeometryCategoryPanel'
 import TextureConfigurationPanel from './TextureCategoryPanel';
 import TogglePanel from './TogglePanel';
 import { ReactSortable } from 'react-sortablejs';
@@ -27,7 +27,7 @@ const renderPanel = (option) => {
   } else if (option.type === "color") {
     return <ColorPanel option={option} />;
   } else if (option.type === "geometryCategory") {
-    return <ElementCategoryPanel option={option} />;
+    return <GeometryCategoryPanel option={option} />;
   } else if (option.type === "textureCategory") {
     return <TextureConfigurationPanel option={option} />;
   } else if (option.type === "toggle") {

@@ -9,7 +9,6 @@ import {
 	selectSurfaceOptionMap,
 	selectSurfaceConfigurationMode,
 	selectMaterialNameSegmentMap,
-	selectHiddenCategoryConfigurations,
 } from './viewerSlice';
 
 const ExportModal = () => {
@@ -22,7 +21,6 @@ const ExportModal = () => {
 	const surfaceOptionMap = useSelector(selectSurfaceOptionMap);
 	const surfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
 	const materialNameSegmentMap = useSelector(selectMaterialNameSegmentMap)
-	const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
 
 	const configurationMaps = {
 		controls, 
@@ -32,7 +30,6 @@ const ExportModal = () => {
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
-		hiddenCategoryConfigurations,
 	}
 
     return (
@@ -58,7 +55,6 @@ const createJSExport = (configurationMaps) => {
 		surfaceOptionMap, 
 		surfaceConfigurationMode,
 		materialNameSegmentMap,
-		hiddenCategoryConfigurations,
 	} = configurationMaps;
 
 	return (
@@ -68,7 +64,7 @@ var version = '1.8.2';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
-var uid = '${modelId === '' ? '66e17931c39e4042ac5aa8764bee7f5a' : modelId}';
+var uid = '${modelId === '' ? '9d5bb1c929b142978ee8a780d170e1a5' : modelId}';
 
 /*
 	COPY THE LINE BELOW
@@ -83,8 +79,6 @@ var controls = ${JSON.stringify(controls)}
 var myMaterials = ${JSON.stringify(materials)}
 
 var sceneGraph = ${JSON.stringify(sceneGraph)}
-
-var hiddenCategoryConfigurations = ${JSON.stringify(hiddenCategoryConfigurations)}
 
 var surfaceConfigurationMode = ${surfaceConfigurationMode};
 var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
@@ -230,32 +224,8 @@ var success = function(api) {
 						}
 						customOption.addEventListener('click', function(e) {
 							handleUpdateSelect(e);
-							var idArray = e.target.id.split("-")
-							var optionName = idArray[0]
-							var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
-							for (var k=0; k<allCategoryOptions.length; ++k) {
-								allCategoryOptions[k].style.visibility = "visible";
-							}
-							var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
-													.filter(select => !select.classList.contains("sketchfab-select-open"))
-													.map(select => select.querySelector(".sketchfab-select-value").textContent)
-													
-							currentCategorySelections.push(optionName)
-							
-							for (var k=0; k<currentCategorySelections.length; ++k) {
-								var selectionName = currentCategorySelections[k];
-								if (hiddenCategoryConfigurations[selectionName] !== undefined) {
-									for (var l=0; l<hiddenCategoryConfigurations[selectionName].length; ++l) {
-										var nameToHide = hiddenCategoryConfigurations[selectionName][l]
-										var optionToHide = document.querySelector("[data-value='" + nameToHide + "']")
-										optionToHide.style.visibility = "hidden"										
-									}
-									break;
-								}
-							}
-							
 							disableAnimations();
-							handleHidingOptions(optionName);
+							handleHidingGeometryCombinations();
 						})
 						
 						customOptions.appendChild(customOption)
@@ -283,7 +253,7 @@ var success = function(api) {
 							customOption.innerHTML = name + " - " + humanReadable;
 							customOption.addEventListener('click', e => {
 								handleUpdateSelect(e);			
-								handleHidingTextureOptions(api)
+								handleHidingTextureCombinations(api)
 							})
 								
 							
@@ -321,8 +291,8 @@ var success = function(api) {
 					}
 				});
 				setVisibleNodes(api);
-				handleHidingOptions();
 				disableAnimations();
+				handleHidingGeometryCombinations();
 			}
 			
 			if (animations.length > 0) {
@@ -330,7 +300,7 @@ var success = function(api) {
 			}			
 			
 			if (surfaceConfigurationMode) {
-				handleHidingTextureOptions(api)
+				handleHidingTextureCombinations(api)
 			}
 		});
 	});
@@ -348,8 +318,8 @@ client.init(uid, {
 	ui_infos: 0,
 });
 
-var handleHidingTextureOptions = function(api) {
-	console.log("BEGIN: handleHidingTextureOptions")
+var handleHidingTextureCombinations = function(api) {
+	console.log("BEGIN: handleHidingTextureCombinations")
 	
 	var textureSelects = document.getElementsByClassName("sketchfab-texture-category")	
 	for (var i=0; i<textureSelects.length; ++i) {
@@ -392,7 +362,7 @@ var handleHidingTextureOptions = function(api) {
 		configureMaterials(geometryName, api)		
 	}
 
-	console.log("END: handleHidingTextureOptions")
+	console.log("END: handleHidingTextureCombinations")
 }
 
 var configureMaterials = function(geometryName, api) {
@@ -539,27 +509,32 @@ var handleUpdateSelect = function(e) {
 }
 
 
-var handleHidingOptions = function(optionName="") {
+var handleHidingGeometryCombinations = function() {
+				
 	var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
-	for (var k=0; k<allCategoryOptions.length; ++k) {
-		allCategoryOptions[k].style.display = "block";
-	}
-	
 	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
-							.filter(select => !select.classList.contains("sketchfab-select-open"))
 							.map(select => select.querySelector(".sketchfab-select-value").textContent)
 							
-	currentCategorySelections.push(optionName)
+	var geometryControls = controls.filter(control => control.type === "geometryCategory")
+
+	var disabledOptions = []
+	for(var i=0; i<geometryControls.length; ++i) {
+		console.log("geometryControls[" + i + "]:")
+		console.log(geometryControls[i])
+		console.log("currentCategorySelections[" + i + "]:")
+		console.log(currentCategorySelections[i])
+		var hiddenValues = geometryControls[i].configuration.geometries.filter(geometry => geometry.designation === currentCategorySelections[i])[0].hiddenValues;
+		console.log("hiddenValues:")
+		console.log(hiddenValues)
+		disabledOptions = disabledOptions.concat(hiddenValues)
+	}
+	console.log("disabledOptions:")
+	console.log(disabledOptions)
 	
-	for (var k=0; k<currentCategorySelections.length; ++k) {
-		var selectionName = currentCategorySelections[k];
-		if (hiddenCategoryConfigurations[selectionName] !== undefined) {
-			for (var l=0; l<hiddenCategoryConfigurations[selectionName].length; ++l) {
-				var nameToHide = hiddenCategoryConfigurations[selectionName][l]
-				var optionToHide = document.querySelector("[data-value='" + nameToHide + "']")
-				optionToHide.style.display = "none"										
-			}
-			break;
+	for (var i=0; i<allCategoryOptions.length; ++i) {
+		allCategoryOptions[i].style.display = "block";
+		if (disabledOptions.includes(allCategoryOptions[i].getAttribute("data-value"))) {
+			allCategoryOptions[i].style.display = "none"
 		}
 	}
 }
@@ -670,6 +645,21 @@ var initializeTextureSelect = function(geometryName, selectName, initialValue) {
 	
 	return wrapper;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

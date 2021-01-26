@@ -2,21 +2,18 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectGroupingOptions,
-  selectHiddenCategoryConfigurations,
   selectControls,
   setUnselectedGeometries,
-  setHiddenCategoryConfigurations,
   updateControl,
 } from './viewerSlice';
 import { ReactSortable } from 'react-sortablejs';
 
-const ElementCategoryPanel = props => {
+const GeometryCategoryPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
     const unselectedGeometries = useSelector(selectGroupingOptions);
     const selectedGeometries = option.configuration.geometries;
-    const hiddenCategoryConfigurations = useSelector(selectHiddenCategoryConfigurations);
     const controls = useSelector(selectControls)
 
     const renderUnselectedGeometryMultiselect = () => unselectedGeometries.map((geometry, index) => (
@@ -72,7 +69,7 @@ const ElementCategoryPanel = props => {
                 }}
               />
             </div>
-            {renderDisableMultiSelect(geometry.designation)}
+            {renderDisableMultiSelect(geometry.designation, index)}
           </div>
           <div style={{display: "flex", flex: "1 1 auto"}}>
               <button 
@@ -113,45 +110,50 @@ const ElementCategoryPanel = props => {
       })
     }
 
-    const renderDisableMultiSelect = (currentElementDesignation) => {
+    const renderDisableMultiSelect = (currentElementDesignation, geometryIndex) => {
     
       var multiSelects = [];
       for (let i=0; i<controls.length; ++i) {
         if (controls[i].type === "geometryCategory" && controls[i].id !== option.id) {
           
-          var multiSelect = controls[i].configuration.geometries.map(element => {
+          var multiSelect = controls[i].configuration.geometries.map((geometry, complimentGeometryIndex) => {
             let showChecked = false;
             
-            if (hiddenCategoryConfigurations[currentElementDesignation] !== undefined) {
-              if (hiddenCategoryConfigurations[currentElementDesignation].includes(element.designation)) {
-                showChecked = true;
-              }
+            if (option.configuration.geometries[geometryIndex].hiddenValues === undefined) { //backwards-compatibility
+              let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+              newConfiguration.geometries[geometryIndex].hiddenValues = []
+              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
             }
+            if (option.configuration.geometries[geometryIndex].hiddenValues.includes(geometry.designation)) {
+              showChecked = true;
+            }
+            
             return (
             <div style={{display: "flex"}}>
               <input 
                 type="checkbox" 
                 checked={showChecked}
                 onChange={() => {        
-                  let newHiddenCategoryConfigurations = JSON.parse(JSON.stringify(hiddenCategoryConfigurations))
-                  if(showChecked) {
-                    newHiddenCategoryConfigurations[currentElementDesignation] = newHiddenCategoryConfigurations[currentElementDesignation].filter(hiddenElementDesignation => hiddenElementDesignation !== element.designation)
-                    newHiddenCategoryConfigurations[element.designation] = newHiddenCategoryConfigurations[element.designation].filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
+                  let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+                  let newComplimentConfiguration = JSON.parse(JSON.stringify(controls[i].configuration))
+                  console.log("controls[i]:")
+                  console.log(controls[i])
+                  console.log(newComplimentConfiguration)
+                  if(showChecked) {                    
+                    newConfiguration.geometries[geometryIndex].hiddenValues = newConfiguration.geometries[geometryIndex].hiddenValues.filter(hiddenElementDesignation => hiddenElementDesignation !== geometry.designation)
+                    newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues = newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues.filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
                   } else {
-                    if (newHiddenCategoryConfigurations[currentElementDesignation] === undefined) {
-                      newHiddenCategoryConfigurations[currentElementDesignation] = [];
-                    }
-                    newHiddenCategoryConfigurations[currentElementDesignation].push(element.designation)
-                    if(newHiddenCategoryConfigurations[element.designation] === undefined) {
-                      newHiddenCategoryConfigurations[element.designation] = [];
-                    }
-                    newHiddenCategoryConfigurations[element.designation].push(currentElementDesignation);
+                    newConfiguration.geometries[geometryIndex].hiddenValues.push(geometry.designation)
+                    newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues.push(currentElementDesignation);
                   }
-
-                  dispatch(setHiddenCategoryConfigurations(newHiddenCategoryConfigurations))
+                  console.log("\n\n\nnewComplimentConfiguration:")
+                  console.log(newComplimentConfiguration)
+                  console.log("\n\n\n")
+                  dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
+                  dispatch(updateControl({id: controls[i].id, key: "configuration", value: newComplimentConfiguration}))
                 }}
               />
-              <div>{element.designation}</div>
+              <div>{geometry.designation}</div>
             </div>            
             )
           })
@@ -182,8 +184,15 @@ const ElementCategoryPanel = props => {
         <div style={{display:"flex"}}>
           <p className="nameFieldTitle">Initial :</p>
           <select onChange={(e) => dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))}>
-            {selectedGeometries.map(geometry => {
-              let selected = geometry.designation === option.initialValue
+            {selectedGeometries.map((geometry, index) => {
+              let selected = false;
+              if(option.initialValue === "" && index === 0) {
+                selected = true
+                dispatch(updateControl({id: option.id, key: "initialValue", value: geometry.designation}))
+              } else {
+                selected = geometry.designation === option.initialValue
+              }
+              
               return (<option selected={selected} value={geometry.designation}>{geometry.designation}</option>)
             })}
           </select>
@@ -202,4 +211,4 @@ const ElementCategoryPanel = props => {
     )
 }
 
-export default ElementCategoryPanel;
+export default GeometryCategoryPanel;

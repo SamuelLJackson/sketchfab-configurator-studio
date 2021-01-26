@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { buildSceneGraph, buildCategoryOptions } from './utils'
+import { buildSceneGraph, buildGeometryCategoryOptions } from './utils'
 
 const initialState = {
   modelId: '',
@@ -18,7 +18,6 @@ const initialState = {
   materialNameSegmentMap: {},
   surfaceAttributeNameMap: {},
   groupingOptions: [],
-  hiddenCategoryConfigurations: {},
 };
 
 export const viewerSlice = createSlice({
@@ -42,7 +41,7 @@ export const viewerSlice = createSlice({
     },
     setSceneGraph: (state, action) => {
       buildSceneGraph(state, action.payload.children, 0);
-      buildCategoryOptions(state)
+      buildGeometryCategoryOptions(state)
     },
     setSceneGraphIsVisible: (state, action) => {
       const { id, value } = action.payload;
@@ -64,6 +63,7 @@ export const viewerSlice = createSlice({
         defaultConfiguration = {
           designations: [],
           geometries: [],
+          hiddenValues: [],
           allowsAnimation: [],  
         }
       }
@@ -93,6 +93,11 @@ export const viewerSlice = createSlice({
         }
         if (newControls[i].type === "textureCategory") {
           state.surfaceConfigurationMode = true
+        }
+        if (newControls[i].type === "geometryCategory") {
+          if (newControls[i].configuration.hiddenValues === undefined) {
+            newControls[i].configuration.hiddenValues = []
+          }
         }
       }
       state.controls = newControls;
@@ -138,9 +143,6 @@ export const viewerSlice = createSlice({
     setUnselectedGeometries: (state, action) => {
       state.groupingOptions = action.payload;
     },
-    setHiddenCategoryConfigurations: (state, action) => {
-      state.hiddenCategoryConfigurations = action.payload;
-    },
     setAllNodesVisible: (state, action) => {
       for(let i=0; i<Object.keys(state.sceneGraphIsVisible).length; ++i) {
         if(action.payload) {
@@ -167,7 +169,6 @@ export const {
   setSceneGraphIsVisible,
   setViewMode,
   setUnselectedGeometries,
-  setHiddenCategoryConfigurations,
   setSurfaceOptionMap,
   setSurfaceConfigurationMode,
   setMaterialNameSegmentMap,
@@ -207,8 +208,6 @@ export const selectMaterialNameSegmentMap = state => state.materialNameSegmentMa
 export const selectSurfaceAttributeNameMap = state => state.surfaceAttributeNameMap;
 
 export const selectGroupingOptions = state => state.groupingOptions;
-
-export const selectHiddenCategoryConfigurations = state => state.hiddenCategoryConfigurations;
 
 export const toggleImportModalDisplay = ()  => dispatch => {
   const modal = document.getElementById("import-modal")

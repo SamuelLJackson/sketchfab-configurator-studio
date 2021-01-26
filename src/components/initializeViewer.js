@@ -19,7 +19,7 @@ const initializeViewer = modelId => dispatch => {
   
     var iframe = document.getElementById('api-frame');
     var version = '1.8.2';
-    var DEFAULT_URLID = '66e17931c39e4042ac5aa8764bee7f5a';
+    var DEFAULT_URLID = '9d5bb1c929b142978ee8a780d170e1a5';
     var DEFAULT_PREFIX = 'seat ';		
     
     var CONFIG = {

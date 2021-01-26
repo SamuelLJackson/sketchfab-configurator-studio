@@ -34,8 +34,15 @@ const TextureConfigurationPanel = props => {
         <div style={{display:"flex"}}>
             <p className="nameFieldTitle">Initial :</p>
             <select onChange={(e) => dispatch(updateControl({id: option.id, key: "initialValue", value: e.target.value}))}>
-                {option.configuration.options.map(designation => {
-                    let selected = designation.name === option.initialValue
+                {option.configuration.options.map((designation, index) => {
+                    let selected = false;
+                    if((option.initialValue === "" || option.initialValue === undefined) && index === 0) {
+                        selected = true
+                        dispatch(updateControl({id: option.id, key: "initialValue", value: designation.name}))
+                    } else {
+                        selected = designation.name === option.initialValue
+                    }
+                    
                     return   (<option selected={selected} value={designation.name}>{designation.name}</option>)
                 })}
             </select>

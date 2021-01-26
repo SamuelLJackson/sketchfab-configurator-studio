@@ -24,7 +24,7 @@ var buildSceneGraph = function(state, children, depth) {
 	}
 }
 
-var buildCategoryOptions = (state) => {   
+var buildGeometryCategoryOptions = (state) => {   
 
   let uniqueStrings = [];
   let geometryCategoryOptions = [];
@@ -47,6 +47,7 @@ var buildCategoryOptions = (state) => {
         capitalLetter: capitalLetter,
         detailedTitle: detailedTitle,
         humanReadable: mainDesignation,
+        hiddenValues: [],
         allowsAnimation: true,
       })
     }
@@ -111,7 +112,8 @@ var buildTextureOptions = (materials) => {
               entity: {instanceID: 0},
               entityIndex: "none",
               isExpanded: true,
-              type: "textureCategory",        
+              type: "textureCategory",      
+              initialValue: "",  
             })
             surfaceOptionMap[geometryName][primaryValue].push([materialOptions[j]])
           }
@@ -174,6 +176,6 @@ var buildTextureOptions = (materials) => {
 
 module.exports = {
     buildSceneGraph,
-    buildCategoryOptions,
+    buildGeometryCategoryOptions,
     buildTextureOptions,
 }
