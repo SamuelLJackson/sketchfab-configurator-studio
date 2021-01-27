@@ -80,7 +80,8 @@ var myMaterials = ${JSON.stringify(materials)}
 
 var sceneGraph = ${JSON.stringify(sceneGraph)}
 
-var surfaceConfigurationMode = ${surfaceConfigurationMode};
+var isElementCategoryControlled = false;
+var surfaceConfigurationMode = false;
 var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
 var materialNameSegmentMap = ${JSON.stringify(materialNameSegmentMap)};
 
@@ -88,12 +89,9 @@ var animationObjects = {};
 
 var controlsContainer = document.getElementById('sketchfab-lower-controls');
 var toggleableItems = {};
-var toggleableGroups = {};
 
 var currentAnimation = "";
 var currentAnimationEndTime = 0;
-var isElementCategoryControlled = false;
-var firstGroupingControlIndex = -1;
 var appContainer = document.querySelector("div.sketchfab__container")
 
 var appWidth = Number(appContainer.style.width.replace("px",""))
@@ -129,9 +127,6 @@ var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
 		api.addEventListener('viewerready', function() {
-			categorySelectObserver = new MutationObserver(function(mutationsList, categorySelectObserver) {
-				setVisibleNodes(api);
-			});
 			
 			api.pause();
 			
@@ -207,7 +202,9 @@ var success = function(api) {
 				} else if (controls[i].type === "geometryCategory") {	
 					isElementCategoryControlled = true;
 					
-					var wrapper = initializeGeometrySelect(i);
+					var wrapper = initializeSelect(i);
+					wrapper.classList.add("sketchfab-geometry-category")
+					
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
 					for (var j=0; j<controls[i].configuration.geometries.length; ++j) {
@@ -226,18 +223,22 @@ var success = function(api) {
 							handleUpdateSelect(e);
 							disableAnimations();
 							handleHidingGeometryCombinations();
+							setVisibleNodes(api);
 						})
 						
 						customOptions.appendChild(customOption)
 					}
 					
 					singleControlContainer.appendChild(wrapper);		
-				} else if (controls[i].type === "textureCategory") {		
+				} else if (controls[i].type === "textureCategory") {
+					surfaceConfigurationMode = true					
 					const { geometryName, options, isPrimary, ordering} = controls[i].configuration
 					
-					var wrapper = initializeTextureSelect(geometryName, controls[i].name, controls[i].initialValue)
+					var controlIndex = i;
+					var wrapper = initializeSelect(controlIndex, geometryName)
 					wrapper.classList.add("sketchfab-texture-category")
 					wrapper.id = geometryName + "-" + ordering;
+					
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
 						for (var j=0; j<options.length; ++j) {
@@ -281,15 +282,8 @@ var success = function(api) {
 				controlsContainer.appendChild(singleControlContainer);
 			}
 			
-			//show/hide to OG specification
+
 			if (isElementCategoryControlled) {
-				window.addEventListener('click', function(e) {
-					for (const select of document.querySelectorAll('.sketchfab-select')) {
-						if (!select.contains(e.target)) {
-							select.classList.remove('sketchfab-select-open');
-						}
-					}
-				});
 				setVisibleNodes(api);
 				disableAnimations();
 				handleHidingGeometryCombinations();
@@ -302,6 +296,13 @@ var success = function(api) {
 			if (surfaceConfigurationMode) {
 				handleHidingTextureCombinations(api)
 			}
+			window.addEventListener('click', function(e) {
+				for (const select of document.querySelectorAll('.sketchfab-select')) {
+					if (!select.contains(e.target)) {
+						select.classList.remove('sketchfab-select-open');
+					}
+				}
+			});
 		});
 	});
 };
@@ -367,11 +368,8 @@ var handleHidingTextureCombinations = function(api) {
 
 var configureMaterials = function(geometryName, api) {
 	console.log("BEGIN: configureMaterials")
-	console.log(arguments)
 	//get array of selected values
 	var relevantSelects = document.getElementsByClassName(geometryName + "-triggerSpan")
-	console.log("relevantSelects:")
-	console.log(relevantSelects)
 	//build name string via accessing selected values
 	var materialNameString = geometryName + "-";
 	
@@ -485,16 +483,6 @@ var mode = function(arr) {
 	}		
 }
 
-var setNonPrimarySurfaceConfiguration = function(e, api) {
-	console.log("BEGIN: setNonPrimarySurfaceConfiguration")
-	handleUpdateSelect(e);
-	var geometryName = e.target.id.split("-")[1]
-	var attributeIndex = e.target.id.split("-")[2]
-	configureMaterials(geometryName, api)
-	
-	console.log("END: setNonPrimarySurfaceConfiguration")
-}
-
 var handleUpdateSelect = function(e) {
 	console.log("BEGIN: handleUpdateSelect")
 	var nameCode = e.target.id.split("-")[0]
@@ -519,17 +507,9 @@ var handleHidingGeometryCombinations = function() {
 
 	var disabledOptions = []
 	for(var i=0; i<geometryControls.length; ++i) {
-		console.log("geometryControls[" + i + "]:")
-		console.log(geometryControls[i])
-		console.log("currentCategorySelections[" + i + "]:")
-		console.log(currentCategorySelections[i])
 		var hiddenValues = geometryControls[i].configuration.geometries.filter(geometry => geometry.designation === currentCategorySelections[i])[0].hiddenValues;
-		console.log("hiddenValues:")
-		console.log(hiddenValues)
 		disabledOptions = disabledOptions.concat(hiddenValues)
 	}
-	console.log("disabledOptions:")
-	console.log(disabledOptions)
 	
 	for (var i=0; i<allCategoryOptions.length; ++i) {
 		allCategoryOptions[i].style.display = "block";
@@ -565,11 +545,11 @@ var disableAnimations = function() {
 	}
 }
 
-var initializeGeometrySelect = function(controlIndex) {
-					
+var initializeSelect = function(controlIndex, geometryName="") {
+	console.log("BEGIN: initializeSelect:")
+
 	var wrapper = document.createElement("div")
-	wrapper.classList.add("sketchfab-select-wrapper")
-	wrapper.classList.add("sketchfab-geometry-category")
+	wrapper.classList.add("sketchfab-select-wrapper")	
 	wrapper.style.width = (appWidth/4) + "px";
 	
 	var select = document.createElement("div")
@@ -579,62 +559,23 @@ var initializeGeometrySelect = function(controlIndex) {
 	selectTrigger.classList.add("sketchfab-select__trigger")
 	
 	var triggerSpan = document.createElement("span")
-	triggerSpan.textContent = controls[controlIndex].initialValue;
 	triggerSpan.id = "triggerSpan-" + controlIndex;
 	triggerSpan.classList.add("sketchfab-select-value")
-	selectTrigger.appendChild(triggerSpan)
+	triggerSpan.classList.add(geometryName + "-triggerSpan")
+	triggerSpan.textContent = controls[controlIndex].initialValue;
 	
 	var arrow = document.createElement("div")
 	arrow.classList.add("sketchfab-select-arrow")
-	selectTrigger.appendChild(arrow)					
-	select.appendChild(selectTrigger)
 	
 	var customOptions = document.createElement("div")
 	customOptions.classList.add("sketchfab-options")
 	var selectTitle = document.createElement("h3")
 	selectTitle.classList.add("sketchfab-title")
 	selectTitle.textContent = controls[controlIndex].name;
-	customOptions.appendChild(selectTitle)
-	select.appendChild(customOptions)
-	wrapper.appendChild(select)	
-
-	wrapper.addEventListener('click', function() {
-		this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
-	})
-
-	categorySelectObserver.observe(triggerSpan, {characterData: false, childList: true, attributes: false});
 	
-	return wrapper;
-}
-
-var initializeTextureSelect = function(geometryName, selectName, initialValue) {
-	console.log("BEGIN: initializeTextureSelect:")
-	console.log("initialValue:")
-	console.log(initialValue)
-	var wrapper = document.createElement("div")
-	wrapper.classList.add("sketchfab-select-wrapper")
-	
-	wrapper.style.width = (appWidth/4) + "px";
-	
-	var select = document.createElement("div")
-	select.classList.add("sketchfab-select")
-	var selectTrigger = document.createElement("div")
-	selectTrigger.classList.add("sketchfab-select__trigger")
-	var triggerSpan = document.createElement("span")
-	triggerSpan.textContent = initialValue;
-	triggerSpan.classList.add(geometryName + "-triggerSpan")
 	selectTrigger.appendChild(triggerSpan)
-	var arrow = document.createElement("div")
-	arrow.classList.add("sketchfab-select-arrow")
 	selectTrigger.appendChild(arrow)
-	
-	var customOptions = document.createElement("div")
-	customOptions.classList.add("sketchfab-options")
-	var selectTitle = document.createElement("h3")
-	selectTitle.classList.add("sketchfab-title")
-	selectTitle.textContent = selectName;
 	customOptions.appendChild(selectTitle)
-	
 	select.appendChild(selectTrigger)
 	select.appendChild(customOptions)
 	wrapper.appendChild(select)	
@@ -644,12 +585,8 @@ var initializeTextureSelect = function(geometryName, selectName, initialValue) {
 	})
 	
 	return wrapper;
+	console.log("END: initializeSelect:")
 }
-
-
-
-
-
 
 
 
