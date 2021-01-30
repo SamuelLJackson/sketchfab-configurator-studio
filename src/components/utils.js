@@ -58,9 +58,6 @@ var buildGeometryCategoryOptions = (state) => {
 
 var buildTextureOptions = (materials) => {  
     let surfaceOptionMap = {};
-    let materialNameSegmentMap = {};
-    let surfaceAttributeNameMap = {};
-
     let surfaceControls = [];
     
     for (let i=0; i<materials.length; ++i) {
@@ -71,11 +68,6 @@ var buildTextureOptions = (materials) => {
         let geometryName = materialNameArray[0];
         let materialOptions = materials[i].name.match(/[A-Z]+-/g).map(option => option.replace("-", ""));
         let primaryValue = materialOptions[0];
-        
-        // generate material name segment map
-        for (let j=0; j<materialOptions.length; ++j) {
-          materialNameSegmentMap[materialOptions[j]] = materialOptions[j];
-        }
 
         // generate select display
         let isNewUniqueGeometry = surfaceOptionMap[geometryName] === undefined;
@@ -97,10 +89,8 @@ var buildTextureOptions = (materials) => {
             type: "textureCategory",            
           })
 
-          surfaceAttributeNameMap[geometryName] = ["Attribute Name"]
           surfaceOptionMap[geometryName][materialOptions[0]] = [];
           for (let j=1; j<materialOptions.length; ++j) {
-            surfaceAttributeNameMap[geometryName].push("Attribute Name")
             surfaceControls.push({
               name: `${geometryName} - Attribute ${j+1}`, 
               configuration: {
@@ -168,8 +158,6 @@ var buildTextureOptions = (materials) => {
     
     return {
         surfaceOptionMap,
-        materialNameSegmentMap,
-        surfaceAttributeNameMap,
         surfaceControls,
     }
 }

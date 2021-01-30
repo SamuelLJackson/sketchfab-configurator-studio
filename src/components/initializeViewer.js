@@ -8,9 +8,7 @@ import {
     toggleDisableButtons,
     setSceneGraph,
     setMaterials,
-    setMaterialNameSegmentMap,
     setSurfaceOptionMap,
-    setSurfaceAttributeNameMap,
 } from './viewerSlice';
 
 const initializeViewer = modelId => dispatch => {
@@ -182,9 +180,7 @@ const initializeViewer = modelId => dispatch => {
                             
                             let surfaceOptions = buildTextureOptions(materials)
                             
-                            dispatch(setMaterialNameSegmentMap(surfaceOptions.materialNameSegmentMap))
                             dispatch(setSurfaceOptionMap(surfaceOptions.surfaceOptionMap))
-                            dispatch(setSurfaceAttributeNameMap(surfaceOptions.surfaceAttributeNameMap))
                             dispatch(setTextureControls(surfaceOptions.surfaceControls))
                         });
                     }.bind(this));

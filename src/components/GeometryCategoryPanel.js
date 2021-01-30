@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  selectGroupingOptions,
+  selectGeometryCategoryOptions,
   selectControls,
   setUnselectedGeometries,
   updateControl,
@@ -12,7 +12,7 @@ const GeometryCategoryPanel = props => {
 
     const dispatch = useDispatch();
     const { option } = props;
-    const unselectedGeometries = useSelector(selectGroupingOptions);
+    const unselectedGeometries = useSelector(selectGeometryCategoryOptions);
     const selectedGeometries = option.configuration.geometries;
     const controls = useSelector(selectControls)
 
