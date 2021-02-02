@@ -53,7 +53,7 @@ var buildGeometryCategoryOptions = (state) => {
     }
   }
   geometryCategoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})
-  state.groupingOptions = geometryCategoryOptions;
+  state.geometryCategoryOptions = geometryCategoryOptions;
 }
 
 var buildTextureOptions = (materials) => {  

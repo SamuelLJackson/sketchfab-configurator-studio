@@ -83,9 +83,8 @@ var toggleableItems = {};
 
 var currentAnimation = "";
 var currentAnimationEndTime = 0;
-var appContainer = document.querySelector("div.sketchfab__container")
 
-var appWidth = Number(appContainer.style.width.replace("px",""))
+var appContainer = document.querySelector("div.sketchfab__container")
 appContainer.style.display = "block"
 
 var apiSkfb, pollTime;
@@ -527,6 +526,7 @@ var initializeSelect = function(controlIndex, geometryName="") {
 
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")	
+	var appWidth = Number(appContainer.clientWidth)
 	wrapper.style.width = (appWidth/4) + "px";
 	
 	var select = document.createElement("div")
