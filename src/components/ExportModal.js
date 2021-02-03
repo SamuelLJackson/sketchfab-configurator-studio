@@ -392,8 +392,12 @@ var setVisibleNodes = function(api) {
 		var indexContainingCodes = i;
 		var isMatrixTransform = false;
 		if (sceneGraph[i].name === "MatrixTransform") {
-			indexContainingCodes = i - 1;
 			isMatrixTransform = true;
+			if (sceneGraph[i].depth < 3) {
+				indexContainingCodes = i + 1;
+			} else {
+				indexContainingCodes = i - 1;
+			}
 		}
 		
 		var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
