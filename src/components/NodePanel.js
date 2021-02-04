@@ -31,7 +31,7 @@ const NodePanel = () => {
                 }
             }}
           />
-          <div className="node-name">{addDashes(node.depth)}{node.name}</div>
+          <div className="node-name">{addDashes(node.depth)}{node.name} - type: {node.type}</div>
         </div>
       )
     })

@@ -56,7 +56,7 @@ var version = '1.8.2';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
-var uid = '${modelId === '' ? '9d5bb1c929b142978ee8a780d170e1a5' : modelId}';
+var uid = '${modelId === '' ? '256c6851707048a69320bffb9573e448' : modelId}';
 
 /*
 	COPY THE LINE BELOW
@@ -390,9 +390,7 @@ var setVisibleNodes = function(api) {
 	
 	for (var i=0; i<sceneGraph.length; ++i) {
 		var indexContainingCodes = i;
-		var isMatrixTransform = false;
 		if (sceneGraph[i].name === "MatrixTransform") {
-			isMatrixTransform = true;
 			if (sceneGraph[i].depth < 3) {
 				indexContainingCodes = i + 1;
 			} else {
@@ -410,24 +408,15 @@ var setVisibleNodes = function(api) {
 				if (lettersByDesignation[currentNodeDesignation].indexOf(currentNodeLetterCode[j]) === -1) {
 					lettersByDesignation[currentNodeDesignation].push(currentNodeLetterCode[j])
 				}	
-			}					
+			}		
 			
-			var currentUpstreamDepth = Number(sceneGraph[i].depth)
-			var currentUpstreamIndex = i-1;
-			var upStreamRelevantNodes = []
-			while(currentUpstreamDepth > 2) {
-				if (sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
-					var currentUpstreamDesignation = sceneGraph[currentUpstreamIndex].name.split("-")[0]
-					var currentUpstreamLetterCode = sceneGraph[currentUpstreamIndex].name.split("-")[1]
-					if (currentUpstreamDesignation !== currentNodeDesignation) {
-						upStreamRelevantNodes.push({letterCode: currentUpstreamLetterCode, instanceID: sceneGraph[currentUpstreamIndex].instanceID, name: sceneGraph[currentUpstreamIndex].name})
-					}	
-					currentUpstreamDepth = Number(sceneGraph[currentUpstreamIndex].depth);
-				}
-				currentUpstreamIndex = currentUpstreamIndex - 1;
-			}
-			
-			relevantNodes.push({letterCode: currentNodeLetterCode, instanceID: sceneGraph[i].instanceID, name: sceneGraph[i].name, upStreamRelevantNodes: upStreamRelevantNodes})		
+			relevantNodes.push({
+				letterCode: currentNodeLetterCode, 
+				instanceID: sceneGraph[i].instanceID, 
+				name: sceneGraph[i].name, 
+				upstreamRelevantNodes: collectUpstreamNodes(i),
+				boneNodes: collectBoneNodes(i),
+			})		
 		}
 	}		
 	
@@ -445,16 +434,68 @@ var setVisibleNodes = function(api) {
 	for (var i=0; i<relevantNodes.length; ++i) {
 		if (relevantNodes[i].letterCode.indexOf(commonLetter) != -1) {
 			api.show(relevantNodes[i].instanceID);
-			for (var j=0; j<relevantNodes[i].upStreamRelevantNodes.length; ++j) {
-				console.log("showing upstream node:")
-				console.log(relevantNodes[i].upStreamRelevantNodes[j].name)
-				api.show(relevantNodes[i].upStreamRelevantNodes[j].instanceID)
+			for (var j=0; j<relevantNodes[i].upstreamRelevantNodes.length; ++j) {
+				api.show(relevantNodes[i].upstreamRelevantNodes[j].instanceID)
+			}
+			for (var j=0; j<relevantNodes[i].boneNodes.length; ++j) {
+				api.show(relevantNodes[i].boneNodes[j].instanceID);
 			}
 		}
 	}
 	console.log("END: setVisibleNodes")
 }
 
+var collectUpstreamNodes = function(nodeIndex) {
+	var nodeNameArray = sceneGraph[nodeIndex].name.split("-")
+	var initialNodeDesignation = nodeNameArray[0];
+			
+	var currentUpstreamDepth = Number(sceneGraph[nodeIndex].depth)
+	var currentUpstreamIndex = nodeIndex - 1;
+	var upstreamRelevantNodes = []
+	while(currentUpstreamDepth > 2) {
+		if (sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
+			var currentUpstreamDesignation = sceneGraph[currentUpstreamIndex].name.split("-")[0]
+			var currentUpstreamLetterCode = sceneGraph[currentUpstreamIndex].name.split("-")[1]
+			if (currentUpstreamDesignation !== initialNodeDesignation) {
+				upstreamRelevantNodes.push({
+					letterCode: currentUpstreamLetterCode, 
+					instanceID: sceneGraph[currentUpstreamIndex].instanceID, 
+					name: sceneGraph[currentUpstreamIndex].name
+				})
+			}	
+			currentUpstreamDepth = Number(sceneGraph[currentUpstreamIndex].depth);
+		}
+		currentUpstreamIndex = currentUpstreamIndex - 1;
+	}
+
+	return upstreamRelevantNodes;
+}
+
+var collectBoneNodes = function(nodeIndex) {
+	
+	var downStreamRelevantNodes = []
+	if (sceneGraph[nodeIndex].type === "Group") {
+		var currentDownstreamIndex = nodeIndex + 1;
+		var initialDepth = Number(sceneGraph[nodeIndex].depth)
+		var currentDownstreamDepth = Number(sceneGraph[currentDownstreamIndex].depth)
+		while(currentDownstreamDepth>initialDepth) {
+
+			var downstreamNodeNameArray = sceneGraph[currentDownstreamIndex].name.split("-")
+			var currentDownstreamNodeLetterCode = downstreamNodeNameArray[1];
+			var currentDownStreamNode = {
+				letterCode: currentDownstreamNodeLetterCode, 
+				instanceID: sceneGraph[currentDownstreamIndex].instanceID, 
+				name: sceneGraph[currentDownstreamIndex].name, 
+				upstreamRelevantNodes: [],
+			}
+			downStreamRelevantNodes.push(currentDownStreamNode)	
+			currentDownstreamDepth = sceneGraph[currentDownstreamIndex].depth;
+			currentDownstreamIndex += 1;
+		}
+	}
+	
+	return downStreamRelevantNodes;
+}
 var mode = function(arr) { 
 	if(arr.filter((x,index) => arr.indexOf(x) == index).length == arr.length) {
 		return arr; 

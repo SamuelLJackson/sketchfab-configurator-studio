@@ -38,7 +38,7 @@ export const viewerSlice = createSlice({
       state.animations = action.payload;
     },
     setSceneGraph: (state, action) => {
-      buildSceneGraph(state, action.payload.children, 0);
+      buildSceneGraph(state, action.payload.children[0].children, 0);
       buildGeometryCategoryOptions(state)
     },
     setSceneGraphIsVisible: (state, action) => {
@@ -93,8 +93,10 @@ export const viewerSlice = createSlice({
           state.surfaceConfigurationMode = true
         }
         if (newControls[i].type === "geometryCategory") {
-          if (newControls[i].configuration.hiddenValues === undefined) {
-            newControls[i].configuration.hiddenValues = []
+          for (let j=0; j<newControls[i].configuration.geometries.length; ++j) {
+            if (newControls[i].configuration.geometries[j].hiddenValues === undefined) {
+              newControls[i].configuration.geometries[j].hiddenValues = []
+            }            
           }
         }
       }

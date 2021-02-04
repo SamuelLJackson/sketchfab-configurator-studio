@@ -1,12 +1,13 @@
 var buildSceneGraph = function(state, children, depth) {
 	for (let i=0; i<children.length; ++i) {
-    if (children[i].type != "Group" && children[i].name != "RootNode") {
+    if (children[i].name != "RootNode") {
       if(children[i].name == undefined) {
         state.sceneGraph.push({
           name: children[i].type, 
           depth: depth, 
           instanceID: children[i].instanceID,
           materialID: children[i].materialID,
+          type: children[i].type,
         });
       } else {
         state.sceneGraph.push({
@@ -14,6 +15,7 @@ var buildSceneGraph = function(state, children, depth) {
           depth: depth, 
           instanceID: children[i].instanceID,
           materialID: children[i].materialID,
+          type: children[i].type,
         });
       }
       state.sceneGraphIsVisible[children[i].instanceID] = true
