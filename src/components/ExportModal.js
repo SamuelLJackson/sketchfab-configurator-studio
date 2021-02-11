@@ -99,7 +99,6 @@ pollTime = function() {
 	});
 };
 
-
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
@@ -351,16 +350,12 @@ var configureMaterials = function(api) {
 		for (var j=0; j<relevantSelects.length; ++j) {
 			materialNameString += relevantSelects[j].textContent + "-";
 		}
-		console.log("materialNameString:")
-		console.log(materialNameString)
 		var newMaterial;
 		for (var j=0; j<myMaterials.length; ++j) {
 			if (myMaterials[j].name.startsWith(materialNameString)) {
 				newMaterial = JSON.parse(JSON.stringify(myMaterials[j]));
 			}
 		}
-		console.log("newMaterial:")
-		console.log(newMaterial)
 		
 		for (var j=0; j<myMaterials.length; ++j) {
 			if (myMaterials[j].name === geometryName) {
@@ -430,7 +425,6 @@ var setVisibleNodes = function(api) {
 		letters = letters.concat(Object.values(lettersByDesignation)[i])
 		commonLetter = mode(letters)[0]
 	}
-	
 	for (var i=0; i<relevantNodes.length; ++i) {
 		if (relevantNodes[i].letterCode.indexOf(commonLetter) != -1) {
 			api.show(relevantNodes[i].instanceID);
@@ -452,7 +446,7 @@ var collectUpstreamNodes = function(nodeIndex) {
 	var currentUpstreamDepth = Number(sceneGraph[nodeIndex].depth)
 	var currentUpstreamIndex = nodeIndex - 1;
 	var upstreamRelevantNodes = []
-	while(currentUpstreamDepth > 2) {
+	while(currentUpstreamDepth > 1) {
 		if (sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
 			var currentUpstreamDesignation = sceneGraph[currentUpstreamIndex].name.split("-")[0]
 			var currentUpstreamLetterCode = sceneGraph[currentUpstreamIndex].name.split("-")[1]
@@ -478,14 +472,11 @@ var collectBoneNodes = function(nodeIndex) {
 		var currentDownstreamIndex = nodeIndex + 1;
 		var initialDepth = Number(sceneGraph[nodeIndex].depth)
 		var currentDownstreamDepth = Number(sceneGraph[currentDownstreamIndex].depth)
-		while(currentDownstreamDepth>initialDepth) {
-
-			var downstreamNodeNameArray = sceneGraph[currentDownstreamIndex].name.split("-")
-			var currentDownstreamNodeLetterCode = downstreamNodeNameArray[1];
+		while(currentDownstreamDepth>initialDepth && sceneGraph[currentDownstreamIndex] !== undefined) {
 			var currentDownStreamNode = {
-				letterCode: currentDownstreamNodeLetterCode, 
+				letterCode: "NA", 
 				instanceID: sceneGraph[currentDownstreamIndex].instanceID, 
-				name: sceneGraph[currentDownstreamIndex].name, 
+				name: "NA", 
 				upstreamRelevantNodes: [],
 			}
 			downStreamRelevantNodes.push(currentDownStreamNode)	
@@ -524,6 +515,8 @@ var handleHidingGeometryCombinations = function() {
 	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
 							.map(select => select.querySelector(".sketchfab-select-value").textContent)
 							
+	var allGeoSelects = document.getElementsByClassName("sketchfab-geometry-category")
+							
 	var geometryControls = controls.filter(control => control.type === "geometryCategory")
 
 	var disabledOptions = []
@@ -536,6 +529,17 @@ var handleHidingGeometryCombinations = function() {
 		allCategoryOptions[i].style.display = "block";
 		if (disabledOptions.includes(allCategoryOptions[i].getAttribute("data-value"))) {
 			allCategoryOptions[i].style.display = "none"
+		}
+	}
+	
+	for (var i=0; i<currentCategorySelections.length; ++i) {
+		if (disabledOptions.includes(currentCategorySelections[i])) {
+			for(var j=0; j<allGeoSelects[i].querySelectorAll(".sketchfab-option").length; ++j) {
+				if (allGeoSelects[i].querySelectorAll(".sketchfab-option")[j].style.display === "block") {
+					allGeoSelects[i].querySelector(".sketchfab-select-value").textContent = allGeoSelects[i].querySelectorAll(".sketchfab-option")[j].getAttribute("data-value")
+					break;
+				}
+			}
 		}
 	}
 }
@@ -609,21 +613,6 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	return wrapper;
 	console.log("END: initializeSelect:")
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 `

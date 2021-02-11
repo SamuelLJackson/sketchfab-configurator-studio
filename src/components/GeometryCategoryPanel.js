@@ -150,7 +150,7 @@ const GeometryCategoryPanel = props => {
                   console.log(newComplimentConfiguration)
                   console.log("\n\n\n")
                   dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-                  dispatch(updateControl({id: controls[i].id, key: "configuration", value: newComplimentConfiguration}))
+                  //dispatch(updateControl({id: controls[i].id, key: "configuration", value: newComplimentConfiguration}))
                 }}
               />
               <div>{geometry.designation}</div>
