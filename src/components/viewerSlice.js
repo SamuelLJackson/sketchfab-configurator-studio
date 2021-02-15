@@ -177,7 +177,7 @@ export const selectAnimations = state => state.animations;
 
 export const selectControls = state => state.controls;
 
-export const selectTextureControls = state => state.controls;
+export const selectTextureControls = state => state.textureControls;
 
 export const selectDisableButtons = state => state.disableButtons;
 

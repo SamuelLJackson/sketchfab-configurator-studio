@@ -87,6 +87,8 @@ var currentAnimationEndTime = 0;
 var appContainer = document.querySelector("div.sketchfab__container")
 appContainer.style.display = "block"
 
+var globalDisabledControls = [];
+
 var apiSkfb, pollTime;
 
 pollTime = function() {
@@ -108,6 +110,7 @@ var success = function(api) {
 			
 			var animations = [];
 			for (let i = 0; i < controls.length; ++i) {	
+				globalDisabledControls.push(false);
 				if (controls[i].type == "animation") {
 					var animationControls = document.getElementById("sketchfab-animation-controls")
 					animationControls.style.display = "block";
@@ -510,6 +513,7 @@ var handleUpdateSelect = function(e) {
 
 
 var handleHidingGeometryCombinations = function() {
+	console.log("BEGIN: handleHidingGeometryCombinations")
 				
 	var allCategoryOptions = document.querySelectorAll(".sketchfab-geometry-category .sketchfab-option")
 	var currentCategorySelections = Array.from(document.querySelectorAll(".sketchfab-geometry-category .sketchfab-select"))
@@ -520,9 +524,12 @@ var handleHidingGeometryCombinations = function() {
 	var geometryControls = controls.filter(control => control.type === "geometryCategory")
 
 	var disabledOptions = []
+	var disabledControls = []
 	for(var i=0; i<geometryControls.length; ++i) {
 		var hiddenValues = geometryControls[i].configuration.geometries.filter(geometry => geometry.designation === currentCategorySelections[i])[0].hiddenValues;
+		var disabledValues = geometryControls[i].configuration.geometries.filter(geometry => geometry.designation === currentCategorySelections[i])[0].disabledTextureControls;
 		disabledOptions = disabledOptions.concat(hiddenValues)
+		disabledControls = disabledOptions.concat(disabledValues)
 	}
 	
 	for (var i=0; i<allCategoryOptions.length; ++i) {
@@ -542,6 +549,26 @@ var handleHidingGeometryCombinations = function() {
 			}
 		}
 	}
+	
+	console.log("disabledValues:")
+	console.log(disabledValues)
+	var dropdownControls = document.querySelectorAll(".sketchfab-single-control-container")
+	var nonCategoryControlOffset = 0;
+	for (var i=0; i<controls.length; ++i) {
+		console.log("controls[i].name:")
+		console.log(controls[i].name)
+		globalDisabledControls[i] = false;
+		if (controls[i].type.includes("Category")) {
+			document.querySelectorAll(".sketchfab-single-control-container")[i-nonCategoryControlOffset].style.opacity = 1;
+			if (disabledValues.includes(controls[i].name)) {
+				globalDisabledControls[i] = true;
+				document.querySelectorAll(".sketchfab-single-control-container")[i-nonCategoryControlOffset].style.opacity = 0.3;			
+			}
+		} else {
+			nonCategoryControlOffset += 1;
+		}
+	}
+	console.log("END: handleHidingGeometryCombinations")
 }
 
 var disableAnimations = function() {		
@@ -607,7 +634,14 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	wrapper.appendChild(select)	
 
 	wrapper.addEventListener('click', function() {
-		this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
+		console.log("BEGIN: wrapper click");
+		console.log("globalDisabledControls:")
+		console.log(globalDisabledControls)
+		var index = this.querySelector(".sketchfab-select-value").id.split("-")[1]
+		if (globalDisabledControls[index] === false) {
+			this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
+		}
+		console.log("END: wrapper click");
 	})
 	
 	return wrapper;

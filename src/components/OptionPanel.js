@@ -14,6 +14,14 @@ import TextureConfigurationPanel from './TextureCategoryPanel';
 import TogglePanel from './TogglePanel';
 import { ReactSortable } from 'react-sortablejs';
 
+const panelColors = {
+  animation: "red",
+  color: "yellow",
+  geometryCategory: "blue",
+  textureCategory: "green",
+  toggle: "purple",
+}
+
 const OptionPanel = () => {  
   
   const options = useSelector(selectControls);
@@ -40,7 +48,7 @@ const renderOptions = (options, dispatch) => {
   let optionsHtml = options.map((option, index, array) => (
     <div className="single-option__panel" key={`option-${index}`}>
       <div className="single-option__header">
-        <h3 className="single-option__title">{option.id}. {option.type}</h3>
+        <h3 className="single-option__title" style={{color: panelColors[option.type]}}>{option.name}</h3>
         <button 
           id={`collapseButton${option.id}`}
           className="collapse__button"

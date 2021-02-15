@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectGeometryCategoryOptions,
   selectControls,
+  selectTextureControls,
   setUnselectedGeometries,
   updateControl,
 } from './viewerSlice';
@@ -15,6 +16,7 @@ const GeometryCategoryPanel = props => {
     const unselectedGeometries = useSelector(selectGeometryCategoryOptions);
     const selectedGeometries = option.configuration.geometries;
     const controls = useSelector(selectControls)
+    const textureControls = useSelector(selectTextureControls)
 
     const renderUnselectedGeometryMultiselect = () => unselectedGeometries.map((geometry, index) => (
             <div 
@@ -24,6 +26,7 @@ const GeometryCategoryPanel = props => {
               onClick={() => {
                 let newUnselectedGeometries = JSON.parse(JSON.stringify(unselectedGeometries))
                 let selectedGeometry = newUnselectedGeometries.splice(index, 1)[0]
+                selectedGeometry.disabledTextureControls = []
                 let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
                 newConfiguration.geometries.push(selectedGeometry)
                 dispatch(updateControl({ id: option.id, key: "configuration", value: newConfiguration }))
@@ -69,7 +72,11 @@ const GeometryCategoryPanel = props => {
                 }}
               />
             </div>
-            {renderDisableMultiSelect(geometry.designation, index)}
+            {renderDisableMultiSelect(index)}
+            <div style={{textAlign: "left", marginLeft: 16}}>
+              <div style={{color: "green"}}>Texture Controls (disabled)</div>
+              {renderDisableTextureControls(index)}
+            </div>
           </div>
           <div style={{display: "flex", flex: "1 1 auto"}}>
               <button 
@@ -110,7 +117,30 @@ const GeometryCategoryPanel = props => {
       })
     }
 
-    const renderDisableMultiSelect = (currentElementDesignation, geometryIndex) => {
+    const renderDisableTextureControls = (geometryIndex) => {
+      return textureControls.map((control, index) => {
+        let showChecked = option.configuration.geometries[geometryIndex].disabledTextureControls.includes(control.name)
+        return (
+          <div style={{display: "flex"}}>
+            <input 
+              type="checkbox" 
+              checked={showChecked}
+              onChange={() => {        
+                let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
+                if (showChecked) {                    
+                  newConfiguration.geometries[geometryIndex].disabledTextureControls = newConfiguration.geometries[geometryIndex].disabledTextureControls.filter(disabledTextureControls => disabledTextureControls !== control.name)
+                } else {                  
+                  newConfiguration.geometries[geometryIndex].disabledTextureControls.push(control.name)
+                }
+                dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
+              }}
+            />
+            <div>{control.name}</div>
+          </div>
+      )})    
+    }
+
+    const renderDisableMultiSelect = (geometryIndex) => {
     
       var multiSelects = [];
       for (let i=0; i<controls.length; ++i) {
@@ -135,22 +165,14 @@ const GeometryCategoryPanel = props => {
                 checked={showChecked}
                 onChange={() => {        
                   let newConfiguration = JSON.parse(JSON.stringify(option.configuration))
-                  let newComplimentConfiguration = JSON.parse(JSON.stringify(controls[i].configuration))
                   console.log("controls[i]:")
                   console.log(controls[i])
-                  console.log(newComplimentConfiguration)
                   if(showChecked) {                    
                     newConfiguration.geometries[geometryIndex].hiddenValues = newConfiguration.geometries[geometryIndex].hiddenValues.filter(hiddenElementDesignation => hiddenElementDesignation !== geometry.designation)
-                    newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues = newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues.filter(hiddenElementDesignation => hiddenElementDesignation !== currentElementDesignation)
                   } else {
                     newConfiguration.geometries[geometryIndex].hiddenValues.push(geometry.designation)
-                    newComplimentConfiguration.geometries[complimentGeometryIndex].hiddenValues.push(currentElementDesignation);
                   }
-                  console.log("\n\n\nnewComplimentConfiguration:")
-                  console.log(newComplimentConfiguration)
-                  console.log("\n\n\n")
                   dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
-                  //dispatch(updateControl({id: controls[i].id, key: "configuration", value: newComplimentConfiguration}))
                 }}
               />
               <div>{geometry.designation}</div>

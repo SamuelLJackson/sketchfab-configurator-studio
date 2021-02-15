@@ -68,7 +68,7 @@ button, input {
 }
 
 .add-option:hover {
-  background-color: blue;
+  background-color: black;
 }
 
 .add-option:disabled {
@@ -125,7 +125,7 @@ button, input {
 }
 
 .control-choice:hover {
-  background-color: blue;
+  background-color: black;
   color: white;
 }
 
