@@ -16,13 +16,11 @@ const initializeViewer = modelId => dispatch => {
     dispatch(setControls([]));
   
     var iframe = document.getElementById('api-frame');
-    var version = '1.8.2';
+    var version = '1.9.0';
     var DEFAULT_URLID = '256c6851707048a69320bffb9573e448';
-    var DEFAULT_PREFIX = 'seat ';		
     
     var CONFIG = {
         urlid: modelId !== '' ? modelId : DEFAULT_URLID,
-        prefix: DEFAULT_PREFIX
     };
     var isSeeking;
     var animationsList = [];

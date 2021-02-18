@@ -52,7 +52,7 @@ const createJSExport = (configurationMaps) => {
 	return (
 `
 // Sketchfab Viewer API: Change Texture/material
-var version = '1.8.2';
+var version = '1.9.0';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
@@ -81,7 +81,7 @@ var animationObjects = {};
 var controlsContainer = document.getElementById('sketchfab-lower-controls');
 var toggleableItems = {};
 
-var currentAnimation = "";
+var currentAnimationIndex = 0;
 var currentAnimationEndTime = 0;
 
 var appContainer = document.querySelector("div.sketchfab__container")
@@ -91,15 +91,19 @@ var globalDisabledControls = [];
 
 var apiSkfb, pollTime;
 
+var animationsEnabled = false;
+
 pollTime = function() {
-	apiSkfb.getCurrentTime(function(err, time) {
-		
-		if (currentAnimationEndTime > 0 && time >= currentAnimationEndTime) {
-			apiSkfb.pause();
+	apiSkfb.getCurrentTime(function(err, time) {	
+		if (animationsEnabled) {
+			if (currentAnimationEndTime > 0 && time >= currentAnimationEndTime) {
+				apiSkfb.pause();
+			}
+			requestAnimationFrame(pollTime);
 		}
-		requestAnimationFrame(pollTime);
 	});
 };
+
 
 var success = function(api) {
     apiSkfb = api;
@@ -117,21 +121,41 @@ var success = function(api) {
 					
 					var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
 					var animationButton = document.createElement("button")
-					animationButton.id = "animation-" + controls[i].id
+					animationButton.id = "animation-" + controls[i].id + "-" + i
 					animationButton.textContent = controls[i].name;
 					animationButton.addEventListener('click', function(e) {
 						var animationId = e.target.id.split("-")[1]
-						
+						currentAnimationIndex = e.target.id.split("-")[2]
 						var startTime = animationObjects[animationId].startTime;
 						var endTime = animationObjects[animationId].endTime;
 						var animationUID = animationObjects[animationId].uid;
-						
 						currentAnimationEndTime = endTime;
-						api.setCurrentAnimationByUID(animationUID);
-						api.seekTo(startTime);
-						api.play();
+
+						apiSkfb.setCurrentAnimationByUID(animationUID)
+						apiSkfb.seekTo(startTime);
+						
+						var animationButtons = document.querySelector("#sketchfab-animation-buttons").querySelectorAll("button")
+						for (var j=0; j<animationButtons.length; ++j) {
+							animationButtons[j].disabled = false;
+							animationButtons[j].style.border = "none"
+							animationButtons[j].style.opacity = 1
+							if (animationButtons[j].textContent === e.target.textContent) {
+								animationButtons[j].disabled = true;
+								animationButtons[j].style.border = "1px solid black"
+								animationButtons[j].style.opacity = 0.5							
+							}
+						}
+						setTimeout(function() { apiSkfb.play();	}, 100);
 					})
 					animationButtonContainer.appendChild(animationButton)
+					
+					var isInitialAnimationPosition = controls[i].configuration.isDisabledInitially
+					if (isInitialAnimationPosition) {
+						animationButton.disabled = true;
+						animationButton.style.border = "1px solid black"
+						animationButton.style.opacity = 0.5
+						currentAnimationIndex = i
+					}
 					
 					animations.push(controls[i]);
 					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].configuration.startTime), endTime: Number(controls[i].configuration.endTime), uid: controls[i].configuration.animationUID}; 
@@ -550,13 +574,9 @@ var handleHidingGeometryCombinations = function() {
 		}
 	}
 	
-	console.log("disabledValues:")
-	console.log(disabledValues)
 	var dropdownControls = document.querySelectorAll(".sketchfab-single-control-container")
 	var nonCategoryControlOffset = 0;
 	for (var i=0; i<controls.length; ++i) {
-		console.log("controls[i].name:")
-		console.log(controls[i].name)
 		globalDisabledControls[i] = false;
 		if (controls[i].type.includes("Category")) {
 			document.querySelectorAll(".sketchfab-single-control-container")[i-nonCategoryControlOffset].style.opacity = 1;
@@ -579,7 +599,6 @@ var disableAnimations = function() {
 		var currentNameCode = allCategorySelects[i].textContent;
 		for (var j=0; j<controls[controlIndex].configuration.geometries.length; ++j) {
 			if (controls[controlIndex].configuration.geometries[j].designation === currentNameCode) {
-				console.log("found matching geometry in control")
 				if (controls[controlIndex].configuration.geometries[j].allowsAnimation === false) {
 					allowAnimations = false;
 				}
@@ -587,13 +606,26 @@ var disableAnimations = function() {
 		}
 	}
 	var animationButtons = document.querySelectorAll("#sketchfab-animation-buttons button")
+	
 	for (var i=0; i<animationButtons.length; ++i) {
 		animationButtons[i].disabled = true;
 	}
+	
+	var initiallyDisabled = animationsEnabled === false
+	
+	animationsEnabled = false;
 	if (allowAnimations) {
 		for (var i=0; i<animationButtons.length; ++i) {
-			animationButtons[i].disabled = false;
-		}						
+			if (animationButtons[i].textContent !== controls[currentAnimationIndex].name) {
+				animationButtons[i].disabled = false;
+			}
+		}	
+		animationsEnabled = true;
+		if (initiallyDisabled) {
+			var animationUID = Object.values(animationObjects)[0].uid
+			apiSkfb.setCurrentAnimationByUID(animationUID);
+			pollTime();
+		}
 	}
 }
 
@@ -635,8 +667,6 @@ var initializeSelect = function(controlIndex, geometryName="") {
 
 	wrapper.addEventListener('click', function() {
 		console.log("BEGIN: wrapper click");
-		console.log("globalDisabledControls:")
-		console.log(globalDisabledControls)
 		var index = this.querySelector(".sketchfab-select-value").id.split("-")[1]
 		if (globalDisabledControls[index] === false) {
 			this.querySelector('.sketchfab-select').classList.toggle('sketchfab-select-open');	
@@ -647,6 +677,7 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	return wrapper;
 	console.log("END: initializeSelect:")
 }
+
 
 
 `

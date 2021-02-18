@@ -2,29 +2,48 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectAnimations,
+  selectControls,
   updateControl,
 } from './viewerSlice';
 
-const AnimationPanel = props => {
-
+const AnimationPanel = props => {           
     const dispatch = useDispatch();
     const { option } = props;
     const animations = useSelector(selectAnimations);
+    const controls = useSelector(selectControls)
 
     const animationOptions = animations.map(animation => <option value={animation[0]}>{animation[1]}</option>)
     animationOptions.unshift(<option value="none">Select an Animation</option>)
 
     return (
       <div style={{display: "flex", alignItems: "flex-start", flexDirection: "column"}}>
+        <div style={{display: "flex"}}>
+          <input
+            type="checkbox"
+            value={option.configuration.isDisabledInitially}
+            onChange={(e) => {
+              for (let i=0; i<controls.length; ++i) {
+                let newXConfiguration = {
+                  ...controls[i].configuration,
+                  isDisabledInitially: false,
+                }
+                dispatch(updateControl({id: controls[i].id, key: "configuration", value: newXConfiguration}))
+              }
+              let newConfiguration = {
+                ...option.configuration,
+                isDisabledInitially: !option.configuration.isDisabledInitially,
+              }
+              dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
+            }}
+          />
+          <div>Disabled Initially</div>
+        </div>
         <div>
           <label>Animation:</label>
           <select 
             name="animationSelect"
             value={option.configuration.animationUID}
             onChange={(e) => {
-              console.log("\n\n\ne.target:")
-              console.log(e.target)
-              console.log("\n\n\n")
               let newConfiguration = {
                 ...option.configuration,
                 animationUID: e.target.value,

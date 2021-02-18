@@ -54,6 +54,7 @@ export const viewerSlice = createSlice({
           animationUID: "none",
           startTime: "0",
           endTime: "0",
+          isDisabledInitially: false,
         }
       }
 
