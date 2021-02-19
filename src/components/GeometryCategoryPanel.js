@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { 
   selectGeometryCategoryOptions,
   selectControls,
-  selectTextureControls,
   setUnselectedGeometries,
   updateControl,
 } from './viewerSlice';
@@ -16,7 +15,6 @@ const GeometryCategoryPanel = props => {
     const unselectedGeometries = useSelector(selectGeometryCategoryOptions);
     const selectedGeometries = option.configuration.geometries;
     const controls = useSelector(selectControls)
-    const textureControls = useSelector(selectTextureControls)
 
     const renderUnselectedGeometryMultiselect = () => unselectedGeometries.map((geometry, index) => (
             <div 
@@ -74,7 +72,7 @@ const GeometryCategoryPanel = props => {
             </div>
             {renderDisableMultiSelect(index)}
             <div style={{textAlign: "left", marginLeft: 16}}>
-              <div style={{color: "green"}}>Texture Controls (disabled)</div>
+              <div style={{color: "green", fontWeight: "bold"}}>Disable When Selected:</div>
               {renderDisableTextureControls(index)}
             </div>
           </div>
@@ -118,7 +116,7 @@ const GeometryCategoryPanel = props => {
     }
 
     const renderDisableTextureControls = (geometryIndex) => {
-      return textureControls.map((control, index) => {
+      return controls.filter(control => control.type === "textureCategory").map(control => {
         let showChecked = option.configuration.geometries[geometryIndex].disabledTextureControls.includes(control.name)
         return (
           <div style={{display: "flex"}}>
@@ -189,7 +187,7 @@ const GeometryCategoryPanel = props => {
       }
       return (
         <div style={{textAlign: "left", marginLeft: 16}}>
-          <div style={{marginLeft: 4}}>Disable when selected:</div>
+          <div style={{color: "blue", fontWeight: "bold"}}>Disable When Selected:</div>
           {multiSelects}
         </div>
       )
