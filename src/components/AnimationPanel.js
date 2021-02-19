@@ -36,7 +36,7 @@ const AnimationPanel = props => {
               dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
             }}
           />
-          <div>Disabled Initially</div>
+          <div>Disable Initially</div>
         </div>
         <div>
           <label>Animation:</label>
