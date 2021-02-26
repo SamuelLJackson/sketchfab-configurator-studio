@@ -322,6 +322,7 @@ client.init(uid, {
 	ui_inspector: 0,
 	ui_stop: 0,
 	ui_infos: 0,
+	ui_fullscreen: window.innerWidth < 1000 ? 0 : 1,
 });
 
 var handleHidingTextureCombinations = function(api) {
