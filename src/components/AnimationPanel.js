@@ -20,8 +20,9 @@ const AnimationPanel = props => {
         <div style={{display: "flex"}}>
           <input
             type="checkbox"
-            value={option.configuration.isDisabledInitially}
+            checked={option.configuration.isDisabledInitially}
             onChange={(e) => {
+              const currentlyDisabled = option.configuration.isDisabledInitially;
               for (let i=0; i<controls.length; ++i) {
                 let newXConfiguration = {
                   ...controls[i].configuration,
@@ -31,7 +32,7 @@ const AnimationPanel = props => {
               }
               let newConfiguration = {
                 ...option.configuration,
-                isDisabledInitially: !option.configuration.isDisabledInitially,
+                isDisabledInitially: !currentlyDisabled,
               }
               dispatch(updateControl({id: option.id, key: "configuration", value: newConfiguration}))
             }}
