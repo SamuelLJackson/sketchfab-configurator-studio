@@ -3,7 +3,6 @@ import { buildTextureOptions } from './utils'
 import {
     setSketchfabAPI,
     setAnimations,
-    setControls,
     setTextureControls,
     toggleDisableButtons,
     setSceneGraph,
@@ -12,8 +11,6 @@ import {
 } from './viewerSlice';
 
 const initializeViewer = modelId => dispatch => {
-
-    dispatch(setControls([]));
   
     var iframe = document.getElementById('api-frame');
     var version = '1.9.0';

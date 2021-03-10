@@ -5,6 +5,7 @@ import ImportModal from './components/ImportModal';
 import ExportModal from './components/ExportModal';
 import OptionChoiceModal from './components/OptionChoiceModal';
 import ControlMenu from './components/ControlMenu';
+import ModelList from './components/ModelList'
 import './App.css';
 import './globals';
 
@@ -13,6 +14,7 @@ function App() {
   return (
     <div className="App">
       <Header />
+      <ModelList />
       <div className="body">
         <Viewer />
         <ControlMenu />
