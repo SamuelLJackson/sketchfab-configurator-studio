@@ -5,6 +5,7 @@ import {
   selectActiveModelGUID,
   setModelId, 
   setModelName,
+  setIsInitialModel,
 } from './viewerSlice';
 import initializeViewer from './initializeViewer';
 
@@ -18,13 +19,13 @@ const ModelPanel = () => {
 
         return (
             <div style={{display: "flex", flexDirection: "column"}}>
-                <div style={{width: 160}}>Model Name:</div>
+                <div style={{marginLeft: 3, textAlign: "left"}}>Model Name:</div>
                 <input
                     style={{marginBottom: 20}}
-                    value={activeModel.name}
+                    value={activeModel.name == "" ? "" : activeModel.name}
                     onChange={e => dispatch(setModelName(e.target.value))}
                 />
-                <div style={{width: 160}}>Model UID:</div>
+                <div style={{marginLeft: 3, textAlign: "left"}}>Model UID:</div>
                 <textarea
                     placeholder="Enter Model UID here"
                     style={{width:"100%"}}
@@ -34,6 +35,14 @@ const ModelPanel = () => {
                         dispatch(initializeViewer(e.target.value))
                     }}
                 />     
+                <div style={{display: "flex", marginLeft: 3}}>
+                    <div>Initial Model?</div>
+                    <input
+                        type={"checkbox"}
+                        checked={activeModel.isInitial}
+                        onChange={e => dispatch(setIsInitialModel(!activeModel.isInitial))}
+                    />
+                </div>
             </div>
         )
     } else {

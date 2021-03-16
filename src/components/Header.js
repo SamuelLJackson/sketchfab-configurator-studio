@@ -12,13 +12,12 @@ const Header = () => {
   const dispatch = useDispatch();
   return (
     <div className="header">
-      <h1 className="header__title">Configurator Studio - v1.0.24</h1>
+      <h1 className="header__title">Configurator Studio - v1.0.25</h1>
 
       <div className="header__buttons">
         <button 
           id="import-javascript"
           className="header__button"
-          disabled={disableButtons}
           onClick={() => dispatch(toggleImportModalDisplay())}>Import Configuration</button>
         <button 
           id="export-javascript"

@@ -10,7 +10,7 @@ const initialState = {
 }
 
 const defaultModel = {
-  nanme: "",
+  name: "",
   uid: "",
   guid: "",
   materials: [],
@@ -23,6 +23,7 @@ const defaultModel = {
   surfaceOptionMap: {},
   surfaceConfigurationMode: false,
   geometryCategoryOptions: [],
+  isInitial: false,
 };
 
 export const viewerSlice = createSlice({
@@ -225,7 +226,14 @@ export const viewerSlice = createSlice({
         guid: newGuid,
       })
       state.activeModelGUID = newGuid
-    }
+    },
+    setIsInitialModel: (state, action) => {
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].isInitial = action.payload;
+        }
+      }
+    },
   },
 });
 
@@ -252,6 +260,7 @@ export const {
   setModelList,
   setActiveModelGUID,
   createModel,
+  setIsInitialModel,
 } = viewerSlice.actions;
 
 export const getAttributeFromModel = (state, attribute) => {

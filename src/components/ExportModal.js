@@ -2,29 +2,13 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
 	toggleModalDisplay, 
-	selectControls, 
-	selectModelId,
-	selectSceneGraph, 
-	selectMaterials,
-	selectSurfaceOptionMap,
+	selectModelList
 } from './viewerSlice';
 
 const ExportModal = () => {
+	const modelList = useSelector(selectModelList)
 
     const dispatch = useDispatch();
-	const controls = useSelector(selectControls);
-	const modelId = useSelector(selectModelId);
-	const sceneGraph = useSelector(selectSceneGraph);
-	const materials = useSelector(selectMaterials);
-	const surfaceOptionMap = useSelector(selectSurfaceOptionMap);
-
-	const configurationMaps = {
-		controls, 
-		modelId, 
-		sceneGraph, 
-		materials,
-		surfaceOptionMap, 
-	}
 
     return (
         <div id="modal">
@@ -34,20 +18,13 @@ const ExportModal = () => {
                 <div className="modal__header">
                     <h1>Add This To Your Page</h1>
                 </div>
-                <textarea id="js-output" value={createJSExport(configurationMaps)} />
+                <textarea id="js-output" value={createJSExport(modelList)} />
             </div>
         </div>
     )
 }
 
-const createJSExport = (configurationMaps) => {
-	const {
-		controls, 
-		modelId, 
-		sceneGraph, 
-		materials,
-		surfaceOptionMap, 
-	} = configurationMaps;
+const createJSExport = (modelList) => {
 
 	return (
 `
@@ -56,42 +33,46 @@ var version = '1.9.0';
 var iframe = document.getElementById('api-frame');
 var client = new window.Sketchfab(version, iframe);
 
-var uid = '${modelId === '' ? '256c6851707048a69320bffb9573e448' : modelId}';
-
 /*
 	COPY THE LINE BELOW
 */
 
-var controls = ${JSON.stringify(controls)}
+var modelList = ${JSON.stringify(modelList)}
 
 /*
 	COPY THE LINE ABOVE
 */
 
-var myMaterials = ${JSON.stringify(materials)}
+var currentModelIndex = 0;
 
-var sceneGraph = ${JSON.stringify(sceneGraph)}
+for (var i=0; i<modelList.length; ++i) {
+	if (modelList[i].isInitial == true) {
+		currentModelIndex = i;
+		break;
+	}
+}
 
 var isElementCategoryControlled = false;
 var surfaceConfigurationMode = false;
-var surfaceOptionMap = ${JSON.stringify(surfaceOptionMap)};
 
 var animationObjects = {};
-
-var controlsContainer = document.getElementById('sketchfab-lower-controls');
 var toggleableItems = {};
 
 var currentAnimationIndex = 0;
 var currentAnimationEndTime = 0;
 
-var appContainer = document.querySelector("div.sketchfab__container")
-appContainer.style.display = "block"
-
 var globalDisabledControls = [];
+
+var animationsEnabled = false;
 
 var apiSkfb, pollTime;
 
-var animationsEnabled = false;
+var controlsContainer = document.getElementById('sketchfab-lower-controls');
+
+var appContainer = document.querySelector("div.sketchfab__container")
+appContainer.style.display = "block"
+
+var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
 
 pollTime = function() {
 	apiSkfb.getCurrentTime(function(err, time) {	
@@ -104,6 +85,7 @@ pollTime = function() {
 	});
 };
 
+var viewerAPIs = {};
 
 var success = function(api) {
     apiSkfb = api;
@@ -113,16 +95,15 @@ var success = function(api) {
 			api.pause();
 			
 			var animations = [];
-			for (let i = 0; i < controls.length; ++i) {	
+			for (let i = 0; i < modelList[currentModelIndex].controls.length; ++i) {	
 				globalDisabledControls.push(false);
-				if (controls[i].type == "animation") {
+				if (modelList[currentModelIndex].controls[i].type == "animation") {
 					var animationControls = document.getElementById("sketchfab-animation-controls")
 					animationControls.style.display = "block";
 					
-					var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
 					var animationButton = document.createElement("button")
-					animationButton.id = "animation-" + controls[i].id + "-" + i
-					animationButton.textContent = controls[i].name;
+					animationButton.id = "animation-" + modelList[currentModelIndex].controls[i].id + "-" + i
+					animationButton.textContent = modelList[currentModelIndex].controls[i].name;
 					animationButton.addEventListener('click', function(e) {
 						var animationId = e.target.id.split("-")[1]
 						currentAnimationIndex = e.target.id.split("-")[2]
@@ -149,7 +130,7 @@ var success = function(api) {
 					})
 					animationButtonContainer.appendChild(animationButton)
 					
-					var isInitialAnimationPosition = controls[i].configuration.isDisabledInitially
+					var isInitialAnimationPosition = modelList[currentModelIndex].controls[i].configuration.isDisabledInitially
 					if (isInitialAnimationPosition) {
 						animationButton.disabled = true;
 						animationButton.style.border = "1px solid black"
@@ -157,44 +138,44 @@ var success = function(api) {
 						currentAnimationIndex = i
 					}
 					
-					animations.push(controls[i]);
-					animationObjects[controls[i].id] = {name: controls[i].name, startTime: Number(controls[i].configuration.startTime), endTime: Number(controls[i].configuration.endTime), uid: controls[i].configuration.animationUID}; 
+					animations.push(modelList[currentModelIndex].controls[i]);
+					animationObjects[modelList[currentModelIndex].controls[i].id] = {name: modelList[currentModelIndex].controls[i].name, startTime: Number(modelList[currentModelIndex].controls[i].configuration.startTime), endTime: Number(modelList[currentModelIndex].controls[i].configuration.endTime), uid: modelList[currentModelIndex].controls[i].configuration.animationUID}; 
 					continue;
 				}
 				var singleControlContainer = document.createElement("div");
 				singleControlContainer.classList.add("sketchfab-single-control-container");		
 											
 				
-				if (controls[i].type == "color") {
+				if (modelList[currentModelIndex].controls[i].type == "color") {
 					var resetBut = document.createElement("button");
 					resetBut.innerHTML = "Reset";
 					resetBut.onclick = function(e) {	
-						var m = myMaterials[controls[i].entityIndex];
-						m = JSON.parse(JSON.stringify(controls[i].entity));
+						var m = modelList[currentModelIndex].materials[modelList[currentModelIndex].controls[i].entityIndex];
+						m = JSON.parse(JSON.stringify(modelList[currentModelIndex].controls[i].entity));
 							
 						api.setMaterial(m);
 					}
 					singleControlContainer.appendChild(resetBut);
 					
-					for (let j = 0; j < controls[i].additionalColors.length; ++j) {
+					for (let j = 0; j < modelList[currentModelIndex].controls[i].additionalColors.length; ++j) {
 						var colorBut = document.createElement("button");
 
-						colorBut.innerHTML = controls[i].additionalColors[j].name;
+						colorBut.innerHTML = modelList[currentModelIndex].controls[i].additionalColors[j].name;
 						
-						colorBut.id = controls[i].id + "-" + controls[i].name
+						colorBut.id = modelList[currentModelIndex].controls[i].id + "-" + modelList[currentModelIndex].controls[i].name
 						colorBut.onclick = function(e) {	
-							var m = myMaterials[controls[i].entityIndex];
+							var m = modelList[currentModelIndex].materials[modelList[currentModelIndex].controls[i].entityIndex];
 							m.channels.AlbedoPBR.factor = 1;
 							m.channels.AlbedoPBR.enable = true;
-							m.channels.AlbedoPBR.color = controls[i].additionalColors[j].colorRGB;
+							m.channels.AlbedoPBR.color = modelList[currentModelIndex].controls[i].additionalColors[j].colorRGB;
 							m.channels.AlbedoPBR.texture = null;
 							
 							m.channels.DiffuseColor.factor = 1;
 							m.channels.DiffuseColor.enable = true;
-							m.channels.DiffuseColor.color = controls[i].additionalColors[j].colorRGB;
+							m.channels.DiffuseColor.color = modelList[currentModelIndex].controls[i].additionalColors[j].colorRGB;
 							m.channels.DiffuseColor.texture = null;
 							
-							m.channels.DiffusePBR.color = controls[i].additionalColors[j].colorRGB;
+							m.channels.DiffusePBR.color = modelList[currentModelIndex].controls[i].additionalColors[j].colorRGB;
 							m.channels.DiffusePBR.enable = false;
 							m.channels.DiffusePBR.factor = 1;
 							
@@ -202,7 +183,7 @@ var success = function(api) {
 						}
 						singleControlContainer.appendChild(colorBut);
 					}	
-				} else if (controls[i].type === "geometryCategory") {	
+				} else if (modelList[currentModelIndex].controls[i].type === "geometryCategory") {	
 					isElementCategoryControlled = true;
 					
 					var wrapper = initializeSelect(i);
@@ -210,16 +191,16 @@ var success = function(api) {
 					
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
-					for (var j=0; j<controls[i].configuration.geometries.length; ++j) {
+					for (var j=0; j<modelList[currentModelIndex].controls[i].configuration.geometries.length; ++j) {
 						
 						let customOption = document.createElement("span")
 						customOption.classList.add("sketchfab-option");
-						var name = controls[i].configuration.geometries[j].designation;
-						var humanReadable = controls[i].configuration.geometries[j].humanReadable;
+						var name = modelList[currentModelIndex].controls[i].configuration.geometries[j].designation;
+						var humanReadable = modelList[currentModelIndex].controls[i].configuration.geometries[j].humanReadable;
 						customOption.setAttribute("data-value", name)
 						customOption.id = name + "-" + j + "-" + i;
 						customOption.innerHTML = name + " - " + humanReadable;
-						if (controls[i].configuration.geometries[j].designation === controls[i].initialValue) {
+						if (modelList[currentModelIndex].controls[i].configuration.geometries[j].designation === modelList[currentModelIndex].controls[i].initialValue) {
 							customOption.classList.add("selected")
 						}
 						customOption.addEventListener('click', function(e) {
@@ -233,9 +214,9 @@ var success = function(api) {
 					}
 					
 					singleControlContainer.appendChild(wrapper);		
-				} else if (controls[i].type === "textureCategory") {
+				} else if (modelList[currentModelIndex].controls[i].type === "textureCategory") {
 					surfaceConfigurationMode = true					
-					const { geometryName, options, isPrimary, ordering} = controls[i].configuration
+					const { geometryName, options, isPrimary, ordering} = modelList[currentModelIndex].controls[i].configuration
 					
 					var controlIndex = i;
 					var wrapper = initializeSelect(controlIndex, geometryName)
@@ -248,7 +229,7 @@ var success = function(api) {
 							let customOption = document.createElement("span")
 							customOption.classList.add("sketchfab-option");
 							const { name, humanReadable } = options[j];
-							if (name === controls[i].initialValue) {
+							if (name === modelList[currentModelIndex].controls[i].initialValue) {
 								customOption.classList.add("selected");
 							}
 							
@@ -266,19 +247,19 @@ var success = function(api) {
 						}
 						singleControlContainer.appendChild(wrapper);
 						
-				} else if (controls[i].type == "toggle") {
-					toggleableItems[String(controls[i].entity.instanceID)] = "visible";
+				} else if (modelList[currentModelIndex].controls[i].type == "toggle") {
+					toggleableItems[String(modelList[currentModelIndex].controls[i].entity.instanceID)] = "visible";
 					var toggleBut = document.createElement("button");
-					toggleBut.innerHTML = "Toggle " + controls[i].name;
-					toggleBut.id = controls[i].entity.instanceID;
+					toggleBut.innerHTML = "Toggle " + modelList[currentModelIndex].controls[i].name;
+					toggleBut.id = modelList[currentModelIndex].controls[i].entity.instanceID;
 					toggleBut.onclick = function(e) {
 						var isVisible = toggleableItems[e.target.id];
 						if (isVisible == "visible") {
 							api.hide(e.target.id);
-							toggleableItems[String(controls[i].entity.instanceID)] = "hidden";
+							toggleableItems[String(modelList[currentModelIndex].controls[i].entity.instanceID)] = "hidden";
 						} else {
 							api.show(e.target.id);
-							toggleableItems[String(controls[i].entity.instanceID)] = "visible";
+							toggleableItems[String(modelList[currentModelIndex].controls[i].entity.instanceID)] = "visible";
 						}
 					}
 					singleControlContainer.appendChild(toggleBut);
@@ -312,10 +293,13 @@ var success = function(api) {
 	});
 };
 
-client.init(uid, {
+client.init(modelList[currentModelIndex].uid, {
 	success: success,
 	error: () => console.error('Sketchfab API error'),
-	autostart: 0,
+	merge_materials: 1,
+	material_packing: 1,
+	//graph_optimizer: 1,
+	autostart: 1,
 	preload: 0,
 	ui_animations: 0,
 	ui_watermark: 0,
@@ -336,7 +320,7 @@ var handleHidingTextureCombinations = function(api) {
 		var isPrimary = Number(ordering) === 0;
 		if (!isPrimary) {
 			var currentInitialPrimarySelection = document.getElementById(geometryName + "-0").querySelector(".sketchfab-select__trigger span").textContent;
-			var availableOptions = surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1].sort()
+			var availableOptions = modelList[currentModelIndex].surfaceOptionMap[geometryName][currentInitialPrimarySelection][ordering-1].sort()
 			var previouslyAvailableOptions =  Array.from(options).filter(op => op.style.display === "block").map(op => op.getAttribute("data-value")).sort()
 			let equal = availableOptions.length == previouslyAvailableOptions.length && availableOptions.every((element, index)=> element === previouslyAvailableOptions[index] );
 			
@@ -379,19 +363,19 @@ var configureMaterials = function(api) {
 			materialNameString += relevantSelects[j].textContent + "-";
 		}
 		var newMaterial;
-		for (var j=0; j<myMaterials.length; ++j) {
-			if (myMaterials[j].name.startsWith(materialNameString)) {
-				newMaterial = JSON.parse(JSON.stringify(myMaterials[j]));
+		for (var j=0; j<modelList[currentModelIndex].materials.length; ++j) {
+			if (modelList[currentModelIndex].materials[j].name.startsWith(materialNameString)) {
+				newMaterial = JSON.parse(JSON.stringify(modelList[currentModelIndex].materials[j]));
 			}
 		}
 		
-		for (var j=0; j<myMaterials.length; ++j) {
-			if (myMaterials[j].name === geometryName) {
-				myMaterials[j].channels = JSON.parse(JSON.stringify(newMaterial.channels));
-				myMaterials[j].reflection = newMaterial.reflection;
-				myMaterials[j].reflector = newMaterial.reflector;
-				myMaterials[j].shadeless = newMaterial.shadeless;
-				api.setMaterial(myMaterials[j], function() {console.log("material updated")})
+		for (var j=0; j<modelList[currentModelIndex].materials.length; ++j) {
+			if (modelList[currentModelIndex].materials[j].name === geometryName) {
+				modelList[currentModelIndex].materials[j].channels = JSON.parse(JSON.stringify(newMaterial.channels));
+				modelList[currentModelIndex].materials[j].reflection = newMaterial.reflection;
+				modelList[currentModelIndex].materials[j].reflector = newMaterial.reflector;
+				modelList[currentModelIndex].materials[j].shadeless = newMaterial.shadeless;
+				api.setMaterial(modelList[currentModelIndex].materials[j], function() {console.log("material updated")})
 			}
 		}
 	}
@@ -411,20 +395,20 @@ var setVisibleNodes = function(api) {
 	
 	var relevantNodes = [];
 	
-	for (var i=0; i<sceneGraph.length; ++i) {
+	for (var i=0; i<modelList[currentModelIndex].sceneGraph.length; ++i) {
 		var indexContainingCodes = i;
-		if (sceneGraph[i].name === "MatrixTransform") {
-			if (sceneGraph[i].depth < 3) {
+		if (modelList[currentModelIndex].sceneGraph[i].name === "MatrixTransform") {
+			if (modelList[currentModelIndex].sceneGraph[i].depth < 3) {
 				indexContainingCodes = i + 1;
 			} else {
 				indexContainingCodes = i - 1;
 			}
 		}
 		
-		var nodeNameArray = sceneGraph[indexContainingCodes].name.split("-")
+		var nodeNameArray = modelList[currentModelIndex].sceneGraph[indexContainingCodes].name.split("-")
 		var currentNodeDesignation = nodeNameArray[0];
 		var currentNodeLetterCode = nodeNameArray[1];
-		api.hide(sceneGraph[indexContainingCodes].instanceID);
+		api.hide(modelList[currentModelIndex].sceneGraph[indexContainingCodes].instanceID);
 		
 		if (selectedPrefixes.includes(currentNodeDesignation)) {
 			for (var j=0; j<currentNodeLetterCode.length; ++j) {
@@ -435,8 +419,8 @@ var setVisibleNodes = function(api) {
 			
 			relevantNodes.push({
 				letterCode: currentNodeLetterCode, 
-				instanceID: sceneGraph[i].instanceID, 
-				name: sceneGraph[i].name, 
+				instanceID: modelList[currentModelIndex].sceneGraph[i].instanceID, 
+				name: modelList[currentModelIndex].sceneGraph[i].name, 
 				upstreamRelevantNodes: collectUpstreamNodes(i),
 				boneNodes: collectBoneNodes(i),
 			})		
@@ -468,24 +452,24 @@ var setVisibleNodes = function(api) {
 }
 
 var collectUpstreamNodes = function(nodeIndex) {
-	var nodeNameArray = sceneGraph[nodeIndex].name.split("-")
+	var nodeNameArray = modelList[currentModelIndex].sceneGraph[nodeIndex].name.split("-")
 	var initialNodeDesignation = nodeNameArray[0];
 			
-	var currentUpstreamDepth = Number(sceneGraph[nodeIndex].depth)
+	var currentUpstreamDepth = Number(modelList[currentModelIndex].sceneGraph[nodeIndex].depth)
 	var currentUpstreamIndex = nodeIndex - 1;
 	var upstreamRelevantNodes = []
 	while(currentUpstreamDepth > 1) {
-		if (sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
-			var currentUpstreamDesignation = sceneGraph[currentUpstreamIndex].name.split("-")[0]
-			var currentUpstreamLetterCode = sceneGraph[currentUpstreamIndex].name.split("-")[1]
+		if (modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].depth < currentUpstreamDepth) {
+			var currentUpstreamDesignation = modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].name.split("-")[0]
+			var currentUpstreamLetterCode = modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].name.split("-")[1]
 			if (currentUpstreamDesignation !== initialNodeDesignation) {
 				upstreamRelevantNodes.push({
 					letterCode: currentUpstreamLetterCode, 
-					instanceID: sceneGraph[currentUpstreamIndex].instanceID, 
-					name: sceneGraph[currentUpstreamIndex].name
+					instanceID: modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].instanceID, 
+					name: modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].name
 				})
 			}	
-			currentUpstreamDepth = Number(sceneGraph[currentUpstreamIndex].depth);
+			currentUpstreamDepth = Number(modelList[currentModelIndex].sceneGraph[currentUpstreamIndex].depth);
 		}
 		currentUpstreamIndex = currentUpstreamIndex - 1;
 	}
@@ -496,19 +480,19 @@ var collectUpstreamNodes = function(nodeIndex) {
 var collectBoneNodes = function(nodeIndex) {
 	
 	var downStreamRelevantNodes = []
-	if (sceneGraph[nodeIndex].type === "Group") {
+	if (modelList[currentModelIndex].sceneGraph[nodeIndex].type === "Group") {
 		var currentDownstreamIndex = nodeIndex + 1;
-		var initialDepth = Number(sceneGraph[nodeIndex].depth)
-		var currentDownstreamDepth = Number(sceneGraph[currentDownstreamIndex].depth)
-		while(currentDownstreamDepth>initialDepth && sceneGraph[currentDownstreamIndex] !== undefined) {
+		var initialDepth = Number(modelList[currentModelIndex].sceneGraph[nodeIndex].depth)
+		var currentDownstreamDepth = Number(modelList[currentModelIndex].sceneGraph[currentDownstreamIndex].depth)
+		while(currentDownstreamDepth>initialDepth && modelList[currentModelIndex].sceneGraph[currentDownstreamIndex] !== undefined) {
 			var currentDownStreamNode = {
 				letterCode: "NA", 
-				instanceID: sceneGraph[currentDownstreamIndex].instanceID, 
+				instanceID: modelList[currentModelIndex].sceneGraph[currentDownstreamIndex].instanceID, 
 				name: "NA", 
 				upstreamRelevantNodes: [],
 			}
 			downStreamRelevantNodes.push(currentDownStreamNode)	
-			currentDownstreamDepth = sceneGraph[currentDownstreamIndex].depth;
+			currentDownstreamDepth = modelList[currentModelIndex].sceneGraph[currentDownstreamIndex].depth;
 			currentDownstreamIndex += 1;
 		}
 	}
@@ -545,7 +529,7 @@ var handleHidingGeometryCombinations = function() {
 							
 	var allGeoSelects = document.getElementsByClassName("sketchfab-geometry-category")
 							
-	var geometryControls = controls.filter(control => control.type === "geometryCategory")
+	var geometryControls = modelList[currentModelIndex].controls.filter(control => control.type === "geometryCategory")
 
 	var disabledOptions = []
 	var disabledControls = []
@@ -578,11 +562,11 @@ var handleHidingGeometryCombinations = function() {
 	
 	var dropdownControls = document.querySelectorAll(".sketchfab-single-control-container")
 	var nonCategoryControlOffset = 0;
-	for (var i=0; i<controls.length; ++i) {
+	for (var i=0; i<modelList[currentModelIndex].controls.length; ++i) {
 		globalDisabledControls[i] = false;
-		if (controls[i].type.includes("Category")) {
+		if (modelList[currentModelIndex].controls[i].type.includes("Category")) {
 			document.querySelectorAll(".sketchfab-single-control-container")[i-nonCategoryControlOffset].style.opacity = 1;
-			if (disabledControls.includes(controls[i].name)) {
+			if (disabledControls.includes(modelList[currentModelIndex].controls[i].name)) {
 				globalDisabledControls[i] = true;
 				document.querySelectorAll(".sketchfab-single-control-container")[i-nonCategoryControlOffset].style.opacity = 0.3;			
 			}
@@ -599,9 +583,9 @@ var disableAnimations = function() {
 	for (var i=0; i<allCategorySelects.length; ++i) {
 		var controlIndex = allCategorySelects[i].id.split("-")[1]
 		var currentNameCode = allCategorySelects[i].textContent;
-		for (var j=0; j<controls[controlIndex].configuration.geometries.length; ++j) {
-			if (controls[controlIndex].configuration.geometries[j].designation === currentNameCode) {
-				if (controls[controlIndex].configuration.geometries[j].allowsAnimation === false) {
+		for (var j=0; j<modelList[currentModelIndex].controls[controlIndex].configuration.geometries.length; ++j) {
+			if (modelList[currentModelIndex].controls[controlIndex].configuration.geometries[j].designation === currentNameCode) {
+				if (modelList[currentModelIndex].controls[controlIndex].configuration.geometries[j].allowsAnimation === false) {
 					allowAnimations = false;
 				}
 			}
@@ -618,7 +602,7 @@ var disableAnimations = function() {
 	animationsEnabled = false;
 	if (allowAnimations) {
 		for (var i=0; i<animationButtons.length; ++i) {
-			if (animationButtons[i].textContent !== controls[currentAnimationIndex].name) {
+			if (animationButtons[i].textContent !== modelList[currentModelIndex].controls[currentAnimationIndex].name) {
 				animationButtons[i].disabled = false;
 			}
 		}	
@@ -649,7 +633,7 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	triggerSpan.id = "triggerSpan-" + controlIndex;
 	triggerSpan.classList.add("sketchfab-select-value")
 	triggerSpan.classList.add(geometryName + "-triggerSpan")
-	triggerSpan.textContent = controls[controlIndex].initialValue;
+	triggerSpan.textContent = modelList[currentModelIndex].controls[controlIndex].initialValue;
 	
 	var arrow = document.createElement("div")
 	arrow.classList.add("sketchfab-select-arrow")
@@ -658,7 +642,7 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	customOptions.classList.add("sketchfab-options")
 	var selectTitle = document.createElement("h3")
 	selectTitle.classList.add("sketchfab-title")
-	selectTitle.textContent = controls[controlIndex].name;
+	selectTitle.textContent = modelList[currentModelIndex].controls[controlIndex].name;
 	
 	selectTrigger.appendChild(triggerSpan)
 	selectTrigger.appendChild(arrow)
@@ -678,6 +662,74 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	
 	return wrapper;
 	console.log("END: initializeSelect:")
+}
+
+var changeViewerContainer = document.querySelector("#change-viewer-container");
+
+if (modelList.length > 1) {
+	for (var i = 0; i<modelList.length; ++i) {
+		console.log("modelList:")
+		console.log(modelList)
+		var viewerButton = document.createElement("button");
+		viewerButton.id = "index" + "-" + i;
+		viewerButton.classList.add("view-change__button")
+		viewerButton.textContent = modelList[i].name;
+		viewerButton.style.border = "1px solid gray"
+		if (currentModelIndex === i) {		
+			viewerButton.style.backgroundColor = "white"
+			viewerButton.style.color = "gray"
+			viewerButton.style.fontWeight = "bold !important"
+			viewerButton.style.cursor = "auto"
+		}
+		viewerButton.addEventListener("click", function() {
+			var viewChangeButtons = document.querySelectorAll(".view-change__button")
+			for (var j=0; j<viewChangeButtons.length; ++j) {
+				viewChangeButtons[j].style.backgroundColor = "gray";
+				viewChangeButtons[j].style.color = "white"
+				viewChangeButtons[j].style.fontWeight = "500 !important"
+				viewChangeButtons[j].style.cursor = "pointer"
+			}
+			
+			this.style.backgroundColor = "white"
+			this.style.color = "gray"
+			this.style.fontWeight = "bold !important"
+			this.style.cursor = "auto"
+
+			controlsContainer.innerHTML = null;
+
+			animationButtonContainer.innerHTML = null;
+			var index = this.id.split("-")[1]
+			apiSkfb.stop();
+			currentModelIndex = index;
+
+			isElementCategoryControlled = false;
+			surfaceConfigurationMode = false;
+
+			animationObjects = {};
+			toggleableItems = {};
+			currentAnimationIndex = 0;
+			currentAnimationEndTime = 0;
+
+			globalDisabledControls = [];
+
+			animationsEnabled = false;
+
+			client.init(modelList[index].uid, {
+				success: success,
+				error: () => console.error('Sketchfab API error'),
+				merge_materials: 1,
+				material_packing: 1,
+				autostart: 1,
+				preload: 0,
+				ui_animations: 0,
+				ui_watermark: 0,
+				ui_inspector: 0,
+				ui_stop: 0,
+				ui_infos: 0,
+			});
+		});
+		changeViewerContainer.appendChild(viewerButton);
+	}
 }
 
 
