@@ -87,11 +87,17 @@ pollTime = function() {
 
 var viewerAPIs = {};
 
+
+var viewer = document.querySelector(".sketchfab__viewer")
+var loader = document.querySelector(".sketchfab-loader__container")
+
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
 		api.addEventListener('viewerready', function() {
 			
+			viewer.style.display = "block"
+			loader.style.display = "none";
 			api.pause();
 			
 			var animations = [];
@@ -713,6 +719,9 @@ if (modelList.length > 1) {
 			globalDisabledControls = [];
 
 			animationsEnabled = false;
+			
+			viewer.style.display = "none"
+			loader.style.display = "flex"
 
 			client.init(modelList[index].uid, {
 				success: success,
