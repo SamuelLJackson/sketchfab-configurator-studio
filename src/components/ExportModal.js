@@ -90,6 +90,7 @@ var viewerAPIs = {};
 
 var viewer = document.querySelector(".sketchfab__viewer")
 var loader = document.querySelector(".sketchfab-loader__container")
+var errorMessage = document.querySelector("#sketchfab-error__container")
 
 var success = function(api) {
     apiSkfb = api;
@@ -301,7 +302,11 @@ var success = function(api) {
 
 client.init(modelList[currentModelIndex].uid, {
 	success: success,
-	error: () => console.error('Sketchfab API error'),
+	error: () => {
+		errorMessage.style.display = "flex";
+		loader.style.display = "none";
+		console.error('Sketchfab API error')
+	},
 	merge_materials: 1,
 	material_packing: 1,
 	//graph_optimizer: 1,
