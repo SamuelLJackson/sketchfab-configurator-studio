@@ -48,6 +48,7 @@ const ControlMenu = () => {
                 <button 
                     className="control-menu__button"
                     style={optionsButtonStyles}
+                    disabled={disableButtons}
                     onClick={() => dispatch(setViewMode("options"))}
                 >Options</button>
                 <button 

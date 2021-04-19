@@ -73,6 +73,7 @@ var appContainer = document.querySelector("div.sketchfab__container")
 appContainer.style.display = "block"
 
 var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
+var animationContainerTitle = document.getElementById("sketchfab-animation-controls__title");
 
 pollTime = function() {
 	apiSkfb.getCurrentTime(function(err, time) {	
@@ -87,9 +88,12 @@ pollTime = function() {
 
 var viewerAPIs = {};
 
-
-var viewer = document.querySelector(".sketchfab__viewer")
-var loader = document.querySelector(".sketchfab-loader__container")
+var changeViewerContainer = document.querySelector("#change-viewer-container");
+var viewer = document.querySelector(".sketchfab__viewer");
+var loader = document.querySelector(".sketchfab-loader__container");
+var loaderTitle = document.querySelector("#sketchfab-load-model-name");
+loaderTitle.textContent = modelList[currentModelIndex].name;
+loader.style.display = "flex";
 var errorMessage = document.querySelector("#sketchfab-error__container")
 
 var success = function(api) {
@@ -107,7 +111,7 @@ var success = function(api) {
 				if (modelList[currentModelIndex].controls[i].type == "animation") {
 					var animationControls = document.getElementById("sketchfab-animation-controls")
 					animationControls.style.display = "block";
-					
+					animationContainerTitle.style.display = "block";
 					var animationButton = document.createElement("button")
 					animationButton.id = "animation-" + modelList[currentModelIndex].controls[i].id + "-" + i
 					animationButton.textContent = modelList[currentModelIndex].controls[i].name;
@@ -302,11 +306,7 @@ var success = function(api) {
 
 client.init(modelList[currentModelIndex].uid, {
 	success: success,
-	error: () => {
-		errorMessage.style.display = "flex";
-		loader.style.display = "none";
-		console.error('Sketchfab API error')
-	},
+	error: () => generateErrorMessage(),
 	merge_materials: 1,
 	material_packing: 1,
 	//graph_optimizer: 1,
@@ -319,6 +319,60 @@ client.init(modelList[currentModelIndex].uid, {
 	ui_infos: 0,
 	ui_fullscreen: window.innerWidth < 1000 ? 0 : 1,
 });
+
+var generateErrorMessage = function() {
+	var isFirefox = typeof InstallTrigger !== 'undefined';
+	var isSafari = /constructor/i.test(window.HTMLElement) || (function (p) { return p.toString() === "[object SafariRemoteNotification]"; })(!window['safari'] || (typeof safari !== 'undefined' && window['safari'].pushNotification));
+	var isIE = /*@cc_on!@*/false || !!document.documentMode;
+	
+	var firefoxSteps = [
+		"Open up the browser menu by clicking the three stacked bars at the top right of the browser window.",
+		"Select 'Options'.",
+		"Scroll down until you see the 'Performance' heading.",
+		"Make sure that the checkbox labeled 'Use recommended performance settings' is checked.",
+	];
+	
+	var edgeSteps = [
+		"Open up the browser menu by clicking the three horizontal dots at the top right of the browser window.",
+		"Click 'Settings'.",
+		"Click 'System' from the left-hand sidebar.",
+		"Make sure the second control labeled 'Use hardware acceleration when available' is enabled'.",
+		"If it appears, click the 'Restart' button.",
+	];
+	
+	var chromeSteps = [
+		"Open the Chrome browser menu by clicking on the three vertical dots at the top right of the window.",
+		"Click on 'Settings'.",
+		"Click 'Advanced' on the left-hand sidebar.",
+		"Click 'System'.",
+		"Make sure the second option is enabled, i.e. 'Use hardware acceleration when available'.",
+		"If it appears, click the 'Relaunch' button."
+	];
+	
+	if (isFirefox) {
+		createHardwareAccelerationSteps(firefoxSteps);		
+	} else if (navigator.userAgent.includes("Edg")) {
+		createHardwareAccelerationSteps(edgeSteps);
+	} else {
+		createHardwareAccelerationSteps(chromeSteps);
+	}
+		
+	changeViewerContainer.style.display = "none";
+	errorMessage.style.display = "flex";
+	loader.style.display = "none";
+	console.error('Sketchfab API error');
+}
+
+var createHardwareAccelerationSteps = function(stepsArray) {
+	console.log(stepsArray);
+	var hardwareAccelerationStepsContainer = document.querySelector("#sketchfab-hardware-acceleration-steps");
+	for (var i=0; i<stepsArray.length; ++i) {
+		var step = document.createElement("li");
+		step.textContent = stepsArray[i];
+		console.log(stepsArray[i]);
+		hardwareAccelerationStepsContainer.appendChild(step);
+	}
+}
 
 var handleHidingTextureCombinations = function(api) {
 	console.log("BEGIN: handleHidingTextureCombinations")
@@ -675,8 +729,6 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	console.log("END: initializeSelect:")
 }
 
-var changeViewerContainer = document.querySelector("#change-viewer-container");
-
 if (modelList.length > 1) {
 	for (var i = 0; i<modelList.length; ++i) {
 		console.log("modelList:")
@@ -685,32 +737,23 @@ if (modelList.length > 1) {
 		viewerButton.id = "index" + "-" + i;
 		viewerButton.classList.add("view-change__button")
 		viewerButton.textContent = modelList[i].name;
-		viewerButton.style.border = "1px solid gray"
-		if (currentModelIndex === i) {		
-			viewerButton.style.backgroundColor = "white"
-			viewerButton.style.color = "gray"
-			viewerButton.style.fontWeight = "bold !important"
-			viewerButton.style.cursor = "auto"
+		if (currentModelIndex === i) {	
+			viewerButton.disabled = true;
 		}
 		viewerButton.addEventListener("click", function() {
 			var viewChangeButtons = document.querySelectorAll(".view-change__button")
 			for (var j=0; j<viewChangeButtons.length; ++j) {
-				viewChangeButtons[j].style.backgroundColor = "gray";
-				viewChangeButtons[j].style.color = "white"
-				viewChangeButtons[j].style.fontWeight = "500 !important"
-				viewChangeButtons[j].style.cursor = "pointer"
+				viewChangeButtons[j].disabled = false;
 			}
+			this.disabled = true;
 			
-			this.style.backgroundColor = "white"
-			this.style.color = "gray"
-			this.style.fontWeight = "bold !important"
-			this.style.cursor = "auto"
-
 			controlsContainer.innerHTML = null;
 
 			animationButtonContainer.innerHTML = null;
+			animationContainerTitle.style.display = "none";
 			var index = this.id.split("-")[1]
 			apiSkfb.stop();
+			loaderTitle.textContent = modelList[index].name;
 			currentModelIndex = index;
 
 			isElementCategoryControlled = false;
@@ -730,7 +773,7 @@ if (modelList.length > 1) {
 
 			client.init(modelList[index].uid, {
 				success: success,
-				error: () => console.error('Sketchfab API error'),
+				error: generateErrorMessage,
 				merge_materials: 1,
 				material_packing: 1,
 				autostart: 1,
@@ -745,6 +788,7 @@ if (modelList.length > 1) {
 		changeViewerContainer.appendChild(viewerButton);
 	}
 }
+
 
 
 
