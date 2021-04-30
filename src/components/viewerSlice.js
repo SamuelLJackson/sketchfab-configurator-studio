@@ -2,20 +2,28 @@ import { createSlice } from '@reduxjs/toolkit';
 import { buildSceneGraph, buildGeometryCategoryOptions } from './utils'
 
 const initialState = {
-  modelId: '',
+  modelList: [],
+  activeModelGUID: "",
+  viewMode: "model",
+  sketchfabAPI: null,
+  disableButtons: true,
+}
+
+const defaultModel = {
+  name: "",
+  uid: "",
+  guid: "",
   materials: [],
   animations: [],
   sceneGraph: [],
   controls: [],
   textureControls: [],
-  disableButtons: true,
   latestControlId: 0,
-  sketchfabAPI: null,
   sceneGraphIsVisible: {},
-  viewMode: "options",
   surfaceOptionMap: {},
   surfaceConfigurationMode: false,
   geometryCategoryOptions: [],
+  isInitial: false,
 };
 
 export const viewerSlice = createSlice({
@@ -29,112 +37,163 @@ export const viewerSlice = createSlice({
       state.sketchfabAPI = action.payload;
     },
     setModelId: (state, action) => {
-      state.modelId = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].uid = action.payload
+        }
+      }
+    },
+    setModelName: (state, action) => {
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].name = action.payload
+        }
+      }
     },
     setMaterials: (state, action) => {
-      state.materials = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].materials = action.payload
+        }
+      }
     },
     setAnimations: (state, action) => {
-      state.animations = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].animations = action.payload
+        }
+      }
     },
     setSceneGraph: (state, action) => {
-      buildSceneGraph(state, action.payload.children[0].children, 0);
-      buildGeometryCategoryOptions(state)
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          buildSceneGraph(state.modelList[i], action.payload.children[0].children, 0);
+          buildGeometryCategoryOptions(state.modelList[i])
+        }
+      }
     },
     setSceneGraphIsVisible: (state, action) => {
       const { id, value } = action.payload;
-      state.sceneGraphIsVisible[id] = value;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].sceneGraphIsVisible[id] = value;
+        }
+      }
     },
     createControl: (state, action) => {
-      state.latestControlId = state.latestControlId += 1;
-      let id = state.latestControlId;
-      let defaultConfiguration = {}
-      if(action.payload === "animation") {
-        defaultConfiguration = {
-          animationUID: "none",
-          startTime: "0",
-          endTime: "0",
-          isDisabledInitially: false,
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].latestControlId = state.modelList[i].latestControlId += 1;
+          let id = state.modelList[i].latestControlId;
+          let defaultConfiguration = {}
+          if(action.payload === "animation") {
+            defaultConfiguration = {
+              animationUID: "none",
+              startTime: "0",
+              endTime: "0",
+              isDisabledInitially: false,
+            }
+          }
+    
+          if(action.payload === "geometryCategory") {
+            defaultConfiguration = {
+              designations: [],
+              geometries: [],
+              hiddenValues: [],
+              allowsAnimation: [],  
+            }
+          }
+          state.modelList[i].controls.unshift({
+            type: action.payload,
+            id: id,
+            name: action.payload,
+            entityIndex: "none",
+            entity: {instanceID: 0},
+            configuration: defaultConfiguration,
+            initialValue: "",
+            isExpanded: true,
+          });
         }
       }
-
-      if(action.payload === "geometryCategory") {
-        defaultConfiguration = {
-          designations: [],
-          geometries: [],
-          hiddenValues: [],
-          allowsAnimation: [],  
-        }
-      }
-      state.controls.unshift({
-        type: action.payload,
-        id: id,
-        name: action.payload,
-        entityIndex: "none",
-        entity: {instanceID: 0},
-        configuration: defaultConfiguration,
-        initialValue: "",
-        isExpanded: true,
-      });
     },
     setViewMode: (state, action) => {
       state.viewMode = action.payload
     },
     setControls: (state, action) => {
-      let newControls = JSON.parse(JSON.stringify(action.payload))
-      for(let i=0; i<newControls.length; ++i) {
-        if (newControls[i].type === "animation") {
-          for (let j=0; j<state.animations.length; ++j) {
-            if (newControls[i].configuration.animationName === state.animations[j][1]) {
-              newControls[i].configuration.animationUID = state.animations[j][0]
-            }
-          }
-        }
-        if (newControls[i].type === "textureCategory") {
-          state.surfaceConfigurationMode = true
-        }
-        if (newControls[i].type === "geometryCategory") {
-          for (let j=0; j<newControls[i].configuration.geometries.length; ++j) {
-            if (newControls[i].configuration.geometries[j].hiddenValues === undefined) {
-              newControls[i].configuration.geometries[j].hiddenValues = []
-            }            
-          }
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          let newControls = JSON.parse(JSON.stringify(action.payload))
+          state.modelList[i].controls = newControls;
         }
       }
-      state.controls = newControls;
     },
     setTextureControls: (state, action) => { 
-      for (var i=0; i<action.payload.length; ++i) {
-        state.latestControlId = state.latestControlId += 1;
-        action.payload[i].id = state.latestControlId;
-      }     
-      state.textureControls = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].textureControls = [];
+          for (var j=0; j<action.payload.length; ++j) {
+            state.modelList[i].latestControlId = state.modelList[i].latestControlId += 1;
+            state.modelList[i].textureControls.push({ ...action.payload[j], id: state.modelList[i].latestControlId})
+          }     
+        }
+      }
     },
     addTextureControls: (state) => {
-      state.controls = state.controls.concat(state.textureControls)
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          if (state.modelList[i].controls.length === 0) {
+            state.modelList[i].controls = state.modelList[i].controls.concat(state.modelList[i].textureControls)
+          }
+          for (let j=0; j<state.modelList[i].textureControls.length; ++j) {
+            for (let k=0; k<state.modelList[i].controls.length; ++k) {
+              if (state.modelList[i].controls[k].textureId !== state.modelList[i].textureControls[j].textureId) {
+                if ( k === state.modelList[i].controls.length - 1) {
+                  state.modelList[i].controls.push(state.modelList[i].textureControls[j])
+                }
+              } else {
+                break
+              }
+            }
+          }
+          console.log("END addTextureControls")
+        }
+      }
     },
     toggleDisableButtons: (state) => {
       state.disableButtons = false;
     },
     updateControl: (state, action) => {
       const { id, key, value } = action.payload;
-      console.log(action.payload)
-      for (let i=0; i<state.controls.length; ++i) {
-        if (state.controls[i].id == id) {
-          state.controls[i][key] = value;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          for (let j=0; j<state.modelList[i].controls.length; ++j) {
+            if (state.modelList[i].controls[j].id == id) {
+              state.modelList[i].controls[j][key] = value;
+            }
+          }
         }
       }
     },
     setSurfaceOptionMap: (state, action) => {
-      console.log("setSurfaceOptionMap -> action.payload")
-      console.log(action.payload)
-      state.surfaceOptionMap = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].surfaceOptionMap = action.payload;
+        }
+      }
     },
     setSurfaceConfigurationMode: (state, action) => {
-      state.surfaceConfigurationMode = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].surfaceConfigurationMode = action.payload;
+        }
+      }
     },
     setUnselectedGeometries: (state, action) => {
-      state.geometryCategoryOptions = action.payload;
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].geometryCategoryOptions = action.payload;
+        }
+      }
     },
     setAllNodesVisible: (state, action) => {
       for(let i=0; i<Object.keys(state.sceneGraphIsVisible).length; ++i) {
@@ -146,12 +205,61 @@ export const viewerSlice = createSlice({
         state.sceneGraphIsVisible[Object.keys(state.sceneGraphIsVisible)[i]] = action.payload;
       }
     },
+    setModelList: (state, action) => {
+      state.modelList = [];
+      let newModelList = JSON.parse(JSON.stringify(action.payload))
+      for (let i=0; i<newModelList.length; ++i) {
+          newModelList[i].latestControlId = 1;
+          let newControls = JSON.parse(JSON.stringify(newModelList[i].controls))
+          for(let j=0; j<newControls.length; ++j) {
+            newModelList[i].latestControlId += 1;
+            if (newControls[j].type === "animation") {
+              for (let k=0; k<newModelList[i].animations.length; ++k) {
+                if (newControls[j].configuration.animationName === newModelList[i].animations[k][1]) {
+                  newControls[j].configuration.animationUID = newModelList[i].animations[k][0]
+                }
+              }
+            }
+            if (newControls[j].type === "textureCategory") {
+              newModelList[i].surfaceConfigurationMode = true
+            }
+            if (newControls[j].type === "geometryCategory") {
+              for (let k=0; k<newControls[j].configuration.geometries.length; ++k) {
+                if (newControls[j].configuration.geometries[k].hiddenValues === undefined) {
+                  newControls[j].configuration.geometries[k].hiddenValues = []
+                }            
+              }
+            }
+          }
+          newModelList[i].controls = newControls;
+      }
+      state.modelList = newModelList;
+    },
+    setActiveModelGUID: (state, action) => {
+      state.activeModelGUID = action.payload;
+    },
+    createModel: (state) => {
+      let newGuid = Math.floor(Math.random() * Math.floor(99999999999999999999999999999999999999999))
+      state.modelList.push({
+        ...defaultModel,
+        guid: newGuid,
+      })
+      state.activeModelGUID = newGuid
+    },
+    setIsInitialModel: (state, action) => {
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].isInitial = action.payload;
+        }
+      }
+    },
   },
 });
 
 export const { 
   resetState,
   setModelId, 
+  setModelName,
   createControl, 
   toggleDisableButtons,
   updateControl,
@@ -168,33 +276,50 @@ export const {
   setAnimations,
   setMaterials,
   setSketchfabAPI,
+  setModelList,
+  setActiveModelGUID,
+  createModel,
+  setIsInitialModel,
 } = viewerSlice.actions;
 
-export const selectModelId = state => state.modelId;
+export const getAttributeFromModel = (state, attribute) => {
+  
+  for (let i=0; i<state.modelList.length; ++i) {
+    if (state.modelList[i].guid === state.activeModelGUID) {
+      return state.modelList[i][attribute]
+    }
+  }
+}
 
-export const selectMaterials = state => state.materials;
+export const selectModelList = state => state.modelList;
 
-export const selectAnimations = state => state.animations;
+export const selectActiveModelGUID = state => state.activeModelGUID;
 
-export const selectControls = state => state.controls;
+export const selectModelId = state => getAttributeFromModel(state, "uid");
 
-export const selectTextureControls = state => state.textureControls;
+export const selectMaterials = state => getAttributeFromModel(state, "materials")
+
+export const selectAnimations = state => getAttributeFromModel(state, "animations");
+
+export const selectControls = state => getAttributeFromModel(state, "controls");
+
+export const selectTextureControls = state => getAttributeFromModel(state, "textureControls");
 
 export const selectDisableButtons = state => state.disableButtons;
 
-export const selectSceneGraph = state => state.sceneGraph;
+export const selectSceneGraph = state => getAttributeFromModel(state, "sceneGraph");
 
 export const selectSketchfabAPI = state => state.sketchfabAPI;
 
-export const selectSceneGraphIsVisible = state => state.sceneGraphIsVisible;
+export const selectSceneGraphIsVisible = state => getAttributeFromModel(state, "sceneGraphIsVisible");
 
 export const selectViewMode = state => state.viewMode;
 
-export const selectSurfaceOptionMap = state => state.surfaceOptionMap;
+export const selectSurfaceOptionMap = state => getAttributeFromModel(state, "surfaceOptionMap");
 
-export const selectSurfaceConfigurationMode = state => state.surfaceConfigurationMode;
+export const selectSurfaceConfigurationMode = state => getAttributeFromModel(state, "surfaceConfigurationMode");
 
-export const selectGeometryCategoryOptions = state => state.geometryCategoryOptions;
+export const selectGeometryCategoryOptions = state => getAttributeFromModel(state, "geometryCategoryOptions");
 
 export const toggleImportModalDisplay = ()  => dispatch => {
   const modal = document.getElementById("import-modal")

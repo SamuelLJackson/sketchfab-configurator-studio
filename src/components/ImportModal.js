@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { 
 	toggleImportModalDisplay, 
-	setControls,
+    setModelList,
 } from './viewerSlice';
 
 const ImportModal = () => {
@@ -20,9 +20,9 @@ const ImportModal = () => {
                 <button
 					onClick={() => {
 						let jsInput = document.getElementById("js-input").value;
-						let importString = jsInput.replace("var controls = ", "")
-						let controls = JSON.parse(importString)
-                        dispatch(setControls(controls))
+						let importString = jsInput.replace("var modelList = ", "")
+						let modelList = JSON.parse(importString)
+                        dispatch(setModelList(modelList))
                         dispatch(toggleImportModalDisplay())
 					}}
 				>Import</button>

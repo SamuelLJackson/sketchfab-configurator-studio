@@ -1,8 +1,8 @@
-var buildSceneGraph = function(state, children, depth) {
+var buildSceneGraph = function(model, children, depth) {
 	for (let i=0; i<children.length; ++i) {
     if (children[i].name != "RootNode") {
       if(children[i].name == undefined) {
-        state.sceneGraph.push({
+        model.sceneGraph.push({
           name: children[i].type, 
           depth: depth, 
           instanceID: children[i].instanceID,
@@ -10,7 +10,7 @@ var buildSceneGraph = function(state, children, depth) {
           type: children[i].type,
         });
       } else {
-        state.sceneGraph.push({
+        model.sceneGraph.push({
           name: children[i].name, 
           depth: depth, 
           instanceID: children[i].instanceID,
@@ -18,20 +18,20 @@ var buildSceneGraph = function(state, children, depth) {
           type: children[i].type,
         });
       }
-      state.sceneGraphIsVisible[children[i].instanceID] = true
+      model.sceneGraphIsVisible[children[i].instanceID] = true
     }
 		if (children[i].children != undefined || children[i].children != null) {			
-			buildSceneGraph(state, children[i].children, depth+1);
+			buildSceneGraph(model, children[i].children, depth+1);
 		}
 	}
 }
 
-var buildGeometryCategoryOptions = (state) => {   
+var buildGeometryCategoryOptions = (model) => {   
 
   let uniqueStrings = [];
   let geometryCategoryOptions = [];
-  for (let i=0; i<state.sceneGraph.length; ++i) {
-    let nodeNameArray = state.sceneGraph[i].name.split("-").filter(string => string != "")
+  for (let i=0; i<model.sceneGraph.length; ++i) {
+    let nodeNameArray = model.sceneGraph[i].name.split("-").filter(string => string != "")
     let mainDesignation = nodeNameArray[0];
     let capitalLetter = nodeNameArray[1];
     let detailedTitle = nodeNameArray[2];
@@ -44,7 +44,7 @@ var buildGeometryCategoryOptions = (state) => {
       irrelevantStrings.indexOf(mainDesignation) == -1) {
       uniqueStrings.push(mainDesignation);
       geometryCategoryOptions.push({
-        instanceID: state.sceneGraph[i].instanceID,
+        instanceID: model.sceneGraph[i].instanceID,
         designation: mainDesignation,
         capitalLetter: capitalLetter,
         detailedTitle: detailedTitle,
@@ -55,7 +55,7 @@ var buildGeometryCategoryOptions = (state) => {
     }
   }
   geometryCategoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})
-  state.geometryCategoryOptions = geometryCategoryOptions;
+  model.geometryCategoryOptions = geometryCategoryOptions;
 }
 
 var buildTextureOptions = (materials) => {  
@@ -88,7 +88,8 @@ var buildTextureOptions = (materials) => {
             entity: {instanceID: 0},
             entityIndex: "none",
             isExpanded: true,
-            type: "textureCategory",            
+            type: "textureCategory",     
+            textureId: surfaceControls.length,       
           })
 
           surfaceOptionMap[geometryName][materialOptions[0]] = [];

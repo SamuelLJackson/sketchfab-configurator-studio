@@ -7,6 +7,7 @@ import {
 } from './viewerSlice';
 import OptionPanel from './OptionPanel';
 import NodePanel from './NodePanel';
+import ModelPanel from './ModelPanel';
 
 const ControlMenu = () => {
     const dispatch = useDispatch();
@@ -21,11 +22,17 @@ const ControlMenu = () => {
         backgroundColor: viewMode === "options" ? "white" : "gray"
     }
 
+    let modelButtonStyles = {
+        backgroundColor: viewMode === "model" ? "white" : "gray"
+    }
+
     const renderPanel = (viewMode) => {
         if (viewMode === "options") {
             return <OptionPanel />
         } else if (viewMode === "nodes") {
             return <NodePanel />
+        } else if (viewMode === "model") {
+            return <ModelPanel />
         }
     }
 
@@ -41,8 +48,14 @@ const ControlMenu = () => {
                 <button 
                     className="control-menu__button"
                     style={optionsButtonStyles}
+                    disabled={disableButtons}
                     onClick={() => dispatch(setViewMode("options"))}
                 >Options</button>
+                <button 
+                    className="control-menu__button"
+                    style={modelButtonStyles}
+                    onClick={() => dispatch(setViewMode("model"))}
+                >Model</button>
             </div>
             {renderPanel(viewMode)}
         </div>

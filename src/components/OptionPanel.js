@@ -25,7 +25,7 @@ const panelColors = {
 const OptionPanel = () => {  
   
   const options = useSelector(selectControls);
-  const disableButtons = useSelector(selectDisableButtons);
+  const disableButtons = useSelector(selectDisableButtons) && false;
 
   const dispatch = useDispatch();
 

@@ -61,6 +61,10 @@ button, input {
   flex-direction: column;
 }
 
+.control-menu__button {
+  width: 80px;
+}
+
 .add-option {
   color: white;
   background-color: lightblue;
