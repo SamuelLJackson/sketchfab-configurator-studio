@@ -12,7 +12,7 @@ const Header = () => {
   const dispatch = useDispatch();
   return (
     <div className="header">
-      <h1 className="header__title">Configurator Studio - v1.0.25</h1>
+      <h1 className="header__title">Configurator Studio - v1.0.26</h1>
 
       <div className="header__buttons">
         <button 

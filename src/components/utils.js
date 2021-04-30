@@ -88,7 +88,8 @@ var buildTextureOptions = (materials) => {
             entity: {instanceID: 0},
             entityIndex: "none",
             isExpanded: true,
-            type: "textureCategory",            
+            type: "textureCategory",     
+            textureId: surfaceControls.length,       
           })
 
           surfaceOptionMap[geometryName][materialOptions[0]] = [];

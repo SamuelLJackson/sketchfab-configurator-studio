@@ -123,25 +123,6 @@ export const viewerSlice = createSlice({
       for (let i=0; i<state.modelList.length; ++i) {
         if (state.modelList[i].guid === state.activeModelGUID) {
           let newControls = JSON.parse(JSON.stringify(action.payload))
-          for(let j=0; j<newControls.length; ++j) {
-            if (newControls[j].type === "animation") {
-              for (let k=0; k<state.modelList[i].animations.length; ++k) {
-                if (newControls[j].configuration.animationName === state.modelList[i].animations[k][1]) {
-                  newControls[j].configuration.animationUID = state.modelList[i].animations[k][0]
-                }
-              }
-            }
-            if (newControls[j].type === "textureCategory") {
-              state.modelList[i].surfaceConfigurationMode = true
-            }
-            if (newControls[j].type === "geometryCategory") {
-              for (let k=0; k<newControls[j].configuration.geometries.length; ++k) {
-                if (newControls[j].configuration.geometries[k].hiddenValues === undefined) {
-                  newControls[j].configuration.geometries[k].hiddenValues = []
-                }            
-              }
-            }
-          }
           state.modelList[i].controls = newControls;
         }
       }
@@ -149,18 +130,32 @@ export const viewerSlice = createSlice({
     setTextureControls: (state, action) => { 
       for (let i=0; i<state.modelList.length; ++i) {
         if (state.modelList[i].guid === state.activeModelGUID) {
+          state.modelList[i].textureControls = [];
           for (var j=0; j<action.payload.length; ++j) {
             state.modelList[i].latestControlId = state.modelList[i].latestControlId += 1;
-            action.payload[j].id = state.modelList[i].latestControlId;
+            state.modelList[i].textureControls.push({ ...action.payload[j], id: state.modelList[i].latestControlId})
           }     
-          state.modelList[i].textureControls = action.payload;
         }
       }
     },
     addTextureControls: (state) => {
       for (let i=0; i<state.modelList.length; ++i) {
         if (state.modelList[i].guid === state.activeModelGUID) {
-          state.modelList[i].controls = state.modelList[i].controls.concat(state.modelList[i].textureControls)
+          if (state.modelList[i].controls.length === 0) {
+            state.modelList[i].controls = state.modelList[i].controls.concat(state.modelList[i].textureControls)
+          }
+          for (let j=0; j<state.modelList[i].textureControls.length; ++j) {
+            for (let k=0; k<state.modelList[i].controls.length; ++k) {
+              if (state.modelList[i].controls[k].textureId !== state.modelList[i].textureControls[j].textureId) {
+                if ( k === state.modelList[i].controls.length - 1) {
+                  state.modelList[i].controls.push(state.modelList[i].textureControls[j])
+                }
+              } else {
+                break
+              }
+            }
+          }
+          console.log("END addTextureControls")
         }
       }
     },
@@ -169,7 +164,6 @@ export const viewerSlice = createSlice({
     },
     updateControl: (state, action) => {
       const { id, key, value } = action.payload;
-      console.log(action.payload)
       for (let i=0; i<state.modelList.length; ++i) {
         if (state.modelList[i].guid === state.activeModelGUID) {
           for (let j=0; j<state.modelList[i].controls.length; ++j) {
@@ -181,8 +175,6 @@ export const viewerSlice = createSlice({
       }
     },
     setSurfaceOptionMap: (state, action) => {
-      console.log("setSurfaceOptionMap -> action.payload")
-      console.log(action.payload)
       for (let i=0; i<state.modelList.length; ++i) {
         if (state.modelList[i].guid === state.activeModelGUID) {
           state.modelList[i].surfaceOptionMap = action.payload;
@@ -214,7 +206,34 @@ export const viewerSlice = createSlice({
       }
     },
     setModelList: (state, action) => {
-      state.modelList = action.payload;
+      state.modelList = [];
+      let newModelList = JSON.parse(JSON.stringify(action.payload))
+      for (let i=0; i<newModelList.length; ++i) {
+          newModelList[i].latestControlId = 1;
+          let newControls = JSON.parse(JSON.stringify(newModelList[i].controls))
+          for(let j=0; j<newControls.length; ++j) {
+            newModelList[i].latestControlId += 1;
+            if (newControls[j].type === "animation") {
+              for (let k=0; k<newModelList[i].animations.length; ++k) {
+                if (newControls[j].configuration.animationName === newModelList[i].animations[k][1]) {
+                  newControls[j].configuration.animationUID = newModelList[i].animations[k][0]
+                }
+              }
+            }
+            if (newControls[j].type === "textureCategory") {
+              newModelList[i].surfaceConfigurationMode = true
+            }
+            if (newControls[j].type === "geometryCategory") {
+              for (let k=0; k<newControls[j].configuration.geometries.length; ++k) {
+                if (newControls[j].configuration.geometries[k].hiddenValues === undefined) {
+                  newControls[j].configuration.geometries[k].hiddenValues = []
+                }            
+              }
+            }
+          }
+          newModelList[i].controls = newControls;
+      }
+      state.modelList = newModelList;
     },
     setActiveModelGUID: (state, action) => {
       state.activeModelGUID = action.payload;

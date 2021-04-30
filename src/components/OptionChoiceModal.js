@@ -10,7 +10,7 @@ import {
 
 const OptionChoiceModal = () => {
     const dispatch = useDispatch();
-    const isSurfaceConfigurationMode = useSelector(selectSurfaceConfigurationMode)
+    const isSurfaceConfigurationMode = false //useSelector(selectSurfaceConfigurationMode)
 
     return (
         <div id="control-choice-modal">
@@ -41,7 +41,7 @@ const OptionChoiceModal = () => {
                 >Geometry Category</div>
                 <div 
                     className="control-choice" 
-                    style={{visibility: isSurfaceConfigurationMode ? "hidden" : "visible", color: "green"}} 
+                    style={{visibility: isSurfaceConfigurationMode ? "hidden" : "visible", color: "green"}}
                     onClick={() => {
                         if (isSurfaceConfigurationMode === false) {
                             dispatch(toggleOptionChoiceModalDisplay());
