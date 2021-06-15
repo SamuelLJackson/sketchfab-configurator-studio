@@ -35,23 +35,42 @@ var buildGeometryCategoryOptions = (model) => {
     let mainDesignation = nodeNameArray[0];
     let capitalLetter = nodeNameArray[1];
     let detailedTitle = nodeNameArray[2];
-    for (let i=3; i<nodeNameArray.length; ++i) {
-      detailedTitle += nodeNameArray[i];
+    for (let j=3; j<nodeNameArray.length; ++j) {
+      detailedTitle += nodeNameArray[j];
     }
 
     const irrelevantStrings = ["Group", "RootNode", "MatrixTransform"];
     if (uniqueStrings.indexOf(mainDesignation) == -1 &&
       irrelevantStrings.indexOf(mainDesignation) == -1) {
       uniqueStrings.push(mainDesignation);
-      geometryCategoryOptions.push({
-        instanceID: model.sceneGraph[i].instanceID,
-        designation: mainDesignation,
-        capitalLetter: capitalLetter,
-        detailedTitle: detailedTitle,
-        humanReadable: mainDesignation,
-        hiddenValues: [],
-        allowsAnimation: true,
-      })
+
+      let isFreeGeometry = true;
+      for (let j=0; j<model.controls.length; ++j) {
+        if (model.controls[j].type === "geometryCategory") {
+          for (let k=0; k<model.controls[j].configuration.geometries.length; ++k) {
+            if (model.sceneGraph[i].instanceID === model.controls[j].geometries[k].instanceID) {
+              isFreeGeometry = false;
+              break;
+            }
+          }
+        }
+        if (isFreeGeometry === false) {
+          break;
+        }
+      }
+
+      if (isFreeGeometry) {
+        geometryCategoryOptions.push({
+          instanceID: model.sceneGraph[i].instanceID,
+          designation: mainDesignation,
+          capitalLetter: capitalLetter,
+          detailedTitle: detailedTitle,
+          humanReadable: mainDesignation,
+          hiddenValues: [],
+          allowsAnimation: true,
+        })
+
+      }
     }
   }
   geometryCategoryOptions.sort(function(a,b){return a.designation.charCodeAt(0)-b.designation.charCodeAt(0)})

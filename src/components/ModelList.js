@@ -6,6 +6,7 @@ import {
     setModelList,
     setActiveModelGUID,
     createModel,
+    setViewMode,
 } from './viewerSlice';
 import initializeViewer from './initializeViewer';
 import { ReactSortable } from 'react-sortablejs';
@@ -62,9 +63,15 @@ const ModelList = () => {
                                 height="1em" 
                                 width="1em" 
                                 viewBox="0 0 40 40" 
-                                style={{verticalAlign: "middle", cursor: "pointer"}}
+                                style={{
+                                    marginLeft: "20px",
+                                    marginRight: "10px",
+                                    verticalAlign: "middle", 
+                                    cursor: "pointer"
+                                }}
                                 onClick={e => {
                                     let newModelList = modelList.filter(m => m.guid !== model.guid)
+                                    dispatch(setViewMode("model"))
                                     dispatch(setModelList(newModelList))
                                 }}
                             >

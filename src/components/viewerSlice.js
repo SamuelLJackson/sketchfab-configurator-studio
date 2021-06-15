@@ -85,34 +85,44 @@ export const viewerSlice = createSlice({
         if (state.modelList[i].guid === state.activeModelGUID) {
           state.modelList[i].latestControlId = state.modelList[i].latestControlId += 1;
           let id = state.modelList[i].latestControlId;
-          let defaultConfiguration = {}
-          if(action.payload === "animation") {
-            defaultConfiguration = {
-              animationUID: "none",
-              startTime: "0",
-              endTime: "0",
-              isDisabledInitially: false,
-            }
-          }
-    
-          if(action.payload === "geometryCategory") {
-            defaultConfiguration = {
-              designations: [],
-              geometries: [],
-              hiddenValues: [],
-              allowsAnimation: [],  
-            }
-          }
-          state.modelList[i].controls.unshift({
+          let defaultControl = {
             type: action.payload,
             id: id,
             name: action.payload,
             entityIndex: "none",
             entity: {instanceID: 0},
-            configuration: defaultConfiguration,
+            configuration: {},
             initialValue: "",
             isExpanded: true,
-          });
+          }
+
+          let newControl = {};
+
+          if(action.payload === "animation") { 
+            newControl = {
+              ...defaultControl,
+              configuration: {
+                animationUID:  state.modelList[i].animations[0][0],
+                animationName: state.modelList[i].animations[0][1],
+                startTime: 0,
+                endTime: 0,
+                isDisabledInitially: false,
+              },
+            }
+          } else if(action.payload === "geometryCategory") {
+            newControl = {
+              ...defaultControl,
+              configuration: {
+                designations: [],
+                geometries: [],
+                hiddenValues: [],
+                allowsAnimation: [],  
+              }
+            }
+          } else {
+            newControl = {...defaultControl};
+          }
+          state.modelList[i].controls.unshift(newControl);
         }
       }
     },
@@ -195,14 +205,18 @@ export const viewerSlice = createSlice({
         }
       }
     },
-    setAllNodesVisible: (state, action) => {
-      for(let i=0; i<Object.keys(state.sceneGraphIsVisible).length; ++i) {
-        if(action.payload) {
-          state.sketchfabAPI.show(Object.keys(state.sceneGraphIsVisible)[i])
-        } else {
-          state.sketchfabAPI.hide(Object.keys(state.sceneGraphIsVisible)[i])
+    setAllNodesVisible: (state, action) => {  
+      for (let i=0; i<state.modelList.length; ++i) {
+        if (state.modelList[i].guid === state.activeModelGUID) {
+          for(let j=0; j<Object.keys(state.modelList[i].sceneGraphIsVisible).length; ++j) {
+            if(action.payload) {
+              state.sketchfabAPI.show(Object.keys(state.modelList[i].sceneGraphIsVisible)[j])
+            } else {
+              state.sketchfabAPI.hide(Object.keys(state.modelList[i].sceneGraphIsVisible)[j])
+            }
+            state.modelList[i].sceneGraphIsVisible[Object.keys(state.modelList[i].sceneGraphIsVisible)[j]] = action.payload;
+          }
         }
-        state.sceneGraphIsVisible[Object.keys(state.sceneGraphIsVisible)[i]] = action.payload;
       }
     },
     setModelList: (state, action) => {
@@ -218,6 +232,10 @@ export const viewerSlice = createSlice({
                 if (newControls[j].configuration.animationName === newModelList[i].animations[k][1]) {
                   newControls[j].configuration.animationUID = newModelList[i].animations[k][0]
                 }
+                if (newControls[j].configuration.animationName === undefined) {
+                  newControls[j].configuration.animationName = newModelList[i].animations[0][1]
+                  newControls[j].configuration.animationUID = newModelList[i].animations[0][0]
+                }
               }
             }
             if (newControls[j].type === "textureCategory") {
@@ -228,6 +246,7 @@ export const viewerSlice = createSlice({
                 if (newControls[j].configuration.geometries[k].hiddenValues === undefined) {
                   newControls[j].configuration.geometries[k].hiddenValues = []
                 }            
+                newModelList[i].geometryCategoryOptions = newModelList[i].geometryCategoryOptions.filter((geometry => geometry.instanceID !== newControls[j].configuration.geometries[k].instanceID))
               }
             }
           }
@@ -355,3 +374,20 @@ export const toggleOptionChoiceModalDisplay = () => dispatch => {
 }
 
 export default viewerSlice.reducer;
+
+
+//        /*v*\            
+//     /\/|***|\/\         
+//    /   \***/   \        
+//         /*\             
+//          *              
+//          *              
+//   ----------------          
+//          *              
+//          *              
+//         \*/
+//    \   /***\   /  
+//     \/\|***|/\/
+//        \*^*/
+//
+//

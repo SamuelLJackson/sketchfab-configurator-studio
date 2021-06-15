@@ -66,14 +66,17 @@ var globalDisabledControls = [];
 var animationsEnabled = false;
 
 var apiSkfb, pollTime;
-
+var upperControlsContainer = document.querySelector("#sketchfab-upper-controls");
 var controlsContainer = document.getElementById('sketchfab-lower-controls');
 
 var appContainer = document.querySelector("div.sketchfab__container")
 appContainer.style.display = "block"
 
+var animationControls = document.getElementById("sketchfab-animation-controls")
 var animationButtonContainer = document.getElementById("sketchfab-animation-buttons")
 var animationContainerTitle = document.getElementById("sketchfab-animation-controls__title");
+
+var numberOfLowerControls = 0;
 
 pollTime = function() {
 	apiSkfb.getCurrentTime(function(err, time) {	
@@ -95,23 +98,49 @@ var loaderTitle = document.querySelector("#sketchfab-load-model-name");
 loaderTitle.textContent = modelList[currentModelIndex].name;
 loader.style.display = "flex";
 var errorMessage = document.querySelector("#sketchfab-error__container")
+var screenshotButton = document.querySelector("button#sketchfab-screenshot");
+var modal = document.querySelector("#sketchfab-screenshot-modal");
+var modalPreviewContent = document.querySelector("#sketchfab-screenshot-modal-preview-container");
+
+var screenshotModalClose = document.querySelector(".sketchfab-screenshot-modal-close");
+var screenshotAnchor = document.querySelector("#sketchfab-screenshot-download__button");
+var screenshotImg = document.querySelector("#sketchfab-screenshot-preview");
+
+screenshotModalClose.addEventListener("click", function() {
+	modal.style.display = "none";
+});
 
 var success = function(api) {
     apiSkfb = api;
 	api.start(function() {
+		loader.style.height = viewer.scrollHeight;
+		errorMessage.style.height = viewer.scrollHeight;
+		
+		screenshotButton.addEventListener('click', function () {
+			api.getScreenShot(800, 800, 'image/png', function (err, result) {
+				
+				screenshotImg.src = result;
+				
+				screenshotAnchor.href = result;
+			});
+			modal.style.display = "block";
+		});
+		
 		api.addEventListener('viewerready', function() {
-			
-			viewer.style.display = "block"
-			loader.style.display = "none";
+			setTimeout(function() {
+				loader.style.display = "none";
+			}, 1000);
+			changeViewerContainer.style.display = "flex";
 			api.pause();
 			
 			var animations = [];
 			for (let i = 0; i < modelList[currentModelIndex].controls.length; ++i) {	
 				globalDisabledControls.push(false);
+				
 				if (modelList[currentModelIndex].controls[i].type == "animation") {
-					var animationControls = document.getElementById("sketchfab-animation-controls")
 					animationControls.style.display = "block";
 					animationContainerTitle.style.display = "block";
+					screenshotButton.style.top = "535px";
 					var animationButton = document.createElement("button")
 					animationButton.id = "animation-" + modelList[currentModelIndex].controls[i].id + "-" + i
 					animationButton.textContent = modelList[currentModelIndex].controls[i].name;
@@ -194,8 +223,13 @@ var success = function(api) {
 						}
 						singleControlContainer.appendChild(colorBut);
 					}	
-				} else if (modelList[currentModelIndex].controls[i].type === "geometryCategory") {	
+				} else if (modelList[currentModelIndex].controls[i].type === "geometryCategory") {
+					numberOfLowerControls += 1;
 					isElementCategoryControlled = true;
+					
+					var label = document.createElement("h4");
+					label.classList.add("sketchfab-dropdown-label");
+					label.textContent = modelList[currentModelIndex].controls[i].name;
 					
 					var wrapper = initializeSelect(i);
 					wrapper.classList.add("sketchfab-geometry-category")
@@ -224,10 +258,16 @@ var success = function(api) {
 						customOptions.appendChild(customOption)
 					}
 					
+					singleControlContainer.appendChild(label);
 					singleControlContainer.appendChild(wrapper);		
 				} else if (modelList[currentModelIndex].controls[i].type === "textureCategory") {
+					numberOfLowerControls += 1;
 					surfaceConfigurationMode = true					
 					const { geometryName, options, isPrimary, ordering} = modelList[currentModelIndex].controls[i].configuration
+					
+					var label = document.createElement("h4");
+					label.classList.add("sketchfab-dropdown-label");
+					label.textContent = modelList[currentModelIndex].controls[i].name;
 					
 					var controlIndex = i;
 					var wrapper = initializeSelect(controlIndex, geometryName)
@@ -236,27 +276,29 @@ var success = function(api) {
 					
 					var customOptions = wrapper.querySelector(".sketchfab-options")
 					
-						for (var j=0; j<options.length; ++j) {
-							let customOption = document.createElement("span")
-							customOption.classList.add("sketchfab-option");
-							const { name, humanReadable } = options[j];
-							if (name === modelList[currentModelIndex].controls[i].initialValue) {
-								customOption.classList.add("selected");
-							}
-							
-							customOption.setAttribute("data-value", name)
-							customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
-							customOption.innerHTML = name + " - " + humanReadable;
-							customOption.addEventListener('click', e => {
-								handleUpdateSelect(e);			
-								handleHidingTextureCombinations()
-								configureMaterials(api) 
-							})
-								
-							
-							customOptions.appendChild(customOption)
+					for (var j=0; j<options.length; ++j) {
+						let customOption = document.createElement("span")
+						customOption.classList.add("sketchfab-option");
+						const { name, humanReadable } = options[j];
+						if (name === modelList[currentModelIndex].controls[i].initialValue) {
+							customOption.classList.add("selected");
 						}
-						singleControlContainer.appendChild(wrapper);
+						
+						customOption.setAttribute("data-value", name)
+						customOption.id = name + "-" + geometryName + "-" + j + "-" + j + "-" + i;
+						customOption.innerHTML = name + " - " + humanReadable;
+						customOption.addEventListener('click', e => {
+							handleUpdateSelect(e);			
+							handleHidingTextureCombinations()
+							configureMaterials(api) 
+						})
+							
+						
+						customOptions.appendChild(customOption)
+					}
+					
+					singleControlContainer.appendChild(label);
+					singleControlContainer.appendChild(wrapper);
 						
 				} else if (modelList[currentModelIndex].controls[i].type == "toggle") {
 					toggleableItems[String(modelList[currentModelIndex].controls[i].entity.instanceID)] = "visible";
@@ -293,6 +335,26 @@ var success = function(api) {
 				handleHidingTextureCombinations()
 				configureMaterials(api)
 			}
+			
+			var lowerControlsHeight = (Math.ceil(numberOfLowerControls/2) * 50);
+			var controlsHeight = upperControlsContainer.scrollHeight + lowerControlsHeight;
+			
+			var viewerHeight = viewer.scrollHeight;
+			appContainer.style.height = (controlsHeight + viewerHeight + changeViewerContainer.scrollHeight + 9) + "px";
+			loader.style.top = -1*(loader.scrollHeight + lowerControlsHeight + changeViewerContainer.scrollHeight + 9) + "px";
+			
+			upperControlsContainer.style.height = (animationButtonContainer.scrollHeight + animationContainerTitle.scrollHeight + 9) + "px";
+			
+			screenshotButton.style.display = "block";
+			screenshotButton.style.top = -1*(lowerControlsHeight + changeViewerContainer.scrollHeight + 12 + screenshotButton.scrollHeight) + "px";
+			
+			/*NEEDS TO BE SET With css*/
+			screenshotButton.style.position = "relative";
+			document.querySelector(".sketchfab-screenshot-modal__content").style.width = "541px";
+			document.querySelector(".sketchfab-screenshot-modal__content").style.height = "615px";
+			screenshotAnchor.style.height = "35px";
+			screenshotAnchor.style.marginLeft = "401px";
+			
 			window.addEventListener('click', function(e) {
 				for (const select of document.querySelectorAll('.sketchfab-select')) {
 					if (!select.contains(e.target)) {
@@ -309,9 +371,8 @@ client.init(modelList[currentModelIndex].uid, {
 	error: () => generateErrorMessage(),
 	merge_materials: 1,
 	material_packing: 1,
-	//graph_optimizer: 1,
 	autostart: 1,
-	preload: 0,
+	preload: 1,
 	ui_animations: 0,
 	ui_watermark: 0,
 	ui_inspector: 0,
@@ -359,6 +420,7 @@ var generateErrorMessage = function() {
 		
 	changeViewerContainer.style.display = "none";
 	errorMessage.style.display = "flex";
+
 	loader.style.display = "none";
 	console.error('Sketchfab API error');
 }
@@ -473,7 +535,10 @@ var setVisibleNodes = function(api) {
 		var nodeNameArray = modelList[currentModelIndex].sceneGraph[indexContainingCodes].name.split("-")
 		var currentNodeDesignation = nodeNameArray[0];
 		var currentNodeLetterCode = nodeNameArray[1];
-		api.hide(modelList[currentModelIndex].sceneGraph[indexContainingCodes].instanceID);
+		
+		if (currentNodeDesignation !== "AlwaysOn") {
+			api.hide(modelList[currentModelIndex].sceneGraph[indexContainingCodes].instanceID);
+		}						
 		
 		if (selectedPrefixes.includes(currentNodeDesignation)) {
 			for (var j=0; j<currentNodeLetterCode.length; ++j) {
@@ -686,7 +751,7 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	var wrapper = document.createElement("div")
 	wrapper.classList.add("sketchfab-select-wrapper")	
 	var appWidth = Number(appContainer.clientWidth)
-	wrapper.style.width = (appWidth/4) + "px";
+	wrapper.style.width = (appWidth/2) + "px";
 	
 	var select = document.createElement("div")
 	select.classList.add("sketchfab-select")
@@ -705,13 +770,9 @@ var initializeSelect = function(controlIndex, geometryName="") {
 	
 	var customOptions = document.createElement("div")
 	customOptions.classList.add("sketchfab-options")
-	var selectTitle = document.createElement("h3")
-	selectTitle.classList.add("sketchfab-title")
-	selectTitle.textContent = modelList[currentModelIndex].controls[controlIndex].name;
 	
 	selectTrigger.appendChild(triggerSpan)
 	selectTrigger.appendChild(arrow)
-	customOptions.appendChild(selectTitle)
 	select.appendChild(selectTrigger)
 	select.appendChild(customOptions)
 	wrapper.appendChild(select)	
@@ -768,8 +829,9 @@ if (modelList.length > 1) {
 
 			animationsEnabled = false;
 			
-			viewer.style.display = "none"
-			loader.style.display = "flex"
+			numberOfLowerControls = 0;
+			loader.style.display = "flex";
+			loader.style.top = -1*(loader.scrollHeight + changeViewerContainer.scrollHeight + 9) + "px";
 
 			client.init(modelList[index].uid, {
 				success: success,
@@ -788,6 +850,11 @@ if (modelList.length > 1) {
 		changeViewerContainer.appendChild(viewerButton);
 	}
 }
+
+
+
+
+
 
 
 
